@@ -5,22 +5,54 @@ import 'package:nearby_service/nearby_service.dart';
 import 'package:nearby_service/src/utils/logger.dart';
 import 'package:nearby_service/src/utils/stream_mapper.dart';
 
+///
+/// IOS implementation for [NearbyService].
+///
+/// Uses [NearbyServiceIOSPlatform] to perform actions.
+/// Connects to the device by subscribing to messages from the selected
+/// device by identifier.
+///
 class NearbyIOSService extends NearbyService {
   final _isBrowser = ValueNotifier<bool>(true);
-  final _isCommunicationChannelConnecting = ValueNotifier<bool>(false);
+  final _state = ValueNotifier(CommunicationChannelState.notConnected);
 
   StreamSubscription<ReceivedNearbyMessage>? _messagesSubscription;
 
   @override
-  ValueListenable<bool> get isCommunicationChannelConnecting =>
-      _isCommunicationChannelConnecting;
+  ValueListenable<CommunicationChannelState> get communicationChannelState =>
+      _state;
 
+  ///
+  /// Determines whether the current device is a **Browser** or **Advertiser**.
+  ///
+  /// * Browser will only see devices with Advertiser status in the peers list.
+  /// Browser sends connection requests.
+  /// * Advertiser will see in the peers list only devices with Browser
+  /// status that have sent it a connection request.
+  /// Advertiser accepts or rejects connection requests.
+  ///
   ValueListenable<bool> get isBrowser => _isBrowser;
 
   String get _currentConnectionType {
     return _isBrowser.value ? 'browsing' : 'advertising';
   }
 
+  ///
+  /// Initializes [MCNearbyServiceAdvertiser](https://developer.apple.com/documentation/multipeerconnectivity/mcnearbyserviceadvertiser)
+  /// and [MCNearbyServiceBrowser](https://developer.apple.com/documentation/multipeerconnectivity/mcnearbyservicebrowser)
+  /// to allow this device to be both.
+  ///
+  /// Creates [MCPeerID](https://developer.apple.com/documentation/multipeerconnectivity/mcpeerid) for
+  /// this device.
+  ///
+  /// The name of the device on the network can be
+  /// specified on initialization via the parameter [data].
+  ///
+  /// [NearbyInitializeData.iosDeviceName] will be passed to the platform as initial
+  /// name. If a new name is not passed, the previous name stored
+  /// in [UserDefaults](https://developer.apple.com/documentation/foundation/userdefaults)
+  /// will be used. If there is no saved name, `UIDevice.current.name` will be used.
+  ///
   @override
   Future<bool> initialize({
     NearbyInitializeData data = const NearbyInitializeData(),
@@ -37,6 +69,12 @@ class NearbyIOSService extends NearbyService {
     return result;
   }
 
+  ///
+  /// Starts discovery on the local P2P network.
+  ///
+  /// Starts browsing for peers if [isBrowser] is true.
+  /// Starts advertising for peers if [isBrowser] is false.
+  ///
   @override
   Future<bool> discover() async {
     final result = _isBrowser.value
@@ -50,6 +88,12 @@ class NearbyIOSService extends NearbyService {
     return result;
   }
 
+  ///
+  /// Slops discovery on the local P2P network.
+  ///
+  /// Slops browsing for peers if [isBrowser] is true.
+  /// Slops advertising for peers if [isBrowser] is false.
+  ///
   @override
   Future<bool> stopDiscovery() async {
     final result = _isBrowser.value
@@ -64,6 +108,14 @@ class NearbyIOSService extends NearbyService {
     return result;
   }
 
+  ///
+  /// Connects to the [device] on the P2P network.
+  ///
+  /// Invites [device] if [isBrowser] is true.
+  /// Accepts invite from [device] if [isBrowser] is false.
+  ///
+  /// Note! Requires [NearbyIOSDevice] to be passed.
+  ///
   @override
   Future<bool> connect(NearbyDevice device) async {
     _requireIOSDevice(device);
@@ -81,6 +133,11 @@ class NearbyIOSService extends NearbyService {
     return result;
   }
 
+  ///
+  /// Disconnects from the [device] on the P2P network.
+  ///
+  /// Note! Requires [NearbyIOSDevice] to be passed.
+  ///
   @override
   Future<bool> disconnect(NearbyDevice device) async {
     _requireIOSDevice(device);
@@ -95,12 +152,16 @@ class NearbyIOSService extends NearbyService {
     return result;
   }
 
+  ///
+  /// Starts listening for messages from device with
+  /// [NearbyCommunicationChannelData.connectedDeviceId].
+  ///
   @override
   FutureOr<bool> startCommunicationChannel(
     NearbyCommunicationChannelData data,
   ) async {
     Logger.debug('Creating messages subscription');
-    _isCommunicationChannelConnecting.value = true;
+    _state.value = CommunicationChannelState.loading;
     await endCommunicationChannel();
     final eventListener = data.eventListener;
     _messagesSubscription = NearbyServiceIOSPlatform.instance.messagesStream
@@ -110,9 +171,13 @@ class NearbyIOSService extends NearbyService {
         .cast<ReceivedNearbyMessage>()
         .listen(
       eventListener.onData,
-      onDone: eventListener.onDone,
+      onDone: () {
+        _state.value = CommunicationChannelState.notConnected;
+        eventListener.onDone?.call();
+      },
       onError: (e, s) {
         Logger.error(e);
+        _state.value = CommunicationChannelState.notConnected;
         eventListener.onError?.call(e, s);
       },
       cancelOnError: eventListener.cancelOnError,
@@ -120,11 +185,18 @@ class NearbyIOSService extends NearbyService {
     if (_messagesSubscription != null) {
       Logger.info('Messages subscription was created successfully');
       eventListener.onCreated?.call(_messagesSubscription!);
+      _state.value = CommunicationChannelState.connected;
+    } else {
+      _state.value = CommunicationChannelState.notConnected;
     }
-    _isCommunicationChannelConnecting.value = false;
+
     return true;
   }
 
+  ///
+  /// Stops listening for messages from previously passed device with
+  /// [NearbyCommunicationChannelData.connectedDeviceId].
+  ///
   @override
   FutureOr<bool> endCommunicationChannel() async {
     await _messagesSubscription?.cancel();
@@ -133,15 +205,30 @@ class NearbyIOSService extends NearbyService {
     return true;
   }
 
+  ///
+  /// Sends [OutgoingNearbyMessage] to [OutgoingNearbyMessage.receiver] via
+  /// IOS platform.
+  ///
   @override
   Future<bool> send(OutgoingNearbyMessage message) {
     return NearbyServiceIOSPlatform.instance.send(message);
   }
 
+  ///
+  /// If you want to ask the user to change the name on the network,
+  /// you can retrieve the name previously saved in
+  /// [UserDefaults](https://developer.apple.com/documentation/foundation/userdefaults) using this method.
+  ///
+  /// Changing the name on the network is only available for IOS,
+  /// so the [NearbyIOSService] only can be used for that.
+  ///
   Future<String?> getSavedDeviceName() {
     return NearbyServiceIOSPlatform.instance.getSavedDeviceName();
   }
 
+  ///
+  /// Changes the [isBrowser] to the passed [value].
+  ///
   void setIsBrowser({required bool value}) {
     Logger.debug('Is Browser Value was set to $value');
     _isBrowser.value = value;

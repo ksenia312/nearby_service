@@ -51,15 +51,18 @@ class MyApp extends StatelessWidget {
                         'Platform: ${service.platformVersion}\n'
                         'Model: ${service.platformModel}',
                       ),
-                      if (service.currentDevice != null)
+                      if (service.currentDeviceInfo != null)
                         Text(
-                          'Device Name: ${service.currentDevice!.displayName}\n'
-                          '${Platform.isIOS ? 'Device ID: ${service.currentDevice!.id}' : ''}\n',
+                          'Device Name: ${service.currentDeviceInfo!.displayName}\n'
+                          '${Platform.isIOS ? 'Device ID: ${service.currentDeviceInfo!.id}' : ''}',
                         ),
                       if (Platform.isIOS)
                         Text(
-                          'You are ${service.isIOSBrowser ? 'going to find your friend' : 'waiting for another user to connect'}\n',
+                          'You are ${service.isIOSBrowser ? 'going to find your friend' : 'waiting for another user to connect'}',
                         ),
+                      Text(
+                        'Communication channel state: ${service.communicationChannelState.name.toUpperCase()}',
+                      )
                     ],
                   ),
                 ),
@@ -170,12 +173,13 @@ enum AppState {
 }
 
 class AppService extends ChangeNotifier {
-  final _nearbyService = NearbyService.getInstance();
+  late final _nearbyService = NearbyService.getInstance()
+    ..communicationChannelState.addListener(notifyListeners);
 
   AppState state = AppState.idle;
   List<NearbyDevice>? peers;
   NearbyDevice? connectedDevice;
-  NearbyDeviceInfo? currentDevice;
+  NearbyDeviceInfo? currentDeviceInfo;
 
   String platformVersion = 'Unknown';
   String platformModel = 'Unknown';
@@ -183,8 +187,8 @@ class AppService extends ChangeNotifier {
   StreamSubscription? peersSubscription;
   StreamSubscription? connectedDeviceSubscription;
 
-  bool get isCommunicationChannelConnecting {
-    return _nearbyService.isCommunicationChannelConnecting.value;
+  CommunicationChannelState get communicationChannelState {
+    return _nearbyService.communicationChannelState.value;
   }
 
   bool get isIOSBrowser {
@@ -202,7 +206,7 @@ class AppService extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<String> getSavedDeviceName() async {
+  Future<String> getSavedIOSDeviceName() async {
     return (await _nearbyService.ios?.getSavedDeviceName()) ?? platformModel;
   }
 
@@ -211,7 +215,7 @@ class AppService extends ChangeNotifier {
       await _nearbyService.initialize(
         data: NearbyInitializeData(iosDeviceName: iosDeviceName),
       );
-      currentDevice = (await _nearbyService.getCurrentDevice())?.info;
+      currentDeviceInfo = await _nearbyService.getCurrentDeviceInfo();
       updateState(
         Platform.isAndroid ? AppState.permissions : AppState.selectClientType,
       );
@@ -432,7 +436,7 @@ class _IdleBodyState extends State<_IdleBody> {
   @override
   void initState() {
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      context.read<AppService>().getSavedDeviceName().then((value) {
+      context.read<AppService>().getSavedIOSDeviceName().then((value) {
         controller.text = value;
         controller.selection = TextSelection.collapsed(offset: value.length);
         setState(() {
@@ -719,7 +723,8 @@ class _ConnectedBody extends StatelessWidget {
                     else
                       _DevicePreview(device: device, largeView: true),
                     const SizedBox(height: 10),
-                    if (!(service.isCommunicationChannelConnecting))
+                    if (service.communicationChannelState !=
+                        CommunicationChannelState.loading)
                       _ActionButton(
                         onTap: () => service.startCommunicationChannel(
                           listener: (event) => AppShackBar.show(

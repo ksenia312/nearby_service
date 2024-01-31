@@ -12,6 +12,9 @@ part 'ping_manager.dart';
 
 part 'network.dart';
 
+///
+/// A service for creating a communication channel on the Android platform.
+///
 class NearbySocketService {
   NearbySocketService(this._manager);
 
@@ -19,17 +22,27 @@ class NearbySocketService {
   final _pingManager = NearbySocketPingManager();
   final _network = NearbyServiceNetwork();
 
-  final isConnecting = ValueNotifier(false);
+  final state = ValueNotifier(CommunicationChannelState.notConnected);
   NearbyConnectionAndroidInfo? connectionInfo;
 
   String? _connectedDeviceId;
   WebSocket? _socket;
   StreamSubscription<ReceivedNearbyMessage>? _messagesSubscription;
 
+  ///
+  /// Start a socket with the user's role defined.
+  /// If he is the owner of the group, he becomes a server.
+  /// Otherwise, he becomes a client.
+  ///
+  /// * The server starts up and waits for a request from the
+  /// client to establish a connection.
+  /// * The client pings the server until he receives a pong.
+  /// When he does, he tries to connect to the server.
+  ///
   Future<bool> startSocket({
     required NearbyCommunicationChannelData data,
   }) async {
-    isConnecting.value = true;
+    state.value = CommunicationChannelState.loading;
     _connectedDeviceId = data.connectedDeviceId;
     connectionInfo = await _manager.getConnectionInfo();
     if (connectionInfo != null && connectionInfo!.groupFormed) {
@@ -55,15 +68,18 @@ class NearbySocketService {
     return false;
   }
 
+  ///
+  /// Add [OutgoingNearbyMessage]'s JSON representation to [_socket].
+  ///
   Future<bool> send(OutgoingNearbyMessage message) async {
     if (_socket != null && message.receiver.id == _connectedDeviceId) {
-      final sender = await _manager.getCurrentDevice();
+      final sender = await _manager.getCurrentDeviceInfo();
       if (sender != null) {
         _socket!.add(
           jsonEncode(
             {
               'message': message.value,
-              'sender': sender.info.toJson(),
+              'sender': sender.toJson(),
             },
           ),
         );
@@ -73,9 +89,11 @@ class NearbySocketService {
     return false;
   }
 
+  ///
+  /// Turns off [_messagesSubscription] and [_socket].
+  ///
   Future<bool> cancel() async {
     try {
-      isConnecting.value = false;
       await _messagesSubscription?.cancel();
       _messagesSubscription = null;
       _socket = null;
@@ -153,7 +171,7 @@ class NearbySocketService {
 
   void _createSocketSubscription(NearbyServiceStreamListener socketListener) {
     Logger.debug('Starting socket subscription');
-    isConnecting.value = false;
+
     if (_connectedDeviceId != null) {
       _messagesSubscription = _socket
           ?.map(MessagesStreamMapper.toMessage)
@@ -162,17 +180,24 @@ class NearbySocketService {
           .map((e) => MessagesStreamMapper.replaceId(e, _connectedDeviceId!))
           .listen(
         socketListener.onData,
-        onDone: socketListener.onDone,
+        onDone: () {
+          state.value = CommunicationChannelState.notConnected;
+          socketListener.onDone?.call();
+        },
         onError: (e, s) {
           Logger.error(e);
+          state.value = CommunicationChannelState.notConnected;
           socketListener.onError?.call(e, s);
         },
         cancelOnError: socketListener.cancelOnError,
       );
     }
     if (_messagesSubscription != null) {
+      state.value = CommunicationChannelState.connected;
       Logger.info('Socket subscription was created successfully');
       socketListener.onCreated?.call(_messagesSubscription!);
+    } else {
+      state.value = CommunicationChannelState.notConnected;
     }
   }
 }

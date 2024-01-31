@@ -21,10 +21,10 @@ class MethodChannelNearbyService extends NearbyServicePlatform {
   }
 
   @override
-  Future<NearbyDevice?> getCurrentDevice() async {
+  Future<NearbyDeviceInfo?> getCurrentDeviceInfo() async {
     return NearbyDeviceMapper.instance.mapToDevice(
       await methodChannel.invokeMethod('getCurrentDevice'),
-    );
+    )?.info;
   }
 
   @override

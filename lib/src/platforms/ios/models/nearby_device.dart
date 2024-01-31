@@ -1,7 +1,18 @@
 import 'package:nearby_service/nearby_service.dart';
-import 'package:nearby_service/src/utils/decoder.dart';
+import 'package:nearby_service/src/utils/json_decoder.dart';
 
+///
+/// A device on a P2P network obtained from the IOS platform.
+///
 class NearbyIOSDevice extends NearbyDevice {
+  ///
+  /// A class representing an IOS device on a P2P network.
+  ///
+  /// [NearbyDeviceInfo] for IOS consists of the [MCPeerID](https://developer.apple.com/documentation/multipeerconnectivity/mcpeerid) passed from the platform
+  /// and a displayName passed from the platform.
+  ///
+  /// [MCPeerID](https://developer.apple.com/documentation/multipeerconnectivity/mcpeerid) is an identifier on the local network for IOS.
+  ///
   NearbyIOSDevice({
     required super.info,
     required super.status,
@@ -10,6 +21,9 @@ class NearbyIOSDevice extends NearbyDevice {
     this.deviceType,
   });
 
+  ///
+  /// Gets [NearbyIOSDevice] from [Map].
+  ///
   factory NearbyIOSDevice.fromJson(Map<String, dynamic>? json) {
     return NearbyIOSDevice(
       info: NearbyDeviceInfo.fromJson(json),
@@ -20,15 +34,45 @@ class NearbyIOSDevice extends NearbyDevice {
     );
   }
 
+  ///
+  /// `UIDevice.current.systemName` from IOS Platform.
+  ///
   final String? os;
+
+  ///
+  /// `UIDevice.current.systemVersion` from IOS Platform.
+  ///
   final String? osVersion;
+
+  ///
+  /// `UIDevice.current.model` from IOS Platform.
+  ///
   final String? deviceType;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      super == other &&
+          other is NearbyIOSDevice &&
+          runtimeType == other.runtimeType &&
+          os == other.os &&
+          osVersion == other.osVersion &&
+          deviceType == other.deviceType;
+
+  @override
+  int get hashCode =>
+      super.hashCode ^ os.hashCode ^ osVersion.hashCode ^ deviceType.hashCode;
+
+  @override
+  String toString() {
+    return 'NearbyIOSDevice{os: $os, osVersion: $osVersion, deviceType: $deviceType}';
+  }
 }
 
 class NearbyIOSMapper implements NearbyDeviceMapper {
   @override
   List<NearbyDevice> mapToDeviceList(dynamic value) {
-    final decoded = Decoder.decodeList(value);
+    final decoded = JSONDecoder.decodeList(value);
     return [
       ...?decoded?.map(
         (e) => NearbyIOSDevice.fromJson(e as Map<String, dynamic>?),
@@ -39,7 +83,7 @@ class NearbyIOSMapper implements NearbyDeviceMapper {
   @override
   NearbyDevice? mapToDevice(dynamic value) {
     return NearbyIOSDevice.fromJson(
-      Decoder.decodeMap(value),
+      JSONDecoder.decodeMap(value),
     );
   }
 }

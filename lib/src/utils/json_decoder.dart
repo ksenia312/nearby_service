@@ -2,8 +2,8 @@ import 'dart:convert';
 
 import 'package:nearby_service/nearby_service.dart';
 
-class Decoder {
-  Decoder._();
+class JSONDecoder {
+  JSONDecoder._();
 
   static Map<String, dynamic>? decodeMap(dynamic value) {
     if (value == null) {

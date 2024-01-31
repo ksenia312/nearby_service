@@ -50,7 +50,7 @@ class MockNearbyServicePlatform
   }
 
   @override
-  Future<NearbyDevice?> getCurrentDevice() {
+  Future<NearbyDeviceInfo?> getCurrentDeviceInfo() {
     // TODO: implement getCurrentDevice
     throw UnimplementedError();
   }

@@ -4,6 +4,7 @@ import MultipeerConnectivity
 let SERVICE_TYPE = "mp-connection"
 let PEER_ID = "PEER-ID"
 let DEVICE_NAME = "DEVICE-NAME"
+let ON_MESSAGE_RECEIVED = Notification.Name("NearbySessionOnMessageReceived")
 
 class MyDeviceDataGenerator {
     static func generate(name: String?) -> NearbyDevice {

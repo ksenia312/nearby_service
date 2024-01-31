@@ -31,7 +31,7 @@ abstract class NearbyServicePlatform extends PlatformInterface {
     throw UnimplementedError('getPlatformModel() has not been implemented.');
   }
 
-  Future<NearbyDevice?> getCurrentDevice() {
+  Future<NearbyDeviceInfo?> getCurrentDeviceInfo() {
     throw UnimplementedError('getCurrentDevice() has not been implemented.');
   }
 

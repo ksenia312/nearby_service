@@ -16,8 +16,6 @@ class NearbySession: NSObject {
         self.session = MCSession(peer: peerID)
     }
     
-    static let messageReceived = Notification.Name("NearbySessionReceivedMessage")
-    
     static func create(peerID: MCPeerID) -> NearbySession {
         let instance = NearbySession(peerID: peerID)
         instance.session.delegate = instance
@@ -34,7 +32,7 @@ extension NearbySession: MCSessionDelegate {
     
     func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
         NotificationCenter.default.post(
-            name: NearbySession.messageReceived,
+            name: ON_MESSAGE_RECEIVED,
             object: nil,
             userInfo: ["from": peerID, "data": data]
         )

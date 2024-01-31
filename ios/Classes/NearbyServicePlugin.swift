@@ -38,8 +38,8 @@ public class NearbyServicePlugin: NSObject, FlutterPlugin {
         
         NotificationCenter.default.addObserver(
             instance,
-            selector: #selector(messageReceived),
-            name: NearbySession.messageReceived,
+            selector: #selector(onMessageReceived),
+            name: ON_MESSAGE_RECEIVED,
             object: nil
         )
         
@@ -49,12 +49,6 @@ public class NearbyServicePlugin: NSObject, FlutterPlugin {
         NearbyDevicesStore.instance.clear()
     }
     
-    @objc func messageReceived(notification: Notification) {
-        DispatchQueue.main.async {
-            let result = NearbyMessageConverter.convert(userInfo: notification.userInfo)
-            self.channel.invokeMethod("invoke_nearby_service_message_received", arguments: result)
-        }
-    }
     
     
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -122,6 +116,12 @@ public class NearbyServicePlugin: NSObject, FlutterPlugin {
             
         default:
             result(FlutterMethodNotImplemented)
+        }
+    }
+    @objc func onMessageReceived(notification: Notification) {
+        DispatchQueue.main.async {
+            let result = NearbyMessageConverter.convert(userInfo: notification.userInfo)
+            self.channel.invokeMethod("invoke_nearby_service_message_received", arguments: result)
         }
     }
     

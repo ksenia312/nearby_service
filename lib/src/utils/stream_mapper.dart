@@ -1,5 +1,5 @@
 import 'package:nearby_service/nearby_service.dart';
-import 'package:nearby_service/src/utils/decoder.dart';
+import 'package:nearby_service/src/utils/json_decoder.dart';
 
 import 'logger.dart';
 
@@ -19,7 +19,7 @@ abstract class MessagesStreamMapper {
 
   static ReceivedNearbyMessage? toMessage(dynamic event) {
     try {
-      final decoded = Decoder.decodeMap(event);
+      final decoded = JSONDecoder.decodeMap(event);
       return ReceivedNearbyMessage.fromJson(decoded);
     } catch (e) {
       Logger.debug(
