@@ -1,0 +1,154 @@
+import Foundation
+import Flutter
+import MultipeerConnectivity
+
+class NearbyManager: NSObject {
+    var device: NearbyDevice!
+    var advertiser: MCNearbyServiceAdvertiser!
+    var browser: MCNearbyServiceBrowser!
+    var invitationHandlers: [String: ((Bool, MCSession?) -> Void)] = [:]
+    
+    
+    func initialize(for deviceName: String? = nil, result: @escaping FlutterResult) {
+        self.device = MyDeviceDataGenerator.generate(name: deviceName)
+        
+        self.advertiser = MCNearbyServiceAdvertiser(
+            peer: self.device.peerID,
+            discoveryInfo: self.device.toDictionary(),
+            serviceType: SERVICE_TYPE
+        )
+        self.advertiser.delegate = self
+        
+        self.browser = MCNearbyServiceBrowser(peer: self.device.peerID, serviceType: SERVICE_TYPE)
+        self.browser.delegate = self
+        
+        result(true)
+    }
+    
+    func getSavedDeviceName(result: @escaping FlutterResult) {
+        result(ArchivedData.getArchivedName())
+    }
+    
+    func getCurrentDevice(result: @escaping FlutterResult) {
+        result(device.toJsonString())
+    }
+    
+    func openServicesSettings(result: @escaping FlutterResult) {
+        if let url = URL(string:UIApplication.openSettingsURLString) {
+            if UIApplication.shared.canOpenURL(url) {
+                UIApplication.shared.open(url, options: [:], completionHandler: nil)
+            }
+        }
+        result(true)
+    }
+    
+    func startAdvertising(result: @escaping FlutterResult) {
+        self.advertiser.startAdvertisingPeer()
+        result(true)
+    }
+    
+    func startBrowsing(result: @escaping FlutterResult) {
+        self.browser.startBrowsingForPeers()
+        result(true)
+    }
+    
+    func stopAdvertising(result: @escaping FlutterResult) {
+        self.advertiser.stopAdvertisingPeer()
+        NearbyDevicesStore.instance.clear()
+        result(true)
+    }
+    
+    func stopBrowsing(result: @escaping FlutterResult) {
+        self.browser.stopBrowsingForPeers()
+        NearbyDevicesStore.instance.clear()
+        result(true)
+    }
+    
+    func getPeers(result: @escaping FlutterResult) {
+        result(NearbyDevicesStore.instance.getDevicesToJsonString())
+    }
+    
+    func invite(for deviceId: String, result: @escaping FlutterResult) {
+        do {
+            let device = NearbyDevicesStore.instance.find(for: deviceId)
+            if let requireDevice = device {
+                let nearbySession = requireDevice.createSession(for: self.device.peerID)
+                self.browser.invitePeer(
+                    requireDevice.peerID,
+                    to: nearbySession.session,
+                    withContext: try JSONSerialization.data(withJSONObject:["displayName": self.device.name]),
+                    timeout: 0
+                )
+                result(true)
+            }
+        } catch let error {
+            Logger.error(message: error.localizedDescription)
+            result(false)
+        }
+    }
+    func acceptInvite(for deviceId: String, result: @escaping FlutterResult) {
+        let device = NearbyDevicesStore.instance.find(for: deviceId)
+        if let requireDevice = device {
+            let nearbySession = requireDevice.createSession(for: self.device.peerID)
+            self.invitationHandlers[deviceId]?(true, nearbySession.session)
+            result(true)
+        }
+    }
+    
+    func disconnect(for deviceId: String, result: @escaping FlutterResult) {
+        let device = NearbyDevicesStore.instance.find(for: deviceId)
+        device?.deleteSession()
+        result(true)
+    }
+    
+    func send(for message: String, with receiverId: String, result: @escaping FlutterResult) {
+        let device = NearbyDevicesStore.instance.find(for: receiverId)
+
+        do {
+            if let requireDevice = device {
+                let data = [
+                    "name": self.device.name,
+                    "message": message
+                ]
+                try requireDevice.session?.session?.send(
+                    try JSONSerialization.data(withJSONObject: data),
+                    toPeers: [requireDevice.peerID],
+                    with: MCSessionSendDataMode.reliable
+                )
+            }
+        } catch let error {
+            Logger.error(message: error.localizedDescription)
+        }
+        
+        result(true)
+    }
+    
+    
+}
+
+extension NearbyManager: MCNearbyServiceAdvertiserDelegate {
+    func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didReceiveInvitationFromPeer peerID: MCPeerID, withContext context: Data?, invitationHandler: @escaping (Bool, MCSession?) -> Void
+    ) {
+        var dict: Dictionary<String, String>?
+        do {
+            dict = try JSONSerialization.jsonObject(with: context ?? Data()) as? Dictionary<String, String>
+        } catch let error {
+            Logger.error(message: error.localizedDescription)
+        }
+        _ = NearbyDevicesStore.instance.add(for: peerID, discoveryInfo: dict)
+        self.invitationHandlers[peerID.displayName] = invitationHandler
+        
+    }
+}
+
+extension NearbyManager: MCNearbyServiceBrowserDelegate {
+    func browser(_ browser: MCNearbyServiceBrowser, foundPeer peerID: MCPeerID, withDiscoveryInfo info: [String : String]?) {
+        _ = NearbyDevicesStore.instance.add(for: peerID, discoveryInfo: info)
+    }
+    
+    func browser(_ browser: MCNearbyServiceBrowser, lostPeer peerID: MCPeerID) {
+        let device = NearbyDevicesStore.instance.find(for: peerID.displayName)
+        device?.deleteSession()
+        NearbyDevicesStore.instance.remove(for: peerID)
+    }
+}

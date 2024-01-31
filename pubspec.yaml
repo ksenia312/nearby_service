@@ -1,0 +1,31 @@
+name: nearby_service
+description: Nearby Service Flutter Plugin for creating connections in a P2P network. With this plugin you can easily create any application for sharing information without the Internet.
+version: 0.0.1
+homepage: https://github.com/ksenia312/nearby_service
+publish_to: none
+platforms:
+  android:
+  ios:
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  plugin_platform_interface: ^2.0.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.1
+
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: com.xenikii.nearby_service
+        pluginClass: NearbyServicePlugin
+      ios:
+        pluginClass: NearbyServicePlugin
