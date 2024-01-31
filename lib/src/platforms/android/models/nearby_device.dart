@@ -134,6 +134,9 @@ class NearbyAndroidDevice extends NearbyDevice {
   }
 }
 
+///
+/// Implementation of [NearbyDeviceMapper] for Android.
+///
 class NearbyAndroidMapper implements NearbyDeviceMapper {
   @override
   List<NearbyDevice> mapToDeviceList(dynamic value) {

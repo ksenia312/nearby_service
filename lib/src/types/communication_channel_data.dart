@@ -80,6 +80,10 @@ class NearbyAndroidCommunicationChannelData {
   /// Listener of events that come to the server.
   ///
   final ValueChanged<HttpRequest>? serverListener;
+
+  ///
+  /// The port on which the socket will be created.
+  ///
   final int port;
 
   @override

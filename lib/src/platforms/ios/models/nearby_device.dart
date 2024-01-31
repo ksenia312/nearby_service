@@ -69,6 +69,9 @@ class NearbyIOSDevice extends NearbyDevice {
   }
 }
 
+///
+/// Implementation of [NearbyDeviceMapper] for IOS.
+///
 class NearbyIOSMapper implements NearbyDeviceMapper {
   @override
   List<NearbyDevice> mapToDeviceList(dynamic value) {

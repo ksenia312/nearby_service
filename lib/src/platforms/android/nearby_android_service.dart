@@ -19,6 +19,10 @@ class NearbyAndroidService extends NearbyService {
     return _socketService.state;
   }
 
+  ///
+  /// The connection information of a Wi-Fi p2p group connection
+  /// from the socket service.
+  ///
   NearbyConnectionAndroidInfo? get connectionInfo {
     return _socketService.connectionInfo;
   }
