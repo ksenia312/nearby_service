@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:nearby_service/nearby_service.dart';
 import 'package:nearby_service/src/utils/logger.dart';
 
 ///
@@ -30,9 +31,9 @@ class NearbyServiceException implements Exception {
     );
   }
 
-  factory NearbyServiceException.invalidMessage(String value) {
+  factory NearbyServiceException.invalidMessage(NearbyMessageContent content) {
     return NearbyServiceException(
-      'The message="$value" is not valid',
+      'The message="$content" is not valid',
     );
   }
 

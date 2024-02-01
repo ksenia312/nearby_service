@@ -5,18 +5,21 @@ import 'package:nearby_service/nearby_service.dart';
 ///
 abstract class NearbyMessage {
   ///
-  /// The basic message contains only [value] - the content
+  /// The basic message contains only [content] - the content
   /// to be sent or received.
   ///
-  const NearbyMessage({required this.value});
-
-  final String value;
+  const NearbyMessage({required this.content});
 
   ///
-  /// Checks if [value] is not empty
+  /// Model representing content to be sent or received
+  ///
+  final NearbyMessageContent content;
+
+  ///
+  /// Checks if [content] is not empty
   ///
   bool get isValid {
-    return value.isNotEmpty;
+    return content.isValid;
   }
 
   @override
@@ -24,14 +27,14 @@ abstract class NearbyMessage {
       identical(this, other) ||
       other is NearbyMessage &&
           runtimeType == other.runtimeType &&
-          value == other.value;
+          content == other.content;
 
   @override
-  int get hashCode => value.hashCode;
+  int get hashCode => content.hashCode;
 
   @override
   String toString() {
-    return 'NearbyMessage{value: $value}';
+    return 'NearbyMessage{content: $content}';
   }
 }
 
@@ -40,11 +43,11 @@ abstract class NearbyMessage {
 ///
 class OutgoingNearbyMessage extends NearbyMessage {
   ///
-  /// To send a message, in addition to [value], you need to pass [receiver]
+  /// To send a message, in addition to [content], you need to pass [receiver]
   /// to know to whom the message is addressed.
   ///
   const OutgoingNearbyMessage({
-    required super.value,
+    required super.content,
     required this.receiver,
   });
 
@@ -58,7 +61,7 @@ class OutgoingNearbyMessage extends NearbyMessage {
   ///
   Map<String, dynamic> toJson() {
     return {
-      'message': value,
+      'content': content.toJson(),
       'receiver': receiver.toJson(),
     };
   }
@@ -73,6 +76,11 @@ class OutgoingNearbyMessage extends NearbyMessage {
 
   @override
   int get hashCode => super.hashCode ^ receiver.hashCode;
+
+  @override
+  String toString() {
+    return 'OutgoingNearbyMessage{receiver: $receiver content:$content}';
+  }
 }
 
 ///
@@ -80,11 +88,11 @@ class OutgoingNearbyMessage extends NearbyMessage {
 ///
 class ReceivedNearbyMessage extends NearbyMessage {
   ///
-  /// The received message contains a [sender] in addition to [value],
+  /// The received message contains a [sender] in addition to [content],
   /// to know from whom the message came.
   ///
   const ReceivedNearbyMessage({
-    required super.value,
+    required super.content,
     required this.sender,
   });
 
@@ -93,7 +101,7 @@ class ReceivedNearbyMessage extends NearbyMessage {
   ///
   factory ReceivedNearbyMessage.fromJson(Map<String, dynamic>? json) {
     return ReceivedNearbyMessage(
-      value: json?['message'] ?? '',
+      content: NearbyMessageContent.fromJson(json?['content']),
       sender: NearbyDeviceInfo.fromJson(json?['sender']),
     );
   }
@@ -116,6 +124,6 @@ class ReceivedNearbyMessage extends NearbyMessage {
 
   @override
   String toString() {
-    return 'ReceivedNearbyMessage{sender: $sender}';
+    return 'ReceivedNearbyMessage{sender: $sender content: $content}';
   }
 }

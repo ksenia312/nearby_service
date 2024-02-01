@@ -1,11 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:nearby_service/nearby_service.dart';
+import 'package:nearby_service/src/platforms/android/socket_service/file_creator.dart';
 import 'package:nearby_service/src/utils/logger.dart';
+import 'package:nearby_service/src/utils/random.dart';
 import 'package:nearby_service/src/utils/stream_mapper.dart';
 
 part 'ping_manager.dart';
@@ -25,10 +26,11 @@ class NearbySocketService {
   final state = ValueNotifier(CommunicationChannelState.notConnected);
   NearbyConnectionAndroidInfo? connectionInfo;
 
+  FileCreator? fileCreator;
   String? _connectedDeviceId;
   WebSocket? _socket;
   HttpServer? _server;
-  StreamSubscription<ReceivedNearbyMessage>? _messagesSubscription;
+  StreamSubscription? _streamSubscription;
 
   ///
   /// Start a socket with the user's role defined.
@@ -80,27 +82,41 @@ class NearbySocketService {
           _socket!.add(
             jsonEncode(
               {
-                'message': message.value,
+                'content': message.content.toJson(),
                 'sender': sender.toJson(),
               },
             ),
+          );
+          message.content.get(
+            onFile: (fileContent) {
+              final file = File(fileContent.filePath);
+
+              file.openRead().listen(
+                (data) => _socket?.add(data),
+                onDone: () {
+                  _socket?.add(
+                    FileCreator.generateFinishCommand(fileContent.id),
+                  );
+                },
+              );
+            },
           );
         }
         return true;
       }
       return false;
     } else {
-      throw NearbyServiceException.invalidMessage(message.value);
+      throw NearbyServiceException.invalidMessage(message.content);
     }
   }
 
   ///
-  /// Turns off [_messagesSubscription] and [_socket].
+  /// Turns off [_streamSubscription] and [_socket].
   ///
   Future<bool> cancel() async {
     try {
-      await _messagesSubscription?.cancel();
-      _messagesSubscription = null;
+      await _streamSubscription?.cancel();
+      _streamSubscription = null;
       _socket?.close();
       _socket = null;
       _server?.close(force: true);
@@ -182,13 +198,40 @@ class NearbySocketService {
     Logger.debug('Starting socket subscription');
 
     if (_connectedDeviceId != null) {
-      _messagesSubscription = _socket
-          ?.map(MessagesStreamMapper.toMessage)
-          .where((event) => event != null)
-          .cast<ReceivedNearbyMessage>()
-          .map((e) => MessagesStreamMapper.replaceId(e, _connectedDeviceId!))
-          .listen(
-        socketListener.onData,
+      _streamSubscription = _socket?.listen(
+        (event) async {
+          if (fileCreator != null) {
+            if (event is List<int>) {
+              fileCreator!.add(event);
+            } else if (event == fileCreator?.finishCommand) {
+              final file = await fileCreator!.getFile().whenComplete(
+                () {
+                  fileCreator = null;
+                },
+              );
+              socketListener.onFile?.call(file);
+            }
+          } else {
+            try {
+              final message = MessagesStreamMapper.toMessage(event);
+              if (message != null) {
+                final newMessage = MessagesStreamMapper.replaceId(
+                  message,
+                  _connectedDeviceId!,
+                );
+                newMessage.content.get(
+                  onFile: (fileContent) {
+                    fileCreator = FileCreator(content: fileContent);
+                  },
+                );
+
+                socketListener.onMessage(newMessage);
+              }
+            } catch (e) {
+              Logger.error(e);
+            }
+          }
+        },
         onDone: () {
           state.value = CommunicationChannelState.notConnected;
           socketListener.onDone?.call();
@@ -201,10 +244,10 @@ class NearbySocketService {
         cancelOnError: socketListener.cancelOnError,
       );
     }
-    if (_messagesSubscription != null) {
+    if (_streamSubscription != null) {
       state.value = CommunicationChannelState.connected;
       Logger.info('Socket subscription was created successfully');
-      socketListener.onCreated?.call(_messagesSubscription!);
+      socketListener.onCreated?.call();
     } else {
       state.value = CommunicationChannelState.notConnected;
     }

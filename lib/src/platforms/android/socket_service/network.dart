@@ -11,7 +11,6 @@ class _Urls {
 
 class NearbyServiceNetwork {
   final _httpClient = HttpClient();
-  final _random = Random();
 
   Future<HttpClientResponse?> pingServer({
     required String address,
@@ -60,7 +59,7 @@ class NearbyServiceNetwork {
     required int port,
   }) async {
     try {
-      final connectionId = _random.nextInt(1000) + 100;
+      final connectionId = RandomUtils.instance.nextInt(100, 999);
       final url =
           '${_Protocols.ws}$ownerIpAddress:$port${_Urls.ws}?as=$connectionId';
       Logger.debug('Connecting to $url');

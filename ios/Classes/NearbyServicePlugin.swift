@@ -102,7 +102,8 @@ public class NearbyServicePlugin: NSObject, FlutterPlugin {
             }
             
         case "send":
-            if let message: String = getArgument(for: "message", call: call) {
+            if let content: Dictionary<String, AnyObject> = getArgument(for: "content", call: call),
+                let message: String = content["value"] as? String {
                 if let receiver : Dictionary<String, AnyObject> =  getArgument(for: "receiver", call: call),
                    let receiverId : String = receiver["id"] as? String
                 {

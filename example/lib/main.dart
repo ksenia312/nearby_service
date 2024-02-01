@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
@@ -10,6 +11,8 @@ import 'package:provider/provider.dart';
 import 'components/app_snack_bar.dart';
 
 part 'components/action_button.dart';
+
+part 'components/action_dialog.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -197,6 +200,8 @@ class AppService extends ChangeNotifier {
   StreamSubscription? peersSubscription;
   StreamSubscription? connectedDeviceSubscription;
 
+  final _filesAccepts = <String, Future<bool?>>{};
+
   @override
   void dispose() {
     stopListeningAll();
@@ -373,13 +378,26 @@ class AppService extends ChangeNotifier {
 
   Future<void> startCommunicationChannel({
     ValueChanged<ReceivedNearbyMessage>? listener,
+    ValueChanged<File>? onFileSaved,
   }) async {
     final eventListener = NearbyServiceStreamListener(
-      onCreated: (_) {
+      onCreated: () {
         updateState(AppState.communicationChannelCreated);
       },
-      onData: (event) {
+      onMessage: (event) {
         listener?.call(event);
+      },
+      onFile: (event) async {
+        final content = event.content;
+        final fileAcceptFuture = _filesAccepts[content.id];
+
+        if (fileAcceptFuture != null && (await fileAcceptFuture == true)) {
+          final downloadsDir = Directory('storage/emulated/0/Download');
+          final newFile = await event.file.copy(
+            '${downloadsDir.path}/${content.id}_${content.fileName}',
+          );
+          onFileSaved?.call(newFile);
+        }
       },
       onError: (e, [StackTrace? s]) {
         stopListeningAll();
@@ -394,14 +412,28 @@ class AppService extends ChangeNotifier {
     );
   }
 
-  void send(String message) {
+  void sendMessage(String message) {
     if (connectedDevice == null) return;
     _nearbyService.send(
       OutgoingNearbyMessage(
-        value: message,
+        content: NearbyMessageTextContent(value: message),
         receiver: connectedDevice!.info,
       ),
     );
+  }
+
+  void sendFile(String filePath) {
+    if (connectedDevice == null) return;
+    _nearbyService.send(
+      OutgoingNearbyMessage(
+        content: NearbyMessageFileContent(filePath: filePath),
+        receiver: connectedDevice!.info,
+      ),
+    );
+  }
+
+  void setFileAcceptFuture(String id, Future<bool?> future) {
+    _filesAccepts[id] = future;
   }
 
   Future<void> disconnect(NearbyDevice device) async {
@@ -740,15 +772,11 @@ class _ConnectedBody extends StatelessWidget {
                     if (service.communicationChannelState !=
                         CommunicationChannelState.loading)
                       _ActionButton(
-                        onTap: () => service.startCommunicationChannel(
-                          listener: (event) => AppShackBar.show(
-                            Scaffold.of(context).context,
-                            event.value,
-                            subtitle: 'From ${event.sender.displayName} '
-                                '(ID: ${event.sender.id})',
-                          ),
-                        ),
                         title: 'Start communicate',
+                        onTap: () => service.startCommunicationChannel(
+                          listener: (event) => _listener(context, event),
+                          onFileSaved: (file) => _onFileSaved(context, file),
+                        ),
                       )
                     else
                       Text(
@@ -762,6 +790,37 @@ class _ConnectedBody extends StatelessWidget {
       },
     );
   }
+
+  void _listener(BuildContext context, ReceivedNearbyMessage message) {
+    final senderSubtitle = 'From ${message.sender.displayName} '
+        '(ID: ${message.sender.id})';
+    message.content.get(
+      onText: (content) {
+        AppShackBar.show(
+          Scaffold.of(context).context,
+          content.value,
+          subtitle: senderSubtitle,
+        );
+      },
+      onFile: (content) {
+        context.read<AppService>().setFileAcceptFuture(
+              content.id,
+              ActionDialog.show(
+                context,
+                title: 'File request ${content.fileName}',
+                subtitle: senderSubtitle,
+              ),
+            );
+      },
+    );
+  }
+
+  void _onFileSaved(BuildContext context, File file) {
+    AppShackBar.show(
+      Scaffold.of(context).context,
+      'File saved to ${file.path}',
+    );
+  }
 }
 
 class _ConnectedSocketBody extends StatefulWidget {
@@ -773,6 +832,7 @@ class _ConnectedSocketBody extends StatefulWidget {
 
 class _ConnectedSocketBodyState extends State<_ConnectedSocketBody> {
   String message = '';
+  String filePath = '';
 
   @override
   Widget build(BuildContext context) {
@@ -797,6 +857,7 @@ class _ConnectedSocketBodyState extends State<_ConnectedSocketBody> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Expanded(
+                    flex: 2,
                     child: TextField(
                       onChanged: (value) => setState(() {
                         message = value;
@@ -810,15 +871,51 @@ class _ConnectedSocketBodyState extends State<_ConnectedSocketBody> {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  _ActionButton(
-                    title: 'Send',
-                    onTap: () {
-                      service.send(message);
-                    },
+                  Flexible(
+                    child: _ActionButton(
+                      title: 'Send',
+                      onTap: () {
+                        service.sendMessage(message);
+                      },
+                    ),
                   ),
                 ],
               ),
             ),
+            const SizedBox(height: 10),
+            Flexible(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    flex: 2,
+                    child: _ActionButton(
+                      type: _ActionButtonType.warning,
+                      title: 'Choose a file',
+                      onTap: () async {
+                        final result = await FilePicker.platform.pickFiles();
+                        if (result != null && result.isSinglePick) {
+                          setState(() {
+                            filePath = result.paths.first!;
+                          });
+                        }
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Flexible(
+                    child: _ActionButton(
+                      title: 'Send',
+                      onTap: () {
+                        service.sendFile(filePath);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text('Selected file: $filePath'),
           ],
         );
       },

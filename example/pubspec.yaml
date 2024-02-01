@@ -5,16 +5,17 @@ description: Demonstrates how to use the nearby_service plugin.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
 environment:
-  sdk: '>=3.0.6 <4.0.0'
+  sdk: '>=3.0.0 <4.0.0'
 
 dependencies:
+  provider: ^6.1.1
+  file_picker: ^6.1.1
   flutter:
     sdk: flutter
 
   nearby_service:
     path: ../
-  permission_handler: ^11.0.1
-  provider: ^6.1.1
+
 
 
 dev_dependencies:

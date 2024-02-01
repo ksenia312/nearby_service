@@ -147,4 +147,20 @@ class NearbyDeviceInfo {
       'displayName': displayName,
     };
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is NearbyDeviceInfo &&
+          runtimeType == other.runtimeType &&
+          displayName == other.displayName &&
+          id == other.id;
+
+  @override
+  int get hashCode => displayName.hashCode ^ id.hashCode;
+
+  @override
+  String toString() {
+    return 'NearbyDeviceInfo{displayName: $displayName, id: $id}';
+  }
 }

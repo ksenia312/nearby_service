@@ -16,7 +16,7 @@ class NearbyIOSService extends NearbyService {
   final _isBrowser = ValueNotifier<bool>(true);
   final _state = ValueNotifier(CommunicationChannelState.notConnected);
 
-  StreamSubscription<ReceivedNearbyMessage>? _messagesSubscription;
+  StreamSubscription? _messagesSubscription;
 
   @override
   ValueListenable<CommunicationChannelState> get communicationChannelState =>
@@ -165,12 +165,25 @@ class NearbyIOSService extends NearbyService {
     await endCommunicationChannel();
     final eventListener = data.eventListener;
     _messagesSubscription = NearbyServiceIOSPlatform.instance.messagesStream
-        .map(MessagesStreamMapper.toMessage)
-        .where((event) => event?.sender.id == data.connectedDeviceId)
-        .where((event) => event != null)
-        .cast<ReceivedNearbyMessage>()
+        // .map(MessagesStreamMapper.toMessage)
+        // .where((event) => event?.sender.id == data.connectedDeviceId)
+        // .where((event) => event != null)
+        // .cast<ReceivedNearbyMessage>()
         .listen(
-      eventListener.onData,
+      (event) {
+        try {
+          final message = MessagesStreamMapper.toMessage(event);
+          if (message != null && message.sender.id == data.connectedDeviceId) {
+            eventListener.onMessage(message);
+          }
+        } catch (e) {
+          try {
+            eventListener.onFile?.call(event);
+          } catch (e) {
+            Logger.error(e);
+          }
+        }
+      },
       onDone: () {
         _state.value = CommunicationChannelState.notConnected;
         eventListener.onDone?.call();
@@ -184,7 +197,7 @@ class NearbyIOSService extends NearbyService {
     );
     if (_messagesSubscription != null) {
       Logger.info('Messages subscription was created successfully');
-      eventListener.onCreated?.call(_messagesSubscription!);
+      eventListener.onCreated?.call();
       _state.value = CommunicationChannelState.connected;
     } else {
       _state.value = CommunicationChannelState.notConnected;
@@ -215,7 +228,7 @@ class NearbyIOSService extends NearbyService {
     if (message.isValid) {
       return NearbyServiceIOSPlatform.instance.send(message);
     }
-    throw NearbyServiceException.invalidMessage(message.value);
+    throw NearbyServiceException.invalidMessage(message.content);
   }
 
   ///

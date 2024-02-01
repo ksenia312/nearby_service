@@ -9,7 +9,7 @@ abstract class MessagesStreamMapper {
     String id,
   ) {
     return ReceivedNearbyMessage(
-      value: message.value,
+      content: message.content,
       sender: NearbyDeviceInfo(
         id: id,
         displayName: message.sender.displayName,

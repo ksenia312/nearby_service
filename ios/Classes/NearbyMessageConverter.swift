@@ -41,7 +41,7 @@ class NearbyMessageConverter {
                 
                 var result: String?
                 let jsonObject = [
-                    "message": message,
+                    "content": ["value": message, "type": "text"],
                     "sender": ["id": peerID.displayName, "displayName": name],
                 ] as [String : Any]
                 
