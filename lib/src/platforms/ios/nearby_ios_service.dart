@@ -201,6 +201,7 @@ class NearbyIOSService extends NearbyService {
   FutureOr<bool> endCommunicationChannel() async {
     await _messagesSubscription?.cancel();
     _messagesSubscription = null;
+    _state.value = CommunicationChannelState.notConnected;
     Logger.debug('Communication channel was cancelled');
     return true;
   }
@@ -211,7 +212,10 @@ class NearbyIOSService extends NearbyService {
   ///
   @override
   Future<bool> send(OutgoingNearbyMessage message) {
-    return NearbyServiceIOSPlatform.instance.send(message);
+    if (message.isValid) {
+      return NearbyServiceIOSPlatform.instance.send(message);
+    }
+    throw NearbyServiceException.invalidMessage(message.value);
   }
 
   ///
@@ -242,7 +246,7 @@ class NearbyIOSService extends NearbyService {
     if (value) {
       Logger.info(onSuccess);
     } else {
-      Logger.error(onError);
+      throw NearbyServiceException(onError);
     }
   }
 

@@ -5,6 +5,10 @@ class _Protocols {
   static const ws = 'ws://';
 }
 
+class _Urls {
+  static const ws = '/ws';
+}
+
 class NearbyServiceNetwork {
   final _httpClient = HttpClient();
   final _random = Random();
@@ -20,7 +24,7 @@ class NearbyServiceNetwork {
       final response = await request.close();
       return response;
     } catch (e) {
-      Logger.error('Server is unreachable');
+      Logger.error('Server is unreachable: $e');
       return null;
     }
   }
@@ -37,7 +41,7 @@ class NearbyServiceNetwork {
     required int port,
   }) async {
     try {
-      final url = 'ws://$ownerIpAddress:$port';
+      final url = '${_Protocols.ws}$ownerIpAddress:$port';
       Logger.debug('Starting server on $url');
       var server = await HttpServer.bind(
         ownerIpAddress,
@@ -47,8 +51,7 @@ class NearbyServiceNetwork {
       Logger.info('Server running on $url');
       return server;
     } catch (e) {
-      Logger.error('Error starting socket: $e');
-      return null;
+      throw NearbyServiceException('Error starting socket: $e');
     }
   }
 
@@ -58,14 +61,14 @@ class NearbyServiceNetwork {
   }) async {
     try {
       final connectionId = _random.nextInt(1000) + 100;
-      final url = '${_Protocols.ws}$ownerIpAddress:$port/ws?as=$connectionId';
+      final url =
+          '${_Protocols.ws}$ownerIpAddress:$port${_Urls.ws}?as=$connectionId';
       Logger.debug('Connecting to $url');
       final socket = await WebSocket.connect(url);
       Logger.info('Connected to $url');
       return socket;
     } catch (e) {
-      Logger.error('Error connecting to server: $e');
-      return null;
+      throw NearbyServiceException('Error connecting to server: $e');
     }
   }
 }

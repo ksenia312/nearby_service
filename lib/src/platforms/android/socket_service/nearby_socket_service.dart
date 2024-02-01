@@ -27,6 +27,7 @@ class NearbySocketService {
 
   String? _connectedDeviceId;
   WebSocket? _socket;
+  HttpServer? _server;
   StreamSubscription<ReceivedNearbyMessage>? _messagesSubscription;
 
   ///
@@ -72,21 +73,25 @@ class NearbySocketService {
   /// Add [OutgoingNearbyMessage]'s JSON representation to [_socket].
   ///
   Future<bool> send(OutgoingNearbyMessage message) async {
-    if (_socket != null && message.receiver.id == _connectedDeviceId) {
-      final sender = await _manager.getCurrentDeviceInfo();
-      if (sender != null) {
-        _socket!.add(
-          jsonEncode(
-            {
-              'message': message.value,
-              'sender': sender.toJson(),
-            },
-          ),
-        );
+    if (message.isValid) {
+      if (_socket != null && message.receiver.id == _connectedDeviceId) {
+        final sender = await _manager.getCurrentDeviceInfo();
+        if (sender != null) {
+          _socket!.add(
+            jsonEncode(
+              {
+                'message': message.value,
+                'sender': sender.toJson(),
+              },
+            ),
+          );
+        }
+        return true;
       }
-      return true;
+      return false;
+    } else {
+      throw NearbyServiceException.invalidMessage(message.value);
     }
-    return false;
   }
 
   ///
@@ -96,8 +101,12 @@ class NearbySocketService {
     try {
       await _messagesSubscription?.cancel();
       _messagesSubscription = null;
+      _socket?.close();
       _socket = null;
+      _server?.close(force: true);
+      _server = null;
       _connectedDeviceId = null;
+      state.value = CommunicationChannelState.notConnected;
       return true;
     } catch (e) {
       return false;
@@ -142,11 +151,11 @@ class NearbySocketService {
     required int port,
     ValueChanged<HttpRequest>? serverListener,
   }) async {
-    final httpServer = await _network.startServer(
+    _server = await _network.startServer(
       ownerIpAddress: info.ownerIpAddress,
       port: port,
     );
-    httpServer?.listen(
+    _server?.listen(
       (request) async {
         serverListener?.call(request);
         final isPing = await _pingManager.checkPing(request);
@@ -156,7 +165,7 @@ class NearbySocketService {
           return;
         }
 
-        if (request.uri.path == '/ws') {
+        if (request.uri.path == _Urls.ws) {
           _socket = await WebSocketTransformer.upgrade(request);
           _createSocketSubscription(socketListener);
         } else {

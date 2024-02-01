@@ -1,11 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:nearby_service/nearby_service.dart';
 
 ///
 /// Stream Subscription Listener.
 ///
-class NearbyServiceStreamListener<T> {
+class NearbyServiceStreamListener {
   ///
   /// It is required to pass the [onData] parameter to process the
   /// data that came through the stream.
@@ -18,8 +19,8 @@ class NearbyServiceStreamListener<T> {
     this.cancelOnError,
   });
 
-  final ValueChanged<T> onData;
-  final ValueChanged<StreamSubscription<T>>? onCreated;
+  final ValueChanged<ReceivedNearbyMessage> onData;
+  final ValueChanged<StreamSubscription<ReceivedNearbyMessage>>? onCreated;
   final VoidCallback? onDone;
   final void Function(Object, [StackTrace])? onError;
   final bool? cancelOnError;

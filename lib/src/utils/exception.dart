@@ -30,5 +30,11 @@ class NearbyServiceException implements Exception {
     );
   }
 
+  factory NearbyServiceException.invalidMessage(String value) {
+    return NearbyServiceException(
+      'The message="$value" is not valid',
+    );
+  }
+
   final Object? error;
 }

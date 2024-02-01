@@ -53,15 +53,15 @@ class MyApp extends StatelessWidget {
                       ),
                       if (service.currentDeviceInfo != null)
                         Text(
-                          'Device Name: ${service.currentDeviceInfo!.displayName}\n'
-                          '${Platform.isIOS ? 'Device ID: ${service.currentDeviceInfo!.id}' : ''}',
+                          'Device Name: ${service.currentDeviceInfo!.displayName}'
+                          '${Platform.isIOS ? '\nDevice ID: ${service.currentDeviceInfo!.id}' : ''}',
                         ),
                       if (Platform.isIOS)
                         Text(
                           'You are ${service.isIOSBrowser ? 'going to find your friend' : 'waiting for another user to connect'}',
                         ),
                       Text(
-                        'Communication channel state: ${service.communicationChannelState.name.toUpperCase()}',
+                        'Communication channel state: ${service.communicationChannelState.previewName}',
                       )
                     ],
                   ),
@@ -172,6 +172,16 @@ enum AppState {
   }
 }
 
+extension on CommunicationChannelState {
+  String get previewName {
+    return switch (this) {
+      CommunicationChannelState.notConnected => 'Not connected',
+      CommunicationChannelState.loading => 'Connecting',
+      CommunicationChannelState.connected => 'Connected',
+    };
+  }
+}
+
 class AppService extends ChangeNotifier {
   late final _nearbyService = NearbyService.getInstance()
     ..communicationChannelState.addListener(notifyListeners);
@@ -186,6 +196,12 @@ class AppService extends ChangeNotifier {
 
   StreamSubscription? peersSubscription;
   StreamSubscription? connectedDeviceSubscription;
+
+  @override
+  void dispose() {
+    stopListeningAll();
+    super.dispose();
+  }
 
   CommunicationChannelState get communicationChannelState {
     return _nearbyService.communicationChannelState.value;
@@ -328,7 +344,7 @@ class AppService extends ChangeNotifier {
           final wasConnected = connectedDevice?.status.isConnected ?? false;
           final nowConnected = event?.status.isConnected ?? false;
           if (wasConnected && !nowConnected) {
-            restart();
+            stopListeningAll();
             return;
           }
           connectedDevice = event;
@@ -358,7 +374,7 @@ class AppService extends ChangeNotifier {
   Future<void> startCommunicationChannel({
     ValueChanged<ReceivedNearbyMessage>? listener,
   }) async {
-    final eventListener = NearbyServiceStreamListener<ReceivedNearbyMessage>(
+    final eventListener = NearbyServiceStreamListener(
       onCreated: (_) {
         updateState(AppState.communicationChannelCreated);
       },
@@ -366,7 +382,7 @@ class AppService extends ChangeNotifier {
         listener?.call(event);
       },
       onError: (e, [StackTrace? s]) {
-        restart();
+        stopListeningAll();
       },
     );
 
@@ -396,17 +412,15 @@ class AppService extends ChangeNotifier {
         print(e);
       }
     } finally {
-      await restart();
+      await stopListeningAll();
     }
     notifyListeners();
   }
 
-  Future<void> restart() async {
+  Future<void> stopListeningAll() async {
     await stopListeningConnectedDevice();
     await stopListeningPeers();
     await stopDiscovery();
-
-    await discover();
   }
 
   void updateState(AppState state, {bool shouldNotify = true}) {
@@ -768,7 +782,7 @@ class _ConnectedSocketBodyState extends State<_ConnectedSocketBody> {
         if (device == null) {
           return Center(
             child: _ActionButton(
-              onTap: service.restart,
+              onTap: service.stopListeningAll,
               title: 'Restart',
             ),
           );

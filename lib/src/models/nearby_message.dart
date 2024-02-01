@@ -12,6 +12,13 @@ abstract class NearbyMessage {
 
   final String value;
 
+  ///
+  /// Checks if [value] is not empty
+  ///
+  bool get isValid {
+    return value.isNotEmpty;
+  }
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||

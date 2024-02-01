@@ -28,7 +28,7 @@ class NearbyCommunicationChannelData {
   ///
   /// Listener for message stream changes.
   ///
-  final NearbyServiceStreamListener<ReceivedNearbyMessage> eventListener;
+  final NearbyServiceStreamListener eventListener;
 
   ///
   /// Android-specific connection data.
