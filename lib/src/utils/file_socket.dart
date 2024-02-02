@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 
@@ -15,15 +16,16 @@ class FilesSocket {
     _socket.listen(
       (event) async {
         if (event is List<int>) {
-          saveChunk(event);
+          addChunk(event);
+        } else if (event == separateCommandOf(_currentFileIndex)) {
+          _futures.add(_createFile(_currentFileIndex));
+          _currentFileIndex = _currentFileIndex + 1;
+          _bytesTable['$_currentFileIndex'] = [];
         } else if (event == finishCommand) {
-          final file = await getFile().whenComplete(
-            () {
-              onDestroy(this);
-            },
-          );
-          Logger.info('File ${file.content.fileName} was created');
-          listener?.onData.call(file);
+          await Future.wait(_futures);
+          Logger.info('Files pack ${content.id} was created');
+          listener?.onData.call(_files);
+          onDestroy(this);
         }
       },
       onError: listener?.onError,
@@ -33,43 +35,52 @@ class FilesSocket {
     listener?.onCreated?.call();
   }
 
-  static const _finishCommand = '@@FINISH_SENDING_FILE_';
+  static const finishCommand = '_@@FINISH_SENDING_FILE_';
 
-  static String generateFinishCommand(String id) {
-    return '$_finishCommand$id';
-  }
+  static const separateCommand = '_@@SEPARATE_SENDING_FILE_';
+
+  static String separateCommandOf(int index) => '$separateCommand$index';
+
+  final NearbyMessageFilesContent content;
 
   final WebSocket _socket;
-  final NearbyMessageFileContent content;
-  final _bytes = <int>[];
+  final _files = <NearbyFile>[];
+  final _bytesTable = <String, List<int>>{'0': []};
+  final _futures = <Future>[];
 
-  int chunksCount = 0;
-
-  String get finishCommand => '$_finishCommand${content.id}';
+  int _chunksCount = 0;
+  int _currentFileIndex = 0;
 
   void sendData(dynamic event) {
     _socket.add(event);
   }
 
-  void saveChunk(List<int> value) {
-    _bytes.addAll(value);
-    chunksCount = chunksCount + 1;
-    final logStep = min(pow(10, chunksCount.toString().length - 1), 100);
-    if (chunksCount % logStep == 0) {
-      Logger.debug('Got $chunksCount chunks for the file ${content.fileName}');
+  void addChunk(List<int> value) {
+    _bytesTable['$_currentFileIndex']?.addAll(value);
+    _chunksCount = _chunksCount + 1;
+    final logStep = min(pow(10, _chunksCount.toString().length - 1), 100);
+    if (_chunksCount % logStep == 0) {
+      Logger.debug(
+        'Got $_chunksCount chunks for the file ${content.files[_currentFileIndex].name}',
+      );
     }
   }
 
-  Future<NearbyFile> getFile() async {
+  Future<void> _createFile(int index) async {
     try {
+      final bytes = _bytesTable['$index']!;
+      final fileInfo = content.files[index];
       final directory = await getTemporaryDirectory();
-      final file = File('${directory.path}/${content.fileName}');
+      final file = File('${directory.path}/${fileInfo.name}');
 
-      await file.writeAsBytes(_bytes);
-      return NearbyFile(file: file, content: content);
+      await file.writeAsBytes(bytes);
+
+      final nearbyFile = NearbyFile(file: file, info: fileInfo);
+      _files.add(nearbyFile);
+
+      Logger.info('File ${nearbyFile.info.name} was created');
     } catch (e) {
       Logger.error(e);
-      rethrow;
     }
   }
 

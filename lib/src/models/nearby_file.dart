@@ -5,24 +5,22 @@ import 'package:nearby_service/nearby_service.dart';
 /// A representation of a file that can be got from the Nearby Service's
 /// communication channel.
 ///
-/// You can use [id] to compare it to the id from [NearbyMessageFileRequest.id].
-///
 /// From the communication channel, you usually get
 /// the [NearbyMessageFileRequest] request first. After that, you get [NearbyFile].
 ///
 class NearbyFile {
   ///
-  /// Pass [content] assigned to file to be sent.
+  /// Pass [info] assigned to file to be sent.
   ///
   const NearbyFile({
-    required this.content,
+    required this.info,
     required this.file,
   });
 
   ///
   /// Quick info about the file
   ///
-  final NearbyMessageFileContent content;
+  final NearbyFileInfo info;
 
   ///
   /// A file that you can save in your phone if needed
@@ -34,14 +32,56 @@ class NearbyFile {
       identical(this, other) ||
       other is NearbyFile &&
           runtimeType == other.runtimeType &&
-          content == other.content &&
+          info == other.info &&
           file == other.file;
 
   @override
-  int get hashCode => content.hashCode ^ file.hashCode;
+  int get hashCode => info.hashCode ^ file.hashCode;
 
   @override
   String toString() {
-    return 'NearbyFile{content: $content, file: $file}';
+    return 'NearbyFile{info: $info, file: $file}';
+  }
+}
+
+class NearbyFileInfo {
+  const NearbyFileInfo({required this.path, this.sizeBytes});
+
+  factory NearbyFileInfo.fromJson(Map<String, dynamic>? json) {
+    return NearbyFileInfo(
+      path: json?['path'] ?? '',
+    );
+  }
+
+  final String path;
+  final int? sizeBytes;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is NearbyFileInfo &&
+          runtimeType == other.runtimeType &&
+          path == other.path;
+
+  @override
+  int get hashCode => path.hashCode;
+
+  Map<String, dynamic> toJson() {
+    return {
+      'path': path,
+    };
+  }
+
+  String get name {
+    try {
+      return path.split('/').last;
+    } catch (e) {
+      throw NearbyServiceException('Can\'t get fileName from $path');
+    }
+  }
+
+  @override
+  String toString() {
+    return 'NearbyFileInfo{path: $path}';
   }
 }

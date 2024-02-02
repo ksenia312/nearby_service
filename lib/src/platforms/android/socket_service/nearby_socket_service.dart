@@ -92,9 +92,9 @@ class NearbySocketService {
               },
             ),
           );
-          if (message.content is NearbyMessageFileContent) {
+          if (message.content is NearbyMessageFilesContent) {
             _fileSocketsManager.handleFileMessageContent(
-              message.content as NearbyMessageFileContent,
+              message.content as NearbyMessageFilesContent,
               androidData: _androidData,
               isReceived: false,
             );
@@ -220,9 +220,9 @@ class NearbySocketService {
                 message,
                 _connectedDeviceId!,
               );
-              if (newMessage.content is NearbyMessageFileContent) {
+              if (newMessage.content is NearbyMessageFilesContent) {
                 _fileSocketsManager.handleFileMessageContent(
-                  newMessage.content as NearbyMessageFileContent,
+                  newMessage.content as NearbyMessageFilesContent,
                   androidData: _androidData,
                   isReceived: true,
                 );

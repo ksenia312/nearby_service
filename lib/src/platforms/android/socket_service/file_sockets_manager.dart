@@ -23,7 +23,7 @@ class FileSocketsManager {
   }
 
   Future<void> handleFileMessageContent(
-    NearbyMessageFileContent content, {
+    NearbyMessageFilesContent content, {
     required NearbyAndroidCommunicationChannelData androidData,
     required bool isReceived,
   }) async {
@@ -56,7 +56,7 @@ class FileSocketsManager {
   }
 
   Future<void> _handleClientFileContent(
-    NearbyMessageFileContent content, {
+    NearbyMessageFilesContent content, {
     required NearbyAndroidCommunicationChannelData connectionData,
     required String ownerIpAddress,
   }) async {
@@ -86,7 +86,7 @@ class FileSocketsManager {
             ),
           );
           Logger.info(
-            'The file socket was created for the file ${content.fileName}',
+            'The file socket was created for the files pack ${content.id}',
           );
         } else {
           await Future.delayed(
@@ -105,7 +105,7 @@ class FileSocketsManager {
   }
 
   Future<void> _handleServerFileContent(
-    NearbyMessageFileContent content,
+    NearbyMessageFilesContent content,
   ) async {
     MapEntry<String, HttpRequest>? request;
     try {
@@ -127,28 +127,45 @@ class FileSocketsManager {
         ),
       );
       _serverWaitingContents.remove(content.id);
-      Logger.info('Created file socket for ${content.fileName}');
+      Logger.info('Created a socket for the files pack ${content.id}');
     }
   }
 
-  Future<void> _tryTransferData(NearbyMessageFileContent content) async {
-    final fileSocket = _find(content.id);
-    if (fileSocket != null) {
-      Logger.info('Start transferring a file ${content.fileName}');
-      final file = File(content.filePath);
+  Future<void> _tryTransferData(NearbyMessageFilesContent content) async {
+    Logger.debug('Start transferring the files pack ${content.id}');
+    final filesSocket = _find(content.id);
+    if (filesSocket != null) {
+      for (var i = 0; i < content.files.length; i++) {
+        try {
+          final fileInfo = content.files[i];
+          await _streamFile(
+            content.id,
+            filesSocket: filesSocket,
+            file: File(fileInfo.path),
+          )?.asFuture();
 
-      file.openRead().listen(
-        (data) {
-          fileSocket.sendData(data);
-        },
-        onDone: () {
-          Logger.debug('Sent finished command for ${content.fileName}');
-          fileSocket.sendData(
-            FilesSocket.generateFinishCommand(fileSocket.content.id),
-          );
-        },
-      );
+          filesSocket.sendData(FilesSocket.separateCommandOf(i));
+          Logger.debug('Sent separate command for file №$i');
+        } catch (e) {
+          Logger.error(e);
+          continue;
+        }
+      }
+      filesSocket.sendData(FilesSocket.finishCommand);
+      Logger.debug('Sent finish command for the pack ${content.id}');
     }
+  }
+
+  StreamSubscription? _streamFile(
+    String id, {
+    required FilesSocket filesSocket,
+    required File file,
+  }) {
+    return file.openRead().listen(
+      (data) {
+        filesSocket.sendData(data);
+      },
+    );
   }
 
   FilesSocket? _find(String id) {

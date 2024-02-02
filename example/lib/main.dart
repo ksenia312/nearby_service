@@ -379,7 +379,7 @@ class AppService extends ChangeNotifier {
 
   Future<void> startCommunicationChannel({
     ValueChanged<ReceivedNearbyMessage>? listener,
-    ValueChanged<File>? onFileSaved,
+    ValueChanged<List<File>>? onFilesSaved,
   }) async {
     final messagesListener = NearbyServiceMessagesListener(
       onCreated: () {
@@ -394,12 +394,16 @@ class AppService extends ChangeNotifier {
     );
     final filesListener = NearbyServiceFilesListener(
       onData: (event) async {
-        final content = event.content;
-        final downloadsDir = Directory('storage/emulated/0/Download');
-        final newFile = await event.file.copy(
-          '${downloadsDir.path}/${content.id}_${content.fileName}',
-        );
-        onFileSaved?.call(newFile);
+        final files = <File>[];
+        for (final nearbyFile in event) {
+          final content = nearbyFile.info;
+          final downloadsDir = Directory('storage/emulated/0/Download');
+          final newFile = await nearbyFile.file.copy(
+            '${downloadsDir.path}/${content.name}',
+          );
+          files.add(newFile);
+        }
+        onFilesSaved?.call(files);
       },
     );
 
@@ -413,26 +417,33 @@ class AppService extends ChangeNotifier {
   }
 
   void sendMessage(String message) {
+    try {
+      if (connectedDevice == null) return;
+      _nearbyService.send(
+        OutgoingNearbyMessage(
+          content: NearbyMessageTextContent(value: message),
+          receiver: connectedDevice!.info,
+        ),
+      );
+    } catch (e, s) {
+      print(e);
+      print(s);
+    }
+  }
+
+  void sendFilesRequest(List<String> paths) {
     if (connectedDevice == null) return;
     _nearbyService.send(
       OutgoingNearbyMessage(
-        content: NearbyMessageTextContent(value: message),
+        content: NearbyMessageFileRequest(
+          files: [...paths.map((e) => NearbyFileInfo(path: e))],
+        ),
         receiver: connectedDevice!.info,
       ),
     );
   }
 
-  void sendFileRequest(String filePath) {
-    if (connectedDevice == null) return;
-    _nearbyService.send(
-      OutgoingNearbyMessage(
-        content: NearbyMessageFileRequest(filePath: filePath),
-        receiver: connectedDevice!.info,
-      ),
-    );
-  }
-
-  void sendFileAccept(NearbyMessageFileRequest request) {
+  void sendFilesAccept(NearbyMessageFileRequest request) {
     if (connectedDevice == null) return;
     _nearbyService.send(
       OutgoingNearbyMessage(
@@ -788,7 +799,7 @@ class _ConnectedBody extends StatelessWidget {
                         title: 'Start communicate',
                         onTap: () => service.startCommunicationChannel(
                           listener: (event) => _listener(context, event),
-                          onFileSaved: (file) => _onFileSaved(context, file),
+                          onFilesSaved: (files) => _onFileSaved(context, files),
                         ),
                       )
                     else
@@ -818,21 +829,21 @@ class _ConnectedBody extends StatelessWidget {
       onFileRequest: (content) {
         ActionDialog.show(
           context,
-          title: 'File request ${content.fileName}',
+          title: 'Files request. Files count: ${content.files.length}',
           subtitle: senderSubtitle,
         ).then((value) {
           if (value == true) {
-            context.read<AppService>().sendFileAccept(content);
+            context.read<AppService>().sendFilesAccept(content);
           }
         });
       },
     );
   }
 
-  void _onFileSaved(BuildContext context, File file) {
+  void _onFileSaved(BuildContext context, List<File> files) {
     AppShackBar.show(
       Scaffold.of(context).context,
-      'File saved to ${file.path}',
+      '${files.length} files saved! \n ${files.map((e) => e.path).join('\n')}',
     );
   }
 }
@@ -846,7 +857,7 @@ class _ConnectedSocketBody extends StatefulWidget {
 
 class _ConnectedSocketBodyState extends State<_ConnectedSocketBody> {
   String message = '';
-  String filePath = '';
+  List<String> filePaths = [];
 
   @override
   Widget build(BuildContext context) {
@@ -905,14 +916,18 @@ class _ConnectedSocketBodyState extends State<_ConnectedSocketBody> {
                     flex: 2,
                     child: _ActionButton(
                       type: _ActionButtonType.warning,
-                      title: 'Choose a file',
+                      title: 'Choose files',
                       onTap: () async {
-                        final result = await FilePicker.platform.pickFiles();
-                        if (result != null && result.isSinglePick) {
-                          setState(() {
-                            filePath = result.paths.first!;
-                          });
-                        }
+                        final result = await FilePicker.platform.pickFiles(
+                          allowMultiple: true,
+                        );
+                        setState(() {
+                          filePaths = [
+                            ...?result?.paths
+                                .where((e) => e != null)
+                                .cast<String>(),
+                          ];
+                        });
                       },
                     ),
                   ),
@@ -921,7 +936,7 @@ class _ConnectedSocketBodyState extends State<_ConnectedSocketBody> {
                     child: _ActionButton(
                       title: 'Send',
                       onTap: () {
-                        service.sendFileRequest(filePath);
+                        service.sendFilesRequest(filePaths);
                       },
                     ),
                   ),
@@ -929,7 +944,8 @@ class _ConnectedSocketBodyState extends State<_ConnectedSocketBody> {
               ),
             ),
             const SizedBox(height: 10),
-            Text('Selected file: $filePath'),
+            const Text('Selected files:', style: TextStyle(fontSize: 18)),
+            Text(filePaths.join('\n')),
           ],
         );
       },
