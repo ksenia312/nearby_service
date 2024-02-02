@@ -399,7 +399,7 @@ class AppService extends ChangeNotifier {
           final content = nearbyFile.info;
           final downloadsDir = Directory('storage/emulated/0/Download');
           final newFile = await nearbyFile.file.copy(
-            '${downloadsDir.path}/${content.name}',
+            '${downloadsDir.path}/${DateTime.now().microsecondsSinceEpoch}.${content.extension}',
           );
           files.add(newFile);
         }

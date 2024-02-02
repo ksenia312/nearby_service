@@ -80,6 +80,14 @@ class NearbyFileInfo {
     }
   }
 
+  String get extension {
+    try {
+      return name.split('.').last;
+    } catch (e) {
+      throw NearbyServiceException('Can\'t get extension from $name');
+    }
+  }
+
   @override
   String toString() {
     return 'NearbyFileInfo{path: $path}';
