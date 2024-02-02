@@ -425,9 +425,10 @@ class AppService extends ChangeNotifier {
           receiver: connectedDevice!.info,
         ),
       );
-    } catch (e, s) {
-      print(e);
-      print(s);
+    } catch (e) {
+      if (kDebugMode) {
+        print(e);
+      }
     }
   }
 
