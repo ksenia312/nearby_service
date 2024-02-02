@@ -4,7 +4,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:nearby_service/nearby_service.dart';
-import 'package:nearby_service/src/platforms/android/socket_service/file_creator.dart';
+import 'package:nearby_service/src/utils/file_socket.dart';
 import 'package:nearby_service/src/utils/logger.dart';
 import 'package:nearby_service/src/utils/random.dart';
 import 'package:nearby_service/src/utils/stream_mapper.dart';
@@ -13,24 +13,28 @@ part 'ping_manager.dart';
 
 part 'network.dart';
 
+part 'file_sockets_manager.dart';
+
 ///
 /// A service for creating a communication channel on the Android platform.
 ///
 class NearbySocketService {
-  NearbySocketService(this._manager);
+  NearbySocketService(this._service);
 
-  final NearbyAndroidService _manager;
+  final NearbyAndroidService _service;
   final _pingManager = NearbySocketPingManager();
   final _network = NearbyServiceNetwork();
+  late final _fileSocketsManager = FileSocketsManager(_network, _service);
 
   final state = ValueNotifier(CommunicationChannelState.notConnected);
-  NearbyConnectionAndroidInfo? connectionInfo;
 
-  FileCreator? fileCreator;
+  NearbyAndroidCommunicationChannelData _androidData =
+      const NearbyAndroidCommunicationChannelData();
+
   String? _connectedDeviceId;
   WebSocket? _socket;
   HttpServer? _server;
-  StreamSubscription? _streamSubscription;
+  StreamSubscription? _messagesSubscription;
 
   ///
   /// Start a socket with the user's role defined.
@@ -46,24 +50,25 @@ class NearbySocketService {
     required NearbyCommunicationChannelData data,
   }) async {
     state.value = CommunicationChannelState.loading;
+
+    _androidData = data.androidData;
     _connectedDeviceId = data.connectedDeviceId;
-    connectionInfo = await _manager.getConnectionInfo();
-    if (connectionInfo != null && connectionInfo!.groupFormed) {
-      final androidData = data.androidData;
-      if (connectionInfo!.isGroupOwner) {
+
+    _fileSocketsManager.setListener(data.filesListener);
+
+    final info = await _service.getConnectionInfo();
+
+    if (info != null && info.groupFormed) {
+      if (info.isGroupOwner) {
         await _startServerSubscription(
-          serverListener: androidData.serverListener,
-          socketListener: data.eventListener,
-          info: connectionInfo!,
-          port: androidData.port,
+          socketListener: data.messagesListener,
+          info: info,
         );
         return true;
       } else {
         await _tryConnectClient(
-          socketListener: data.eventListener,
-          reconnectInterval: androidData.clientReconnectInterval,
-          info: connectionInfo!,
-          port: androidData.port,
+          socketListener: data.messagesListener,
+          info: info,
         );
         return true;
       }
@@ -77,7 +82,7 @@ class NearbySocketService {
   Future<bool> send(OutgoingNearbyMessage message) async {
     if (message.isValid) {
       if (_socket != null && message.receiver.id == _connectedDeviceId) {
-        final sender = await _manager.getCurrentDeviceInfo();
+        final sender = await _service.getCurrentDeviceInfo();
         if (sender != null) {
           _socket!.add(
             jsonEncode(
@@ -87,20 +92,13 @@ class NearbySocketService {
               },
             ),
           );
-          message.content.get(
-            onFile: (fileContent) {
-              final file = File(fileContent.filePath);
-
-              file.openRead().listen(
-                (data) => _socket?.add(data),
-                onDone: () {
-                  _socket?.add(
-                    FileCreator.generateFinishCommand(fileContent.id),
-                  );
-                },
-              );
-            },
-          );
+          if (message.content is NearbyMessageFileContent) {
+            _fileSocketsManager.handleFileMessageContent(
+              message.content as NearbyMessageFileContent,
+              androidData: _androidData,
+              isReceived: false,
+            );
+          }
         }
         return true;
       }
@@ -111,17 +109,20 @@ class NearbySocketService {
   }
 
   ///
-  /// Turns off [_streamSubscription] and [_socket].
+  /// Turns off [_messagesSubscription] and [_socket].
   ///
   Future<bool> cancel() async {
     try {
-      await _streamSubscription?.cancel();
-      _streamSubscription = null;
+      await _messagesSubscription?.cancel();
+      await _fileSocketsManager.closeAll();
+
+      _messagesSubscription = null;
       _socket?.close();
       _socket = null;
       _server?.close(force: true);
       _server = null;
       _connectedDeviceId = null;
+
       state.value = CommunicationChannelState.notConnected;
       return true;
     } catch (e) {
@@ -130,50 +131,45 @@ class NearbySocketService {
   }
 
   Future<void> _tryConnectClient({
-    required NearbyServiceStreamListener socketListener,
+    required NearbyServiceMessagesListener socketListener,
     required NearbyConnectionAndroidInfo info,
-    required int port,
-    required Duration reconnectInterval,
   }) async {
     final response = await _network.pingServer(
       address: info.ownerIpAddress,
-      port: port,
+      port: _androidData.port,
     );
 
     if (await _pingManager.checkPong(response)) {
       _socket = await _network.connectToSocket(
         ownerIpAddress: info.ownerIpAddress,
-        port: port,
+        port: _androidData.port,
+        socketType: NearbySocketType.message,
       );
       _createSocketSubscription(socketListener);
     } else {
       Logger.debug(
-        'Retry to connect to the server in ${reconnectInterval.inSeconds}s',
+        'Retry to connect to the server in ${_androidData.clientReconnectInterval.inSeconds}s',
       );
-      Future.delayed(reconnectInterval, () {
+      Future.delayed(_androidData.clientReconnectInterval, () {
         _tryConnectClient(
           socketListener: socketListener,
-          reconnectInterval: reconnectInterval,
           info: info,
-          port: port,
         );
       });
     }
   }
 
   Future<void> _startServerSubscription({
-    required NearbyServiceStreamListener socketListener,
+    required NearbyServiceMessagesListener socketListener,
     required NearbyConnectionAndroidInfo info,
-    required int port,
-    ValueChanged<HttpRequest>? serverListener,
   }) async {
     _server = await _network.startServer(
       ownerIpAddress: info.ownerIpAddress,
-      port: port,
+      port: _androidData.port,
     );
     _server?.listen(
       (request) async {
-        serverListener?.call(request);
+        _androidData.serverListener?.call(request);
         final isPing = await _pingManager.checkPing(request);
         if (isPing) {
           Logger.debug('Server got ping request');
@@ -182,8 +178,13 @@ class NearbySocketService {
         }
 
         if (request.uri.path == _Urls.ws) {
-          _socket = await WebSocketTransformer.upgrade(request);
-          _createSocketSubscription(socketListener);
+          final type = NearbySocketType.fromRequest(request);
+          if (type == NearbySocketType.message) {
+            _socket = await WebSocketTransformer.upgrade(request);
+            _createSocketSubscription(socketListener);
+          } else {
+            _fileSocketsManager.onWsRequest(request);
+          }
         } else {
           request.response
             ..statusCode = HttpStatus.notFound
@@ -194,43 +195,44 @@ class NearbySocketService {
     );
   }
 
-  void _createSocketSubscription(NearbyServiceStreamListener socketListener) {
+  void _createSocketSubscription(NearbyServiceMessagesListener socketListener) {
     Logger.debug('Starting socket subscription');
 
     if (_connectedDeviceId != null) {
-      _streamSubscription = _socket?.listen(
+      _messagesSubscription = _socket?.listen(
         (event) async {
-          if (fileCreator != null) {
-            if (event is List<int>) {
-              fileCreator!.add(event);
-            } else if (event == fileCreator?.finishCommand) {
-              final file = await fileCreator!.getFile().whenComplete(
-                () {
-                  fileCreator = null;
-                },
+          // if (fileLoaders != null) {
+          //   if (event is List<int>) {
+          //     fileLoaders!.add(event);
+          //   } else if (event == fileLoaders?.finishCommand) {
+          //     final file = await fileLoaders!.getFile().whenComplete(
+          //       () {
+          //         fileLoaders = null;
+          //       },
+          //     );
+          //     socketListener.onFile?.call(file);
+          //   }
+          // } else {
+          try {
+            final message = MessagesStreamMapper.toMessage(event);
+            if (message != null) {
+              final newMessage = MessagesStreamMapper.replaceId(
+                message,
+                _connectedDeviceId!,
               );
-              socketListener.onFile?.call(file);
-            }
-          } else {
-            try {
-              final message = MessagesStreamMapper.toMessage(event);
-              if (message != null) {
-                final newMessage = MessagesStreamMapper.replaceId(
-                  message,
-                  _connectedDeviceId!,
+              if (newMessage.content is NearbyMessageFileContent) {
+                _fileSocketsManager.handleFileMessageContent(
+                  newMessage.content as NearbyMessageFileContent,
+                  androidData: _androidData,
+                  isReceived: true,
                 );
-                newMessage.content.get(
-                  onFile: (fileContent) {
-                    fileCreator = FileCreator(content: fileContent);
-                  },
-                );
-
-                socketListener.onMessage(newMessage);
               }
-            } catch (e) {
-              Logger.error(e);
+              socketListener.onData(newMessage);
             }
+          } catch (e) {
+            Logger.error(e);
           }
+          // }
         },
         onDone: () {
           state.value = CommunicationChannelState.notConnected;
@@ -244,7 +246,7 @@ class NearbySocketService {
         cancelOnError: socketListener.cancelOnError,
       );
     }
-    if (_streamSubscription != null) {
+    if (_messagesSubscription != null) {
       state.value = CommunicationChannelState.connected;
       Logger.info('Socket subscription was created successfully');
       socketListener.onCreated?.call();

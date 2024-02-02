@@ -20,14 +20,6 @@ class NearbyAndroidService extends NearbyService {
   }
 
   ///
-  /// The connection information of a Wi-Fi p2p group connection
-  /// from the socket service.
-  ///
-  NearbyConnectionAndroidInfo? get connectionInfo {
-    return _socketService.connectionInfo;
-  }
-
-  ///
   /// Initializes Android [WifiP2PManager](https://developer.android.com/reference/android/net/wifi/p2p/WifiP2pManager)
   ///
   /// Starts listening for changes to the P2P network.

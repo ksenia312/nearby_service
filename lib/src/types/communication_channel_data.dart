@@ -16,7 +16,8 @@ class NearbyCommunicationChannelData {
   ///
   const NearbyCommunicationChannelData(
     this.connectedDeviceId, {
-    required this.eventListener,
+    required this.messagesListener,
+    this.filesListener,
     this.androidData = const NearbyAndroidCommunicationChannelData(),
   });
 
@@ -28,7 +29,12 @@ class NearbyCommunicationChannelData {
   ///
   /// Listener for message stream changes.
   ///
-  final NearbyServiceStreamListener eventListener;
+  final NearbyServiceMessagesListener messagesListener;
+
+  ///
+  /// Listener for message stream changes.
+  ///
+  final NearbyServiceFilesListener? filesListener;
 
   ///
   /// Android-specific connection data.
@@ -41,18 +47,18 @@ class NearbyCommunicationChannelData {
       other is NearbyCommunicationChannelData &&
           runtimeType == other.runtimeType &&
           connectedDeviceId == other.connectedDeviceId &&
-          eventListener == other.eventListener &&
+          messagesListener == other.messagesListener &&
           androidData == other.androidData;
 
   @override
   int get hashCode =>
       connectedDeviceId.hashCode ^
-      eventListener.hashCode ^
+      messagesListener.hashCode ^
       androidData.hashCode;
 
   @override
   String toString() {
-    return 'NearbyCommunicationChannelData{connectedDeviceId: $connectedDeviceId, eventListener: $eventListener, androidData: $androidData}';
+    return 'NearbyCommunicationChannelData{connectedDeviceId: $connectedDeviceId, eventListener: $messagesListener, androidData: $androidData}';
   }
 }
 

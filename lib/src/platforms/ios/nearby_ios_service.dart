@@ -163,7 +163,8 @@ class NearbyIOSService extends NearbyService {
     Logger.debug('Creating messages subscription');
     _state.value = CommunicationChannelState.loading;
     await endCommunicationChannel();
-    final eventListener = data.eventListener;
+    final eventListener = data.messagesListener;
+    final filesListener = data.filesListener;
     _messagesSubscription = NearbyServiceIOSPlatform.instance.messagesStream
         // .map(MessagesStreamMapper.toMessage)
         // .where((event) => event?.sender.id == data.connectedDeviceId)
@@ -174,11 +175,11 @@ class NearbyIOSService extends NearbyService {
         try {
           final message = MessagesStreamMapper.toMessage(event);
           if (message != null && message.sender.id == data.connectedDeviceId) {
-            eventListener.onMessage(message);
+            eventListener.onData(message);
           }
         } catch (e) {
           try {
-            eventListener.onFile?.call(event);
+            filesListener?.onData(event);
           } catch (e) {
             Logger.error(e);
           }

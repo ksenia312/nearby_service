@@ -5,12 +5,13 @@ import 'package:nearby_service/src/utils/random.dart';
 /// Type of the message.
 ///
 /// If [text], it will be a text message.
-/// If [file], it will be a file request. After accepting request,
+/// If [fileRequest], it will be a file request. After accepting request,
 /// user can get file stream from connected device.
 ///
 enum NearbyMessageContentType {
   text,
-  file;
+  fileRequest,
+  fileResponse;
 
   ///
   /// Checks if this is [NearbyMessageContentType.text]
@@ -20,10 +21,17 @@ enum NearbyMessageContentType {
   }
 
   ///
-  /// Checks if this is [NearbyMessageContentType.file]
+  /// Checks if this is [NearbyMessageContentType.fileRequest]
   ///
-  bool get isFile {
-    return this == NearbyMessageContentType.file;
+  bool get isFileRequest {
+    return this == NearbyMessageContentType.fileRequest;
+  }
+
+  ///
+  /// Checks if this is [NearbyMessageContentType.fileResponse]
+  ///
+  bool get isFileResponse {
+    return this == NearbyMessageContentType.fileResponse;
   }
 }
 
@@ -35,7 +43,7 @@ abstract class NearbyMessageContent {
   const NearbyMessageContent(this._type);
 
   ///
-  /// Contains the conditional logic of creating [NearbyMessageFileContent]
+  /// Contains the conditional logic of creating [NearbyMessageFileRequest]
   /// or [NearbyMessageTextContent] by `type` field of [json].
   ///
   factory NearbyMessageContent.fromJson(Map<String, dynamic>? json) {
@@ -43,10 +51,12 @@ abstract class NearbyMessageContent {
       final type = NearbyMessageContentType.values.firstWhere(
         (e) => e.name == json?['type'],
       );
-      if (type.isFile) {
-        return NearbyMessageFileContent.fromJson(json);
+      if (type.isFileRequest) {
+        return NearbyMessageFileRequest.fromJson(json);
       } else if (type.isText) {
         return NearbyMessageTextContent.fromJson(json);
+      } else if (type.isFileResponse) {
+        return NearbyMessageFileResponse.fromJson(json);
       } else {
         throw NearbyServiceException.unsupportedDecoding(json);
       }
@@ -66,17 +76,23 @@ abstract class NearbyMessageContent {
   /// * The [onText] callback returns this instance of [NearbyMessageContent],
   /// cast as [NearbyMessageTextContent] if is a text.
   ///
-  /// * The [onFile] callback returns this instance of [NearbyMessageContent],
-  /// cast as [NearbyMessageFileContent] if is a file.
+  /// * The [onFileRequest] callback returns this instance of [NearbyMessageContent],
+  /// cast as [NearbyMessageFileRequest] if is a file request.
   ///
-  T? get<T>({
+  /// * The [onFileResponse] callback returns this instance of [NearbyMessageContent],
+  /// cast as [NearbyMessageFileResponse] if is a file response.
+  ///
+  T? byType<T>({
     T Function(NearbyMessageTextContent)? onText,
-    T Function(NearbyMessageFileContent)? onFile,
+    T Function(NearbyMessageFileRequest)? onFileRequest,
+    T Function(NearbyMessageFileResponse)? onFileResponse,
   }) {
     if (this is NearbyMessageTextContent && onText != null) {
       return onText(this as NearbyMessageTextContent);
-    } else if (this is NearbyMessageFileContent && onFile != null) {
-      return onFile(this as NearbyMessageFileContent);
+    } else if (this is NearbyMessageFileRequest && onFileRequest != null) {
+      return onFileRequest(this as NearbyMessageFileRequest);
+    } else if (this is NearbyMessageFileResponse && onFileResponse != null) {
+      return onFileResponse(this as NearbyMessageFileResponse);
     }
     return null;
   }
@@ -141,38 +157,12 @@ class NearbyMessageTextContent extends NearbyMessageContent {
   }
 }
 
-///
-/// Nearby message File content. Used for file sending requests.
-/// Does not contain file bytes!
-///
-/// Contains [filePath] - the name of file to be sent or received.
-///
-class NearbyMessageFileContent extends NearbyMessageContent {
-  const NearbyMessageFileContent._({
+abstract class NearbyMessageFileContent extends NearbyMessageContent {
+  const NearbyMessageFileContent(
+    super.type, {
     required this.id,
     required this.filePath,
-  }) : super(
-          NearbyMessageContentType.file,
-        );
-
-  ///
-  /// Basic constructor with [filePath] to be sent or received.
-  ///
-  NearbyMessageFileContent({required this.filePath})
-      : id = RandomUtils.instance.nextInt(1000000, 9999999).toString(),
-        super(
-          NearbyMessageContentType.file,
-        );
-
-  ///
-  /// Gets [NearbyMessageFileContent] from [json].
-  ///
-  factory NearbyMessageFileContent.fromJson(Map<String, dynamic>? json) {
-    return NearbyMessageFileContent._(
-      id: json?['id'] ?? '',
-      filePath: json?['filePath'] ?? '',
-    );
-  }
+  });
 
   ///
   /// ID for comparing file requests.
@@ -193,22 +183,15 @@ class NearbyMessageFileContent extends NearbyMessageContent {
   }
 
   @override
-  bool get isValid => filePath.isNotEmpty;
-
-  @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is NearbyMessageFileContent &&
           runtimeType == other.runtimeType &&
+          id == other.id &&
           filePath == other.filePath;
 
   @override
-  int get hashCode => filePath.hashCode;
-
-  @override
-  String toString() {
-    return 'NearbyMessageFileContent{filePath: $filePath, id: $id}';
-  }
+  int get hashCode => id.hashCode ^ filePath.hashCode;
 
   @override
   Map<String, dynamic> toJson() {
@@ -217,5 +200,94 @@ class NearbyMessageFileContent extends NearbyMessageContent {
       'filePath': filePath,
       ...super.toJson(),
     };
+  }
+}
+
+///
+/// Nearby message File content. Used for file sending requests.
+/// Does not contain file bytes!
+///
+/// Contains [filePath] - the name of file to be sent or received.
+///
+class NearbyMessageFileRequest extends NearbyMessageFileContent {
+  const NearbyMessageFileRequest._({
+    required super.id,
+    required super.filePath,
+  }) : super(
+          NearbyMessageContentType.fileRequest,
+        );
+
+  ///
+  /// Basic constructor with [filePath] to be sent or received.
+  ///
+  NearbyMessageFileRequest({required super.filePath})
+      : super(
+          NearbyMessageContentType.fileRequest,
+          id: RandomUtils.instance.nextInt(1000000, 9999999).toString(),
+        );
+
+  ///
+  /// Gets [NearbyMessageFileRequest] from [json].
+  ///
+  factory NearbyMessageFileRequest.fromJson(Map<String, dynamic>? json) {
+    return NearbyMessageFileRequest._(
+      id: json?['id'] ?? '',
+      filePath: json?['filePath'] ?? '',
+    );
+  }
+
+  @override
+  bool get isValid => filePath.isNotEmpty;
+
+  @override
+  String toString() {
+    return 'NearbyMessageFileRequest{id: $id, filePath: $filePath}';
+  }
+}
+
+class NearbyMessageFileResponse extends NearbyMessageFileContent {
+  NearbyMessageFileResponse({
+    required super.id,
+    required super.filePath,
+    required this.response,
+  }) : super(
+          NearbyMessageContentType.fileResponse,
+        );
+
+  factory NearbyMessageFileResponse.fromRequest(
+    NearbyMessageFileRequest request, {
+    required bool response,
+  }) {
+    return NearbyMessageFileResponse(
+      id: request.id,
+      filePath: request.filePath,
+      response: response,
+    );
+  }
+
+  factory NearbyMessageFileResponse.fromJson(Map<String, dynamic>? json) {
+    return NearbyMessageFileResponse(
+      id: json?['id'] ?? '',
+      filePath: json?['filePath'] ?? '',
+      response: json?['response'] ?? false,
+    );
+  }
+
+  final bool response;
+
+  @override
+  bool get isValid => filePath.isNotEmpty;
+
+  @override
+  Map<String, dynamic> toJson() {
+    return {
+      'response': response,
+      ...super.toJson(),
+    };
+  }
+
+  @override
+  String toString() {
+    return 'NearbyMessageFileResponse{response: $response, id: $id, filePath: $filePath}';
   }
 }

@@ -57,17 +57,54 @@ class NearbyServiceNetwork {
   Future<WebSocket?> connectToSocket({
     required String ownerIpAddress,
     required int port,
+    required NearbySocketType socketType,
+    Map<String, String>? headers,
   }) async {
     try {
       final connectionId = RandomUtils.instance.nextInt(100, 999);
       final url =
           '${_Protocols.ws}$ownerIpAddress:$port${_Urls.ws}?as=$connectionId';
       Logger.debug('Connecting to $url');
-      final socket = await WebSocket.connect(url);
+      final socket = await WebSocket.connect(
+        url,
+        headers: {
+          NearbySocketType.key: socketType.name,
+          ...?headers,
+        },
+      );
       Logger.info('Connected to $url');
       return socket;
     } catch (e) {
       throw NearbyServiceException('Error connecting to server: $e');
     }
+  }
+}
+
+enum NearbySocketType {
+  message,
+  file;
+
+  static const key = 'SocketType';
+
+  static NearbySocketType? fromRequest(HttpRequest request) {
+    return NearbySocketType.fromString(
+      request.headers.value(NearbySocketType.key),
+    );
+  }
+
+  static NearbySocketType? fromString(String? value) {
+    try {
+      return values.firstWhere((element) => element.name == value);
+    } catch (e) {
+      return null;
+    }
+  }
+}
+
+class NearbyFileId {
+  static const key = 'FileID';
+
+  static String? fromRequest(HttpRequest request) {
+    return request.headers.value(NearbyFileId.key);
   }
 }

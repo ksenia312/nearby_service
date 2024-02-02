@@ -4,24 +4,58 @@ import 'package:nearby_service/nearby_service.dart';
 ///
 /// Stream Subscription Listener.
 ///
-class NearbyServiceStreamListener {
+class NearbyServiceSocketListener<T> {
   ///
-  /// It is required to pass the [onMessage] parameter to process the
+  /// It is required to pass the [onData] parameter to process the
   /// data that came through the stream.
   ///
-  const NearbyServiceStreamListener({
-    required this.onMessage,
-    this.onFile,
+  const NearbyServiceSocketListener({
+    required this.onData,
     this.onCreated,
     this.onDone,
     this.onError,
     this.cancelOnError,
   });
 
-  final ValueChanged<ReceivedNearbyMessage> onMessage;
-  final ValueChanged<NearbyFile>? onFile;
+  final ValueChanged<T> onData;
   final VoidCallback? onCreated;
   final VoidCallback? onDone;
   final void Function(Object, [StackTrace])? onError;
   final bool? cancelOnError;
+}
+
+///
+/// Stream Subscription Listener.
+///
+class NearbyServiceMessagesListener
+    extends NearbyServiceSocketListener<ReceivedNearbyMessage> {
+  ///
+  /// It is required to pass the [onData] parameter to process the
+  /// data that came through the stream.
+  ///
+  const NearbyServiceMessagesListener({
+    required super.onData,
+    super.onCreated,
+    super.onDone,
+    super.onError,
+    super.cancelOnError,
+  });
+}
+
+///
+/// Stream Subscription Listener.
+///
+class NearbyServiceFilesListener
+    extends NearbyServiceSocketListener<NearbyFile> {
+  ///
+  /// It is required to pass the [onData] parameter to process the
+  /// data that came through the stream.
+  ///
+  const NearbyServiceFilesListener({
+    required super.onData,
+    super.onCreated,
+    super.onDone,
+    super.onError,
+    super.cancelOnError,
+  });
 }

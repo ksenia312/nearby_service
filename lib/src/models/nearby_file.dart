@@ -5,10 +5,10 @@ import 'package:nearby_service/nearby_service.dart';
 /// A representation of a file that can be got from the Nearby Service's
 /// communication channel.
 ///
-/// You can use [id] to compare it to the id from [NearbyMessageFileContent.id].
+/// You can use [id] to compare it to the id from [NearbyMessageFileRequest.id].
 ///
 /// From the communication channel, you usually get
-/// the [NearbyMessageFileContent] request first. After that, you get [NearbyFile].
+/// the [NearbyMessageFileRequest] request first. After that, you get [NearbyFile].
 ///
 class NearbyFile {
   ///

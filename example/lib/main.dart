@@ -193,6 +193,7 @@ class AppService extends ChangeNotifier {
   List<NearbyDevice>? peers;
   NearbyDevice? connectedDevice;
   NearbyDeviceInfo? currentDeviceInfo;
+  NearbyConnectionAndroidInfo? connectionAndroidInfo;
 
   String platformVersion = 'Unknown';
   String platformModel = 'Unknown';
@@ -217,8 +218,7 @@ class AppService extends ChangeNotifier {
   }
 
   bool get isAndroidGroupOwner {
-    return Platform.isAndroid &&
-        (_nearbyService.android?.connectionInfo?.isGroupOwner ?? false);
+    return Platform.isAndroid && (connectionAndroidInfo?.isGroupOwner ?? false);
   }
 
   Future<void> getPlatformInfo() async {
@@ -332,6 +332,7 @@ class AppService extends ChangeNotifier {
   Future<void> connect(NearbyDevice device) async {
     try {
       await _nearbyService.connect(device);
+      connectionAndroidInfo = await _nearbyService.android?.getConnectionInfo();
     } catch (e) {
       if (kDebugMode) {
         print(e);
@@ -380,34 +381,33 @@ class AppService extends ChangeNotifier {
     ValueChanged<ReceivedNearbyMessage>? listener,
     ValueChanged<File>? onFileSaved,
   }) async {
-    final eventListener = NearbyServiceStreamListener(
+    final messagesListener = NearbyServiceMessagesListener(
       onCreated: () {
         updateState(AppState.communicationChannelCreated);
       },
-      onMessage: (event) {
+      onData: (event) {
         listener?.call(event);
-      },
-      onFile: (event) async {
-        final content = event.content;
-        final fileAcceptFuture = _filesAccepts[content.id];
-
-        if (fileAcceptFuture != null && (await fileAcceptFuture == true)) {
-          final downloadsDir = Directory('storage/emulated/0/Download');
-          final newFile = await event.file.copy(
-            '${downloadsDir.path}/${content.id}_${content.fileName}',
-          );
-          onFileSaved?.call(newFile);
-        }
       },
       onError: (e, [StackTrace? s]) {
         stopListeningAll();
+      },
+    );
+    final filesListener = NearbyServiceFilesListener(
+      onData: (event) async {
+        final content = event.content;
+        final downloadsDir = Directory('storage/emulated/0/Download');
+        final newFile = await event.file.copy(
+          '${downloadsDir.path}/${content.id}_${content.fileName}',
+        );
+        onFileSaved?.call(newFile);
       },
     );
 
     await _nearbyService.startCommunicationChannel(
       NearbyCommunicationChannelData(
         connectedDevice!.info.id,
-        eventListener: eventListener,
+        messagesListener: messagesListener,
+        filesListener: filesListener,
       ),
     );
   }
@@ -422,12 +422,25 @@ class AppService extends ChangeNotifier {
     );
   }
 
-  void sendFile(String filePath) {
+  void sendFileRequest(String filePath) {
     if (connectedDevice == null) return;
     _nearbyService.send(
       OutgoingNearbyMessage(
-        content: NearbyMessageFileContent(filePath: filePath),
+        content: NearbyMessageFileRequest(filePath: filePath),
         receiver: connectedDevice!.info,
+      ),
+    );
+  }
+
+  void sendFileAccept(NearbyMessageFileRequest request) {
+    if (connectedDevice == null) return;
+    _nearbyService.send(
+      OutgoingNearbyMessage(
+        receiver: connectedDevice!.info,
+        content: NearbyMessageFileResponse.fromRequest(
+          request,
+          response: true,
+        ),
       ),
     );
   }
@@ -794,7 +807,7 @@ class _ConnectedBody extends StatelessWidget {
   void _listener(BuildContext context, ReceivedNearbyMessage message) {
     final senderSubtitle = 'From ${message.sender.displayName} '
         '(ID: ${message.sender.id})';
-    message.content.get(
+    message.content.byType(
       onText: (content) {
         AppShackBar.show(
           Scaffold.of(context).context,
@@ -802,15 +815,16 @@ class _ConnectedBody extends StatelessWidget {
           subtitle: senderSubtitle,
         );
       },
-      onFile: (content) {
-        context.read<AppService>().setFileAcceptFuture(
-              content.id,
-              ActionDialog.show(
-                context,
-                title: 'File request ${content.fileName}',
-                subtitle: senderSubtitle,
-              ),
-            );
+      onFileRequest: (content) {
+        ActionDialog.show(
+          context,
+          title: 'File request ${content.fileName}',
+          subtitle: senderSubtitle,
+        ).then((value) {
+          if (value == true) {
+            context.read<AppService>().sendFileAccept(content);
+          }
+        });
       },
     );
   }
@@ -907,7 +921,7 @@ class _ConnectedSocketBodyState extends State<_ConnectedSocketBody> {
                     child: _ActionButton(
                       title: 'Send',
                       onTap: () {
-                        service.sendFile(filePath);
+                        service.sendFileRequest(filePath);
                       },
                     ),
                   ),
