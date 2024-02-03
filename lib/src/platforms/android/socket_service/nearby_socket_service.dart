@@ -24,7 +24,11 @@ class NearbySocketService {
   final NearbyAndroidService _service;
   final _pingManager = NearbySocketPingManager();
   final _network = NearbyServiceNetwork();
-  late final _fileSocketsManager = FileSocketsManager(_network, _service);
+  late final _fileSocketsManager = FileSocketsManager(
+    _network,
+    _service,
+    _pingManager,
+  );
 
   final state = ValueNotifier(CommunicationChannelState.notConnected);
 
@@ -77,7 +81,7 @@ class NearbySocketService {
   }
 
   ///
-  /// Add [OutgoingNearbyMessage]'s JSON representation to [_socket].
+  /// Adds [OutgoingNearbyMessage]'s JSON representation to the [_socket].
   ///
   Future<bool> send(OutgoingNearbyMessage message) async {
     if (message.isValid) {
@@ -199,36 +203,22 @@ class NearbySocketService {
     Logger.debug('Starting socket subscription');
 
     if (_connectedDeviceId != null) {
-      _messagesSubscription = _socket?.listen(
-        (event) async {
-          // if (fileLoaders != null) {
-          //   if (event is List<int>) {
-          //     fileLoaders!.add(event);
-          //   } else if (event == fileLoaders?.finishCommand) {
-          //     final file = await fileLoaders!.getFile().whenComplete(
-          //       () {
-          //         fileLoaders = null;
-          //       },
-          //     );
-          //     socketListener.onFile?.call(file);
-          //   }
-          // } else {
+      _messagesSubscription = _socket
+          ?.map(MessagesStreamMapper.toMessage)
+          .where((e) => e != null)
+          .cast<ReceivedNearbyMessage>()
+          .map((e) => MessagesStreamMapper.replaceId(e, _connectedDeviceId!))
+          .listen(
+        (message) async {
           try {
-            final message = MessagesStreamMapper.toMessage(event);
-            if (message != null) {
-              final newMessage = MessagesStreamMapper.replaceId(
-                message,
-                _connectedDeviceId!,
+            if (message.content is NearbyMessageFilesContent) {
+              _fileSocketsManager.handleFileMessageContent(
+                message.content as NearbyMessageFilesContent,
+                androidData: _androidData,
+                isReceived: true,
               );
-              if (newMessage.content is NearbyMessageFilesContent) {
-                _fileSocketsManager.handleFileMessageContent(
-                  newMessage.content as NearbyMessageFilesContent,
-                  androidData: _androidData,
-                  isReceived: true,
-                );
-              }
-              socketListener.onData(newMessage);
             }
+            socketListener.onData(message);
           } catch (e) {
             Logger.error(e);
           }

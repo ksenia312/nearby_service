@@ -395,12 +395,17 @@ class AppService extends ChangeNotifier {
     final filesListener = NearbyServiceFilesListener(
       onData: (event) async {
         final files = <File>[];
+        final directory = Directory(
+          'storage/emulated/0/Download',
+        );
+
         for (final nearbyFile in event) {
-          final content = nearbyFile.info;
-          final downloadsDir = Directory('storage/emulated/0/Download');
           final newFile = await nearbyFile.file.copy(
-            '${downloadsDir.path}/${DateTime.now().microsecondsSinceEpoch}.${content.extension}',
+            '${directory.path}/${DateTime.now().microsecondsSinceEpoch}.${nearbyFile.info.extension}',
           );
+          if (!await newFile.exists()) {
+            await newFile.create();
+          }
           files.add(newFile);
         }
         onFilesSaved?.call(files);
@@ -436,22 +441,27 @@ class AppService extends ChangeNotifier {
     if (connectedDevice == null) return;
     _nearbyService.send(
       OutgoingNearbyMessage(
-        content: NearbyMessageFileRequest(
-          files: [...paths.map((e) => NearbyFileInfo(path: e))],
+        content: NearbyMessageFilesRequest(
+          files: [
+            ...paths.map((e) => NearbyFileInfo(path: e)),
+          ],
         ),
         receiver: connectedDevice!.info,
       ),
     );
   }
 
-  void sendFilesAccept(NearbyMessageFileRequest request) {
+  void sendFilesResponse(
+    NearbyMessageFilesRequest request, {
+    required bool response,
+  }) {
     if (connectedDevice == null) return;
     _nearbyService.send(
       OutgoingNearbyMessage(
         receiver: connectedDevice!.info,
-        content: NearbyMessageFileResponse.fromRequest(
+        content: NearbyMessageFilesResponse.fromRequest(
           request,
-          response: true,
+          response: response,
         ),
       ),
     );
@@ -827,16 +837,26 @@ class _ConnectedBody extends StatelessWidget {
           subtitle: senderSubtitle,
         );
       },
-      onFileRequest: (content) {
+      onFilesRequest: (content) {
         ActionDialog.show(
           context,
           title: 'Files request. Files count: ${content.files.length}',
           subtitle: senderSubtitle,
         ).then((value) {
-          if (value == true) {
-            context.read<AppService>().sendFilesAccept(content);
+          if (value is bool) {
+            context.read<AppService>().sendFilesResponse(
+                  content,
+                  response: value,
+                );
           }
         });
+      },
+      onFilesResponse: (content) {
+        AppShackBar.show(
+          Scaffold.of(context).context,
+          content.response ? 'Request is accepted!' : 'Request was denied :(',
+          subtitle: senderSubtitle,
+        );
       },
     );
   }

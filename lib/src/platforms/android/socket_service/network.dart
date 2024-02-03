@@ -101,10 +101,10 @@ enum NearbySocketType {
   }
 }
 
-class NearbyFileId {
-  static const key = 'FileID';
+class NearbyFilesPackId {
+  static const key = 'FilesPackID';
 
   static String? fromRequest(HttpRequest request) {
-    return request.headers.value(NearbyFileId.key);
+    return request.headers.value(NearbyFilesPackId.key);
   }
 }

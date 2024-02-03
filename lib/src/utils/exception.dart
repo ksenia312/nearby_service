@@ -38,4 +38,9 @@ class NearbyServiceException implements Exception {
   }
 
   final Object? error;
+
+  @override
+  String toString() {
+    return 'NearbyServiceException{error: $error}';
+  }
 }

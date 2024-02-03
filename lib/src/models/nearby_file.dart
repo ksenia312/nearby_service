@@ -6,7 +6,9 @@ import 'package:nearby_service/nearby_service.dart';
 /// communication channel.
 ///
 /// From the communication channel, you usually get
-/// the [NearbyMessageFileRequest] request first. After that, you get [NearbyFile].
+/// the [NearbyMessageFilesRequest] request first.
+/// After that, you can send positive [NearbyMessageFilesResponse] and
+/// get the list of [NearbyFile].
 ///
 class NearbyFile {
   ///
@@ -44,8 +46,14 @@ class NearbyFile {
   }
 }
 
+///
+/// Quick info about the file
+///
 class NearbyFileInfo {
-  const NearbyFileInfo({required this.path, this.sizeBytes});
+  ///
+  /// Contains the file [path] to get the file from it.
+  ///
+  const NearbyFileInfo({required this.path});
 
   factory NearbyFileInfo.fromJson(Map<String, dynamic>? json) {
     return NearbyFileInfo(
@@ -53,8 +61,10 @@ class NearbyFileInfo {
     );
   }
 
+  ///
+  /// Path of the representing file
+  ///
   final String path;
-  final int? sizeBytes;
 
   @override
   bool operator ==(Object other) =>
@@ -72,14 +82,20 @@ class NearbyFileInfo {
     };
   }
 
+  ///
+  /// Quick access to the file [name]
+  ///
   String get name {
     try {
       return path.split('/').last;
     } catch (e) {
-      throw NearbyServiceException('Can\'t get fileName from $path');
+      return path;
     }
   }
 
+  ///
+  /// Quick access to the file [extension]
+  ///
   String get extension {
     try {
       return name.split('.').last;

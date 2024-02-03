@@ -9,25 +9,12 @@ import 'package:path_provider/path_provider.dart';
 class FilesSocket {
   FilesSocket.startListening({
     required this.content,
+    required this.listener,
+    required this.onDestroy,
     required WebSocket socket,
-    required NearbyServiceFilesListener? listener,
-    required void Function(FilesSocket) onDestroy,
   }) : _socket = socket {
     _socket.listen(
-      (event) async {
-        if (event is List<int>) {
-          addChunk(event);
-        } else if (event == separateCommandOf(_currentFileIndex)) {
-          _futures.add(_createFile(_currentFileIndex));
-          _currentFileIndex = _currentFileIndex + 1;
-          _bytesTable['$_currentFileIndex'] = [];
-        } else if (event == finishCommand) {
-          await Future.wait(_futures);
-          Logger.info('Files pack ${content.id} was created');
-          listener?.onData.call(_files);
-          onDestroy(this);
-        }
-      },
+      _listener,
       onError: listener?.onError,
       cancelOnError: listener?.cancelOnError,
       onDone: listener?.onDone,
@@ -35,13 +22,15 @@ class FilesSocket {
     listener?.onCreated?.call();
   }
 
-  static const finishCommand = '_@@FINISH_SENDING_FILE_';
+  static const finishCommand = '_@@FINISH_SENDING_FILES_';
 
   static const separateCommand = '_@@SEPARATE_SENDING_FILE_';
 
   static String separateCommandOf(int index) => '$separateCommand$index';
 
   final NearbyMessageFilesContent content;
+  final void Function(String) onDestroy;
+  final NearbyServiceFilesListener? listener;
 
   final WebSocket _socket;
   final _files = <NearbyFile>[];
@@ -63,6 +52,21 @@ class FilesSocket {
       Logger.debug(
         'Got $_chunksCount chunks for the file ${content.files[_currentFileIndex].name}',
       );
+    }
+  }
+
+  Future<void> _listener(dynamic event) async {
+    if (event is List<int>) {
+      addChunk(event);
+    } else if (event == separateCommandOf(_currentFileIndex)) {
+      _futures.add(_createFile(_currentFileIndex));
+      _currentFileIndex = _currentFileIndex + 1;
+      _bytesTable['$_currentFileIndex'] = [];
+    } else if (event == finishCommand) {
+      await Future.wait(_futures);
+      Logger.info('Files pack ${content.id} was created');
+      listener?.onData.call(_files);
+      onDestroy(content.id);
     }
   }
 
