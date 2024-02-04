@@ -85,8 +85,9 @@ class NearbyIOSMapper implements NearbyDeviceMapper {
 
   @override
   NearbyDevice? mapToDevice(dynamic value) {
-    return NearbyIOSDevice.fromJson(
-      JSONDecoder.decodeMap(value),
-    );
+    final decoded = JSONDecoder.decodeMap(value);
+    if (decoded == null) return null;
+
+    return NearbyIOSDevice.fromJson(decoded);
   }
 }

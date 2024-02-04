@@ -26,11 +26,11 @@ class NearbyManager: NSObject {
     }
     
     func getSavedDeviceName(result: @escaping FlutterResult) {
-        result(ArchivedData.getArchivedName())
+        result(Archiver.getName())
     }
     
     func getCurrentDevice(result: @escaping FlutterResult) {
-        result(device.toJsonString())
+        result(device.toDartFormat())
     }
     
     func openServicesSettings(result: @escaping FlutterResult) {
@@ -65,7 +65,7 @@ class NearbyManager: NSObject {
     }
     
     func getPeers(result: @escaping FlutterResult) {
-        result(NearbyDevicesStore.instance.getDevicesToJsonString())
+        result(NearbyDevicesStore.instance.toDartFormat())
     }
     
     func invite(for deviceId: String, result: @escaping FlutterResult) {
@@ -101,17 +101,14 @@ class NearbyManager: NSObject {
         result(true)
     }
     
-    func send(for message: String, with receiverId: String, result: @escaping FlutterResult) {
+    func send(for content: NearbyMessageContent, with receiverId: String, result: @escaping FlutterResult) {
         let device = NearbyDevicesStore.instance.find(for: receiverId)
 
         do {
             if let requireDevice = device {
-                let data = [
-                    "name": self.device.name,
-                    "message": message
-                ]
+                let message = NearbyMessage(content: content, senderName: self.device.name, senderPeerID: self.device.peerID)
                 try requireDevice.session?.session?.send(
-                    try JSONSerialization.data(withJSONObject: data),
+                    try JSONSerialization.data(withJSONObject: message.toDictionary()),
                     toPeers: [requireDevice.peerID],
                     with: MCSessionSendDataMode.reliable
                 )
@@ -123,7 +120,34 @@ class NearbyManager: NSObject {
         result(true)
     }
     
-    
+    func sendFiles(id: String, paths: [String], with receiverId: String) {
+        do {
+            let device = NearbyDevicesStore.instance.find(for: receiverId)
+            if let requireDevice = device {
+                try requireDevice.session?.session?.send(
+                    try JSONSerialization.data(withJSONObject: NearbyStartCommand( id: id, filesCount: paths.count).toDictionary()),
+                    toPeers: [requireDevice.peerID],
+                    with: MCSessionSendDataMode.reliable
+                )
+
+                for path in paths {
+                     let url = URL(fileURLWithPath: path)
+                        if FileManager.default.fileExists(atPath: url.path) {
+                            requireDevice.session?.session?.sendResource(
+                                at: url,
+                                withName: url.lastPathComponent,
+                                toPeer: requireDevice.peerID
+                            )
+                        } else {
+                            Logger.error(message: "File does not exist: " + path)
+                        }
+                    
+                }
+            }
+        }  catch let error {
+            Logger.error(message: error.localizedDescription)
+        }
+    }
 }
 
 extension NearbyManager: MCNearbyServiceAdvertiserDelegate {
@@ -139,6 +163,7 @@ extension NearbyManager: MCNearbyServiceAdvertiserDelegate {
         self.invitationHandlers[peerID.displayName] = invitationHandler
         
     }
+    
 }
 
 extension NearbyManager: MCNearbyServiceBrowserDelegate {

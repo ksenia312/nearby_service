@@ -27,6 +27,10 @@ abstract class NearbyServiceIOSPlatform extends PlatformInterface {
     throw UnimplementedError('messagesStream() has not been implemented.');
   }
 
+  Stream get resourcesStream {
+    throw UnimplementedError('resourcesStream() has not been implemented.');
+  }
+
   Future<bool> initialize([String? deviceName]) {
     throw UnimplementedError('initialize() has not been implemented.');
   }

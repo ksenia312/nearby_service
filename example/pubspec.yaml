@@ -15,6 +15,7 @@ dependencies:
 
   nearby_service:
     path: ../
+  path_provider: ^2.1.2
 
 
 

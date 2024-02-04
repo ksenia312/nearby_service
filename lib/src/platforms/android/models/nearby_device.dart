@@ -150,6 +150,9 @@ class NearbyAndroidMapper implements NearbyDeviceMapper {
 
   @override
   NearbyDevice? mapToDevice(dynamic value) {
-    return NearbyAndroidDevice.fromJson(JSONDecoder.decodeMap(value));
+    final decoded = JSONDecoder.decodeMap(value);
+    if (decoded == null) return null;
+
+    return NearbyAndroidDevice.fromJson(decoded);
   }
 }

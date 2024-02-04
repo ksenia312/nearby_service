@@ -7,9 +7,13 @@ import 'package:nearby_service/nearby_service.dart';
 /// An implementation of [NearbyServiceIOSPlatform] that uses method channels.
 class MethodChannelIOSNearbyService extends NearbyServiceIOSPlatform {
   final messageReceiver = StreamController.broadcast();
+  final resourcesReceiver = StreamController.broadcast();
 
   @override
   Stream get messagesStream => messageReceiver.stream;
+
+  @override
+  Stream get resourcesStream => resourcesReceiver.stream;
 
   /// The method channel used to interact with the native platform.
   @visibleForTesting
@@ -21,6 +25,9 @@ class MethodChannelIOSNearbyService extends NearbyServiceIOSPlatform {
       switch (handler.method) {
         case 'invoke_nearby_service_message_received':
           messageReceiver.add(handler.arguments);
+          break;
+        case 'invoke_nearby_service_resources_received':
+          resourcesReceiver.add(handler.arguments);
           break;
       }
     });

@@ -22,22 +22,7 @@ class NearbyDevicesStore : NSObject {
             return device.peerID.displayName == deviceId
         }
     }
-    
-    func getDevicesToJsonString() -> String {
-        let devicesObject = devices.map { device in
-            return device.toDictionary()
-        }
-        do {
-            let jsonData = try JSONSerialization.data(withJSONObject: devicesObject)
-            if let jsonString = String(data: jsonData, encoding: .utf8) {
-                return jsonString
-            }
-        } catch {
-            return "[]"
-        }
-        return "[]"
-    }
-    
+
     
     func add(for peerID: MCPeerID, discoveryInfo: [String: String]? = nil) -> NearbyDevice? {
         devices = devices.filter{$0.peerID.displayName != peerID.displayName}
@@ -55,4 +40,20 @@ class NearbyDevicesStore : NSObject {
     func clear() {
         self.devices = []
     }
+    
+    func toDartFormat() -> String {
+        let devicesObject = devices.map { device in
+            return device.toDictionary()
+        }
+        do {
+            let jsonData = try JSONSerialization.data(withJSONObject: devicesObject)
+            if let jsonString = String(data: jsonData, encoding: .utf8) {
+                return jsonString
+            }
+        } catch {
+            return "[]"
+        }
+        return "[]"
+    }
+    
 }

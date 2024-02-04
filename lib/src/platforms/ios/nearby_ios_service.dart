@@ -17,6 +17,7 @@ class NearbyIOSService extends NearbyService {
   final _state = ValueNotifier(CommunicationChannelState.notConnected);
 
   StreamSubscription? _messagesSubscription;
+  StreamSubscription? _resourcesSubscription;
 
   @override
   ValueListenable<CommunicationChannelState> get communicationChannelState =>
@@ -166,25 +167,12 @@ class NearbyIOSService extends NearbyService {
     final eventListener = data.messagesListener;
     final filesListener = data.filesListener;
     _messagesSubscription = NearbyServiceIOSPlatform.instance.messagesStream
-        // .map(MessagesStreamMapper.toMessage)
-        // .where((event) => event?.sender.id == data.connectedDeviceId)
-        // .where((event) => event != null)
-        // .cast<ReceivedNearbyMessage>()
+        .where((event) => event != null)
+        .map(MessagesStreamMapper.toMessage)
+        .where((event) => event?.sender.id == data.connectedDeviceId)
+        .cast<ReceivedNearbyMessage>()
         .listen(
-      (event) {
-        try {
-          final message = MessagesStreamMapper.toMessage(event);
-          if (message != null && message.sender.id == data.connectedDeviceId) {
-            eventListener.onData(message);
-          }
-        } catch (e) {
-          try {
-            filesListener?.onData(event);
-          } catch (e) {
-            Logger.error(e);
-          }
-        }
-      },
+      eventListener.onData,
       onDone: () {
         _state.value = CommunicationChannelState.notConnected;
         eventListener.onDone?.call();
@@ -196,12 +184,29 @@ class NearbyIOSService extends NearbyService {
       },
       cancelOnError: eventListener.cancelOnError,
     );
+    _resourcesSubscription = NearbyServiceIOSPlatform.instance.resourcesStream
+        .map(ResourcesStreamMapper.toFiles)
+        .where((event) => event != null)
+        .cast<List<NearbyFile>>()
+        .listen(
+      (e) => filesListener?.onData.call(e),
+      onDone: filesListener?.onDone,
+      onError: (e, s) {
+        Logger.error(e);
+        _state.value = CommunicationChannelState.notConnected;
+        filesListener?.onError?.call(e, s);
+      },
+      cancelOnError: filesListener?.cancelOnError,
+    );
     if (_messagesSubscription != null) {
       Logger.info('Messages subscription was created successfully');
       eventListener.onCreated?.call();
       _state.value = CommunicationChannelState.connected;
     } else {
       _state.value = CommunicationChannelState.notConnected;
+    }
+    if (_resourcesSubscription != null) {
+      Logger.info('Resources subscription was created successfully');
     }
 
     return true;
@@ -214,7 +219,9 @@ class NearbyIOSService extends NearbyService {
   @override
   FutureOr<bool> endCommunicationChannel() async {
     await _messagesSubscription?.cancel();
+    await _resourcesSubscription?.cancel();
     _messagesSubscription = null;
+    _resourcesSubscription = null;
     _state.value = CommunicationChannelState.notConnected;
     Logger.debug('Communication channel was cancelled');
     return true;

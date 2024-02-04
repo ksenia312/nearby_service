@@ -71,7 +71,7 @@ extension NearbyDevice {
         return deviceDict
     }
     
-    func toJsonString() -> String? {
+    func toDartFormat() -> String? {
         var result: String?
         do {
             let jsonData = try JSONSerialization.data(withJSONObject: toDictionary())

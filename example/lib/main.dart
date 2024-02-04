@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 
 import 'package:nearby_service/nearby_service.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
 import 'components/app_snack_bar.dart';
@@ -395,9 +396,9 @@ class AppService extends ChangeNotifier {
     final filesListener = NearbyServiceFilesListener(
       onData: (event) async {
         final files = <File>[];
-        final directory = Directory(
-          'storage/emulated/0/Download',
-        );
+        final directory = Platform.isAndroid
+            ? Directory('storage/emulated/0/Download')
+            : await getApplicationDocumentsDirectory();
 
         for (final nearbyFile in event) {
           final newFile = await nearbyFile.file.copy(

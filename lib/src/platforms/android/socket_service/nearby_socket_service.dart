@@ -204,8 +204,8 @@ class NearbySocketService {
 
     if (_connectedDeviceId != null) {
       _messagesSubscription = _socket
-          ?.map(MessagesStreamMapper.toMessage)
-          .where((e) => e != null)
+          ?.where((e) => e != null)
+          .map(MessagesStreamMapper.toMessage)
           .cast<ReceivedNearbyMessage>()
           .map((e) => MessagesStreamMapper.replaceId(e, _connectedDeviceId!))
           .listen(

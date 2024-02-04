@@ -1,13 +1,12 @@
 import Flutter
 
-class ConnectedDeviceStreamHandler: NSObject, FlutterStreamHandler {
+class NearbyPeersStreamHandler: NSObject, FlutterStreamHandler {
     private var eventSink: FlutterEventSink?
     private var timer : Timer?
 
     func onListen(withArguments arguments: Any?, eventSink: @escaping FlutterEventSink) -> FlutterError? {
-        let deviceId = arguments as! String
         self.eventSink = eventSink
-        startSendingUpdates(deviceId: deviceId)
+        startSendingUpdates()
         return nil
     }
 
@@ -17,14 +16,12 @@ class ConnectedDeviceStreamHandler: NSObject, FlutterStreamHandler {
         return nil
     }
 
-    func startSendingUpdates(deviceId:String) {
+    func startSendingUpdates() {
         self.timer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
             guard let self = self else { return }
-            var result: String?
-            if let device = NearbyDevicesStore.instance.find(for: deviceId) {
-                result = device.toJsonString()
-            }
-            self.eventSink?(result)
+            
+            let devicesList = NearbyDevicesStore.instance.toDartFormat()
+            self.eventSink?(devicesList)
         }
     }
 

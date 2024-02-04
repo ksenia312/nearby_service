@@ -2,14 +2,16 @@ import Flutter
 import MultipeerConnectivity
 import UIKit
 
-public class NearbyServicePlugin: NSObject, FlutterPlugin {
+public class NearbyServicePlugin: NSObject, FlutterPlugin{
     
+
     let manager: NearbyManager;
     let channel: FlutterMethodChannel
     
     init(manager: NearbyManager, channel: FlutterMethodChannel) {
         self.manager = manager
         self.channel = channel
+    
     }
     
     public static func register(with registrar: FlutterPluginRegistrar) {
@@ -34,15 +36,20 @@ public class NearbyServicePlugin: NSObject, FlutterPlugin {
         let manager = NearbyManager()
         let instance = NearbyServicePlugin(manager: manager, channel: channel)
         
-        registrar.addMethodCallDelegate(instance, channel: channel)
-        
         NotificationCenter.default.addObserver(
             instance,
             selector: #selector(onMessageReceived),
             name: ON_MESSAGE_RECEIVED,
             object: nil
         )
+        NotificationCenter.default.addObserver(
+            instance,
+            selector: #selector(onResourceReceived),
+            name: ON_RESOURCE_RECEIVED,
+            object: nil
+        )
         
+        registrar.addMethodCallDelegate(instance, channel: channel)
     }
     
     public func detachFromEngine(for registrar: FlutterPluginRegistrar) {
@@ -52,18 +59,14 @@ public class NearbyServicePlugin: NSObject, FlutterPlugin {
     
     
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-
+        
         switch call.method {
         case "getPlatformVersion":
             result("iOS " + UIDevice.current.systemVersion)
         case "getPlatformModel":
             result(UIDevice.current.name)
         case "initialize":
-            if let deviceName: String = getArgument(for: "deviceName", call: call)  {
-                manager.initialize(for: deviceName, result: result)
-            } else {
-                manager.initialize(for: nil, result: result)
-            }
+            manager.initialize(for: getArgument(for: "deviceName", call: call), result: result)
         case "getSavedDeviceName":
             manager.getSavedDeviceName(result: result)
         case "getCurrentDevice":
@@ -102,12 +105,12 @@ public class NearbyServicePlugin: NSObject, FlutterPlugin {
             }
             
         case "send":
-            if let content: Dictionary<String, AnyObject> = getArgument(for: "content", call: call),
-                let message: String = content["value"] as? String {
+            if let contentJson: Dictionary<String, AnyObject> = getArgument(for: "content", call: call),
+               let content: NearbyMessageContent = NearbyMessageContent.typedFromJson(json: contentJson) {
                 if let receiver : Dictionary<String, AnyObject> =  getArgument(for: "receiver", call: call),
                    let receiverId : String = receiver["id"] as? String
                 {
-                    manager.send(for: message, with: receiverId, result: result)
+                    manager.send(for: content, with: receiverId, result: result)
                 } else {
                     result(false)
                 }
@@ -119,14 +122,7 @@ public class NearbyServicePlugin: NSObject, FlutterPlugin {
             result(FlutterMethodNotImplemented)
         }
     }
-    @objc func onMessageReceived(notification: Notification) {
-        DispatchQueue.main.async {
-            let result = NearbyMessageConverter.convert(userInfo: notification.userInfo)
-            self.channel.invokeMethod("invoke_nearby_service_message_received", arguments: result)
-        }
-    }
-    
-    private func getArgument<T>(for name: String, call: FlutterMethodCall) -> T? {
+    func getArgument<T>(for name: String, call: FlutterMethodCall) -> T? {
         guard let data = call.arguments as? Dictionary<String, AnyObject> else {
             return nil
         }
@@ -136,3 +132,4 @@ public class NearbyServicePlugin: NSObject, FlutterPlugin {
         return argument
     }
 }
+
