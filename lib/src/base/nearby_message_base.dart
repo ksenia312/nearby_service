@@ -3,7 +3,7 @@ import 'package:nearby_service/nearby_service.dart';
 ///
 /// Basic Message Abstraction.
 ///
-abstract base class NearbyMessageBase<Content extends NearbyMessageContentBase> {
+abstract base class NearbyMessageBase<C extends NearbyMessageContentBase> {
   ///
   /// The basic message contains only [content] - the content
   /// to be sent or received.
@@ -13,7 +13,7 @@ abstract base class NearbyMessageBase<Content extends NearbyMessageContentBase> 
   ///
   /// Model representing content to be sent or received
   ///
-  final Content content;
+  final C content;
 
   ///
   /// Checks if [content] is not empty
