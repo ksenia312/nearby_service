@@ -46,27 +46,30 @@ class MyApp extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Platform: ${service.platformVersion}\n'
-                        'Model: ${service.platformModel}',
+                        'Platform: ${service.platformVersion}, Model: ${service.platformModel}',
                       ),
                       if (service.currentDeviceInfo != null)
                         Text(
-                          'Device Name: ${service.currentDeviceInfo!.displayName}'
-                          '${Platform.isIOS ? '\nDevice ID: ${service.currentDeviceInfo!.id}' : ''}',
+                          'Device Name: ${service.currentDeviceInfo!.displayName} ${Platform.isIOS ? '\nDevice ID: ${service.currentDeviceInfo!.id}' : ''}',
                         ),
+                      Text(
+                        'Communication channel state: ${service.communicationChannelState.previewName}\n',
+                      ),
                       if (Platform.isIOS)
                         Text(
                           'You are ${service.isIOSBrowser ? 'going to find your friend' : 'waiting for another user to connect'}',
                         ),
-                      Text(
-                        'Communication channel state: ${service.communicationChannelState.previewName}',
-                      )
+                      if (Platform.isAndroid &&
+                          service.isAndroidGroupOwner != null)
+                        Text(
+                          'You ${service.isAndroidGroupOwner! ? 'are' : 'are not'} a group owner',
+                        ),
                     ],
                   ),
                 ),
@@ -201,8 +204,7 @@ class AppService extends ChangeNotifier {
 
   StreamSubscription? peersSubscription;
   StreamSubscription? connectedDeviceSubscription;
-
-  final _filesAccepts = <String, Future<bool?>>{};
+  StreamSubscription? connectionInfoSubscription;
 
   @override
   void dispose() {
@@ -218,8 +220,8 @@ class AppService extends ChangeNotifier {
     return _nearbyService.ios?.isBrowser.value ?? false;
   }
 
-  bool get isAndroidGroupOwner {
-    return Platform.isAndroid && (connectionAndroidInfo?.isGroupOwner ?? false);
+  bool? get isAndroidGroupOwner {
+    return connectionAndroidInfo?.isGroupOwner;
   }
 
   Future<void> getPlatformInfo() async {
@@ -287,6 +289,7 @@ class AppService extends ChangeNotifier {
       final result = await _nearbyService.discover();
       if (result) {
         updateState(AppState.discoveringPeers);
+        startListeningConnectionInfo();
       }
     } catch (e) {
       if (kDebugMode) {
@@ -325,15 +328,36 @@ class AppService extends ChangeNotifier {
   }
 
   Future<void> stopListeningPeers() async {
-    peersSubscription?.cancel();
+    await peersSubscription?.cancel();
     peers = null;
     updateState(AppState.discoveringPeers);
+  }
+
+  Future<void> stopListeningConnectionInfo() async {
+    await connectionInfoSubscription?.cancel();
+    connectionInfoSubscription = null;
   }
 
   Future<void> connect(NearbyDevice device) async {
     try {
       await _nearbyService.connect(device);
-      connectionAndroidInfo = await _nearbyService.android?.getConnectionInfo();
+    } catch (e) {
+      if (kDebugMode) {
+        print(e);
+      }
+    }
+    notifyListeners();
+  }
+
+  void startListeningConnectionInfo() {
+    try {
+      connectionInfoSubscription =
+          _nearbyService.android?.getConnectionInfoStream().listen(
+        (event) async {
+          connectionAndroidInfo = event;
+          notifyListeners();
+        },
+      );
     } catch (e) {
       if (kDebugMode) {
         print(e);
@@ -468,10 +492,6 @@ class AppService extends ChangeNotifier {
     );
   }
 
-  void setFileAcceptFuture(String id, Future<bool?> future) {
-    _filesAccepts[id] = future;
-  }
-
   Future<void> disconnect(NearbyDevice device) async {
     try {
       await _nearbyService.disconnect(device);
@@ -488,6 +508,7 @@ class AppService extends ChangeNotifier {
   Future<void> stopListeningAll() async {
     await stopListeningConnectedDevice();
     await stopListeningPeers();
+    await stopListeningConnectionInfo();
     await stopDiscovery();
   }
 
@@ -817,7 +838,7 @@ class _ConnectedBody extends StatelessWidget {
                     else
                       Text(
                         'Connecting socket.. '
-                        '${service.isAndroidGroupOwner ? "Waiting a client for connect" : "Waiting a connection"}',
+                        '${service.isAndroidGroupOwner != null ? service.isAndroidGroupOwner! ? "Waiting a client for connect" : "Waiting a server for connect" : "Waiting a connection"}',
                       )
                   ],
                 ),

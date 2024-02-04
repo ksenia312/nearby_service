@@ -64,4 +64,14 @@ class MethodChannelAndroidNearbyService extends NearbyServiceAndroidPlatform {
         )) ??
         false;
   }
+
+  @override
+  Stream<NearbyConnectionAndroidInfo?> getConnectionInfoStream() {
+    const connectedDeviceChannel = EventChannel(
+      "nearby_service_connection_info",
+    );
+    return connectedDeviceChannel.receiveBroadcastStream().map(
+          (e) => NearbyConnectionInfoMapper.mapToInfo(e),
+        );
+  }
 }

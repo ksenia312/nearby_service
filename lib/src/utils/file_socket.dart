@@ -31,8 +31,8 @@ class FilesSocket {
   final NearbyMessageFilesContent content;
   final void Function(String) onDestroy;
   final NearbyServiceFilesListener? listener;
-
   final WebSocket _socket;
+
   final _files = <NearbyFile>[];
   final _bytesTable = <String, List<int>>{'0': []};
   final _futures = <Future>[];

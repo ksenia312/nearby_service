@@ -289,4 +289,28 @@ class NearbyServiceManager(private var context: Context) {
             handler.removeCallbacks(postCallback)
         }
     }
+    var connectionInfoHandler = object : EventChannel.StreamHandler {
+        private var handler: Handler = Handler(Looper.getMainLooper())
+        private var eventSink: EventChannel.EventSink? = null
+
+        val postCallback = object : Runnable {
+            override fun run() {
+                handler.post { eventSink?.success(receiver.wifiInfo?.toJsonString()) }
+                handler.postDelayed(this, 1000)
+            }
+        }
+
+        override fun onListen(arguments: Any?, sink: EventChannel.EventSink?) {
+            onCancel(null)
+            eventSink = sink
+            Logger.d("Listen connection info")
+            handler.postDelayed(postCallback, 1000)
+        }
+
+        override fun onCancel(p0: Any?) {
+            Logger.d("Kill last process connection info")
+            eventSink = null
+            handler.removeCallbacks(postCallback)
+        }
+    }
 }

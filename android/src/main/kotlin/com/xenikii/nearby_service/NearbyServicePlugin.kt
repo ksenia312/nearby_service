@@ -17,6 +17,7 @@ import kotlinx.coroutines.launch
 const val CHANNEL_NAME = "nearby_service"
 const val PEERS_CHANNEL_NAME = "nearby_service_peers"
 const val CONNECTED_DEVICE_CHANNEL_NAME = "nearby_service_connected_device"
+const val CONNECTION_INFO_CHANNEL_NAME = "nearby_service_connection_info"
 
 /**
  * Plugin for creating connections in the Wi-fi Direct scope.
@@ -27,6 +28,7 @@ class NearbyServicePlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
     private lateinit var manager: NearbyServiceManager
     private lateinit var peersChannel: EventChannel
     private lateinit var connectedDeviceChannel: EventChannel
+    private lateinit var connectionInfoChannel: EventChannel
 
 
     @OptIn(DelicateCoroutinesApi::class)
@@ -157,6 +159,9 @@ class NearbyServicePlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
 
         connectedDeviceChannel = EventChannel(binaryMessenger, CONNECTED_DEVICE_CHANNEL_NAME)
         connectedDeviceChannel.setStreamHandler(manager.connectedDeviceInfoHandler)
+
+        connectionInfoChannel = EventChannel(binaryMessenger, CONNECTION_INFO_CHANNEL_NAME)
+        connectionInfoChannel.setStreamHandler(manager.connectionInfoHandler)
     }
 
 

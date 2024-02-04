@@ -126,6 +126,14 @@ class NearbyAndroidService extends NearbyService {
     return NearbyServiceAndroidPlatform.instance.getConnectionInfo();
   }
 
+  ///
+  /// Streams [NearbyConnectionAndroidInfo] -
+  /// information about the connection information.
+  ///
+  Stream<NearbyConnectionAndroidInfo?> getConnectionInfoStream() {
+    return NearbyServiceAndroidPlatform.instance.getConnectionInfoStream();
+  }
+
   void _requireAndroidDevice(NearbyDevice device) {
     assert(
       device is NearbyAndroidDevice,
