@@ -6,30 +6,29 @@
 //
 
 import Foundation
+import MultipeerConnectivity
 
 
 class NearbyStartCommand {
     
-    init( id: String, filesCount: Int) {
-        self.id = id
+    init(senderName: String, filesCount: Int) {
+        self.senderName = senderName
         self.filesCount = filesCount
     }
     
     static func fromUserInfo(userInfo: NearbyUserInfo)-> NearbyStartCommand? {
-        if let id = userInfo.dictionary["id"] as? String ,
+        if let name = userInfo.dictionary["name"] as? String,
            let filesCount = userInfo.dictionary["filesCount"] as? Int
         {
-            return NearbyStartCommand(
-               id: id, filesCount: filesCount
-            )
+            return NearbyStartCommand(senderName: name, filesCount: filesCount)
         }
         return nil
     }
     
     func toDictionary() -> [String: Any] {
-        return ["id": id, "filesCount": filesCount]
+        return ["name": senderName, "filesCount": filesCount]
     }
     
-    let id: String
+    let senderName: String
     let filesCount: Int
 }

@@ -195,7 +195,8 @@ abstract class NearbyService {
   /// Note that if [Platform.isIOS] == true, [NearbyIOSDevice] should be passed.
   /// If [Platform.isAndroid] == true, [NearbyAndroidDevice] should be passed.
   ///
-  Future<bool> disconnect(NearbyDeviceBase device);
+  /// For IOS [device] is required!!!
+  Future<bool> disconnect([NearbyDeviceBase? device]);
 
   ///
   /// If the device is already connected, it does not mean that you can

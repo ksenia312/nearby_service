@@ -270,6 +270,7 @@ class AppService extends ChangeNotifier {
     final result = await _nearbyService.android?.checkWifiService();
     if (result ?? false) {
       updateState(AppState.readyToDiscover);
+      startListeningConnectionInfo();
       return true;
     }
     return false;
@@ -289,7 +290,6 @@ class AppService extends ChangeNotifier {
       final result = await _nearbyService.discover();
       if (result) {
         updateState(AppState.discoveringPeers);
-        startListeningConnectionInfo();
       }
     } catch (e) {
       if (kDebugMode) {
@@ -333,11 +333,6 @@ class AppService extends ChangeNotifier {
     updateState(AppState.discoveringPeers);
   }
 
-  Future<void> stopListeningConnectionInfo() async {
-    await connectionInfoSubscription?.cancel();
-    connectionInfoSubscription = null;
-  }
-
   Future<void> connect(NearbyDeviceBase device) async {
     try {
       await _nearbyService.connect(device);
@@ -364,6 +359,11 @@ class AppService extends ChangeNotifier {
       }
     }
     notifyListeners();
+  }
+
+  Future<void> stopListeningConnectionInfo() async {
+    await connectionInfoSubscription?.cancel();
+    connectionInfoSubscription = null;
   }
 
   Future<void> startListeningConnectedDevice(NearbyDeviceBase device) async {
@@ -404,7 +404,7 @@ class AppService extends ChangeNotifier {
 
   Future<void> startCommunicationChannel({
     ValueChanged<ReceivedNearbyMessage>? listener,
-    ValueChanged<List<NearbyFileInfo>>? onFilesSaved,
+    ValueChanged<ReceivedNearbyFilesPack>? onFilesSaved,
   }) async {
     final messagesListener = NearbyServiceMessagesListener(
       onCreated: () {
@@ -424,16 +424,18 @@ class AppService extends ChangeNotifier {
             ? Directory('storage/emulated/0/Download')
             : await getApplicationDocumentsDirectory();
 
-        for (final nearbyFile in event) {
-          final newFile = await nearbyFile.file.copy(
-            '${directory.path}/${DateTime.now().microsecondsSinceEpoch}.${nearbyFile.info.extension}',
+        for (final nearbyFile in event.files) {
+          final newFile = await File(nearbyFile.path).copy(
+            '${directory.path}/${DateTime.now().microsecondsSinceEpoch}.${nearbyFile.extension}',
           );
           if (!await newFile.exists()) {
             await newFile.create();
           }
           files.add(NearbyFileInfo(path: newFile.path));
         }
-        onFilesSaved?.call(files);
+        onFilesSaved?.call(
+          ReceivedNearbyFilesPack(sender: event.sender, files: files),
+        );
       },
     );
 
@@ -492,7 +494,7 @@ class AppService extends ChangeNotifier {
     );
   }
 
-  Future<void> disconnect(NearbyDeviceBase device) async {
+  Future<void> disconnect([NearbyDeviceBase? device]) async {
     try {
       await _nearbyService.disconnect(device);
     } catch (e) {
@@ -883,10 +885,13 @@ class _ConnectedBody extends StatelessWidget {
     );
   }
 
-  void _onFileSaved(BuildContext context, List<NearbyFileInfo> files) {
+  void _onFileSaved(BuildContext context, ReceivedNearbyFilesPack pack) {
+    final senderSubtitle = 'From ${pack.sender.displayName} '
+        '(ID: ${pack.sender.id})';
     AppShackBar.show(
       Scaffold.of(context).context,
-      '${files.length} files saved! \n${files.map((e) => e.name).join('\n')}',
+      '${pack.files.length} files saved! \n${pack.files.map((e) => e.name).join('\n')}',
+      subtitle: senderSubtitle,
     );
   }
 }

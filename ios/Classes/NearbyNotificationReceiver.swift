@@ -33,13 +33,17 @@ extension NearbyServicePlugin {
     }
     
     @objc func onResourceReceived(notification: Notification) {
+
         DispatchQueue.main.async {
             if let userInfo = NearbyUserInfo.fromDictionary(userInfo: notification.userInfo) {
 
                 if let url = userInfo.dictionary["url"] as? URL {
                     NearbyFilesStore.instance.add(url: url)
+
                     if (NearbyFilesStore.instance.checkIsFull()) {
-                        self.channel.invokeMethod(DART_COMMAND_RESOURCES_RECEIVED, arguments: NearbyFilesStore.instance.toDartFormat())
+
+                        self.channel.invokeMethod(DART_COMMAND_RESOURCES_RECEIVED, arguments: NearbyFilesStore.instance.toDartFormat(peerID: userInfo.peerID))
+                        NearbyFilesStore.instance.clear()
                     }
                 }
             }

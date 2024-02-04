@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:nearby_service/nearby_service.dart';
 import 'package:nearby_service/src/utils/json_decoder.dart';
 
@@ -20,6 +18,8 @@ abstract class MessagesStreamMapper {
   static ReceivedNearbyMessage? toMessage(dynamic event) {
     try {
       final decoded = JSONDecoder.decodeMap(event);
+      if (decoded == null) return null;
+
       return ReceivedNearbyMessage.fromJson(decoded);
     } catch (e) {
       throw NearbyServiceException(
@@ -30,17 +30,12 @@ abstract class MessagesStreamMapper {
 }
 
 abstract class ResourcesStreamMapper {
-  static List<NearbyFile>? toFiles(dynamic event) {
+  static ReceivedNearbyFilesPack? toFilesPack(dynamic event) {
     try {
-      final decoded = JSONDecoder.decodeList(event);
-      final infoList = [
-        ...?decoded?.map(
-          (e) => NearbyFileInfo.fromJson(e as Map<String, dynamic>),
-        )
-      ];
-      return [
-        ...infoList.map((e) => NearbyFile(info: e, file: File(e.path))),
-      ];
+      final decoded = JSONDecoder.decodeMap(event);
+      if (decoded == null) return null;
+
+      return ReceivedNearbyFilesPack.fromJson(decoded);
     } catch (e) {
       throw NearbyServiceException(
         'Can\'t convert $event to ReceivedNearbyMessage',

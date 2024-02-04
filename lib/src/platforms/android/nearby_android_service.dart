@@ -65,9 +65,8 @@ class NearbyAndroidService extends NearbyService {
   /// Note! Requires [NearbyAndroidDevice] to be passed.
   ///
   @override
-  Future<bool> disconnect(NearbyDeviceBase device) {
-    _requireAndroidDevice(device);
-    return NearbyServiceAndroidPlatform.instance.disconnect(device.info.id);
+  Future<bool> disconnect([NearbyDeviceBase? device]) {
+    return NearbyServiceAndroidPlatform.instance.disconnect();
   }
 
   ///

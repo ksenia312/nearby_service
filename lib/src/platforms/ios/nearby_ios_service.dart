@@ -140,7 +140,8 @@ class NearbyIOSService extends NearbyService {
   /// Note! Requires [NearbyIOSDevice] to be passed.
   ///
   @override
-  Future<bool> disconnect(NearbyDeviceBase device) async {
+  Future<bool> disconnect([NearbyDeviceBase? device]) async {
+    if (device == null) return false;
     _requireIOSDevice(device);
     final result = await NearbyServiceIOSPlatform.instance.disconnect(
       device.info.id,
@@ -185,9 +186,9 @@ class NearbyIOSService extends NearbyService {
       cancelOnError: eventListener.cancelOnError,
     );
     _resourcesSubscription = NearbyServiceIOSPlatform.instance.resourcesStream
-        .map(ResourcesStreamMapper.toFiles)
+        .map(ResourcesStreamMapper.toFilesPack)
         .where((event) => event != null)
-        .cast<List<NearbyFile>>()
+        .cast<ReceivedNearbyFilesPack>()
         .listen(
       (e) => filesListener?.onData.call(e),
       onDone: filesListener?.onDone,

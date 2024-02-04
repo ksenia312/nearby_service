@@ -57,12 +57,8 @@ class MethodChannelAndroidNearbyService extends NearbyServiceAndroidPlatform {
   }
 
   @override
-  Future<bool> disconnect(String deviceAddress) async {
-    return (await methodChannel.invokeMethod<bool?>(
-          "disconnect",
-          {"deviceAddress": deviceAddress},
-        )) ??
-        false;
+  Future<bool> disconnect() async {
+    return (await methodChannel.invokeMethod<bool?>("disconnect")) ?? false;
   }
 
   @override

@@ -42,7 +42,7 @@ class NearbyConnectionAndroidInfo {
   final bool isGroupOwner;
 
   ///
-  /// Indicates if the current device is the group owner.
+  /// Indicates if a p2p group has been successfully formed.
   /// Source [WifiP2pInfo documentation](https://developer.android.com/reference/android/net/wifi/p2p/WifiP2pInfo)
   ///
   final bool groupFormed;

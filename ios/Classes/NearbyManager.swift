@@ -124,8 +124,13 @@ class NearbyManager: NSObject {
         do {
             let device = NearbyDevicesStore.instance.find(for: receiverId)
             if let requireDevice = device {
-                try requireDevice.session?.session?.send(
-                    try JSONSerialization.data(withJSONObject: NearbyStartCommand( id: id, filesCount: paths.count).toDictionary()),
+                let command = NearbyStartCommand(
+                    senderName: requireDevice.name,
+                    filesCount: paths.count
+                ).toDictionary()
+
+                try requireDevice.session?.session?.send( 
+                    try JSONSerialization.data(withJSONObject: command),
                     toPeers: [requireDevice.peerID],
                     with: MCSessionSendDataMode.reliable
                 )

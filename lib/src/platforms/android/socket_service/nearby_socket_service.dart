@@ -96,13 +96,7 @@ class NearbySocketService {
               },
             ),
           );
-          if (message.content is NearbyMessageFilesContent) {
-            _fileSocketsManager.handleFileMessageContent(
-              message.content as NearbyMessageFilesContent,
-              androidData: _androidData,
-              isReceived: false,
-            );
-          }
+          _handleMessage(message);
         }
         return true;
       }
@@ -211,13 +205,7 @@ class NearbySocketService {
           .listen(
         (message) async {
           try {
-            if (message.content is NearbyMessageFilesContent) {
-              _fileSocketsManager.handleFileMessageContent(
-                message.content as NearbyMessageFilesContent,
-                androidData: _androidData,
-                isReceived: true,
-              );
-            }
+            _handleMessage(message);
             socketListener.onData(message);
           } catch (e) {
             Logger.error(e);
@@ -242,6 +230,17 @@ class NearbySocketService {
       socketListener.onCreated?.call();
     } else {
       state.value = CommunicationChannelState.notConnected;
+    }
+  }
+
+  void _handleMessage(NearbyMessageBase message) {
+    if (message.content is NearbyMessageFilesContent) {
+      _fileSocketsManager.handleFileMessageContent(
+        message.content as NearbyMessageFilesContent,
+        isReceived: message is ReceivedNearbyMessage,
+        sender: message is ReceivedNearbyMessage ? message.sender : null,
+        androidData: _androidData,
+      );
     }
   }
 }

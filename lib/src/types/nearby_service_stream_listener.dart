@@ -46,7 +46,7 @@ class NearbyServiceMessagesListener
 /// Stream Subscription Listener.
 ///
 class NearbyServiceFilesListener
-    extends NearbyServiceSocketListener<List<NearbyFile>> {
+    extends NearbyServiceSocketListener<ReceivedNearbyFilesPack> {
   ///
   /// It is required to pass the [onData] parameter to process the
   /// data that came through the stream.

@@ -32,5 +32,3 @@ abstract interface class NearbyDeviceMapper {
   ///
   NearbyDeviceBase? mapToDevice(dynamic value);
 }
-
-

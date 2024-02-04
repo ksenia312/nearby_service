@@ -47,15 +47,17 @@ extension NearbySession: MCSessionDelegate {
     func session(_ session: MCSession, didFinishReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, at localURL: URL?, withError error: Error?) {
         guard let localURL = localURL else { return }
 
-        let destinationURL = localURL.deletingLastPathComponent().appendingPathComponent("\(resourceName)")
+        var destinationURL = localURL.deletingLastPathComponent().appendingPathComponent("\(resourceName)")
         
+        if FileManager.default.fileExists(atPath: destinationURL.path) {
+            destinationURL = localURL.deletingLastPathComponent().appendingPathComponent("New_\(resourceName)")
+        }
 
         do {
             try FileManager.default.moveItem(at: localURL, to: destinationURL)
         } catch {
             Logger.error(message: "Error moving file: \(error)")
         }
-
         NotificationCenter.default.post(
             name: ON_RESOURCE_RECEIVED,
             object: nil,

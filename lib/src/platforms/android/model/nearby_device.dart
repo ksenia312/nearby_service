@@ -18,15 +18,15 @@ final class NearbyAndroidDevice extends NearbyDeviceBase {
   ///
   NearbyAndroidDevice({
     required String deviceName,
-    required super.status,
     required this.deviceAddress,
-    required this.isGroupOwner,
-    required this.isServiceDiscoveryCapable,
-    required this.primaryDeviceType,
-    required this.wpsKeypadSupported,
-    required this.wpsPbcSupported,
-    required this.wpsDisplaySupported,
+    this.isGroupOwner = false,
+    this.isServiceDiscoveryCapable = false,
+    this.primaryDeviceType = kNearbyUnknown,
+    this.wpsKeypadSupported = false,
+    this.wpsPbcSupported = false,
+    this.wpsDisplaySupported = false,
     this.secondaryDeviceType,
+    super.status = NearbyDeviceStatus.unavailable,
   }) : super(
           info: NearbyDeviceInfo(
             displayName: deviceName,

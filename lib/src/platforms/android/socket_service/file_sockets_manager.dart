@@ -11,6 +11,7 @@ class FileSocketsManager {
   final _serverWaitingRequests = <String, HttpRequest>{};
 
   NearbyServiceFilesListener? _filesListener;
+  NearbyDeviceInfo? _sender;
 
   void setListener(NearbyServiceFilesListener? listener) {
     _filesListener = listener;
@@ -26,22 +27,30 @@ class FileSocketsManager {
 
   Future<void> handleFileMessageContent(
     NearbyMessageFilesContent content, {
+    required NearbyDeviceInfo? sender,
     required NearbyAndroidCommunicationChannelData androidData,
     required bool isReceived,
   }) async {
+    if (sender != null) {
+      _sender = sender;
+      Logger.debug('Sender was set to $_sender');
+    }
+
     final shouldStartSocket = content.byType(
           onFilesResponse: (response) => response.response,
           onFilesRequest: (_) => true,
         ) ??
         false;
 
-    if (shouldStartSocket) {
+    final alreadyExists = _filesSockets[content.id] != null;
+
+    if (shouldStartSocket && !alreadyExists) {
       final info = await _service.getConnectionInfo();
       if (info != null && info.groupFormed) {
         if (info.isGroupOwner) {
           await _startFilesServer(content);
-          if (content is NearbyMessageFilesResponse && isReceived) {
-            await _tryTransferData(content);
+          if (isReceived && content is NearbyMessageFilesResponse) {
+            await _startDataTransfer(content);
           }
         } else {
           await _connectToFilesSocket(
@@ -49,13 +58,11 @@ class FileSocketsManager {
             connectionData: androidData,
             ownerIpAddress: info.ownerIpAddress,
           );
-          if (content is NearbyMessageFilesRequest && !isReceived) {
-            await _tryTransferData(content);
+          if (!isReceived && content is NearbyMessageFilesRequest) {
+            await _startDataTransfer(content);
           }
         }
       }
-    } else {
-      _filesSockets.remove(content.id);
     }
   }
 
@@ -107,9 +114,7 @@ class FileSocketsManager {
     }
   }
 
-  Future<void> _startFilesServer(
-    NearbyMessageFilesContent content,
-  ) async {
+  Future<void> _startFilesServer(NearbyMessageFilesContent content) async {
     final request = _serverWaitingRequests[content.id];
 
     if (request != null) {
@@ -130,8 +135,9 @@ class FileSocketsManager {
     required Future<WebSocket?> Function() onCreateSocket,
   }) async {
     final socket = await onCreateSocket();
-    if (socket != null) {
+    if (socket != null && _sender != null) {
       _filesSockets[content.id] = FilesSocket.startListening(
+        sender: _sender!,
         content: content,
         socket: socket,
         listener: _filesListener,
@@ -143,7 +149,7 @@ class FileSocketsManager {
     return false;
   }
 
-  Future<void> _tryTransferData(NearbyMessageFilesContent content) async {
+  Future<void> _startDataTransfer(NearbyMessageFilesContent content) async {
     final filesSocket = _filesSockets[content.id];
     if (filesSocket != null) {
       Logger.debug('Start transferring the files pack ${content.id}');

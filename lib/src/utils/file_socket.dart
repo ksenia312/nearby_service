@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 
 class FilesSocket {
   FilesSocket.startListening({
+    required this.sender,
     required this.content,
     required this.listener,
     required this.onDestroy,
@@ -31,9 +32,10 @@ class FilesSocket {
   final NearbyMessageFilesContent content;
   final void Function(String) onDestroy;
   final NearbyServiceFilesListener? listener;
+  final NearbyDeviceInfo sender;
   final WebSocket _socket;
 
-  final _files = <NearbyFile>[];
+  final _files = <NearbyFileInfo>[];
   final _bytesTable = <String, List<int>>{'0': []};
   final _futures = <Future>[];
 
@@ -65,7 +67,13 @@ class FilesSocket {
     } else if (event == finishCommand) {
       await Future.wait(_futures);
       Logger.info('Files pack ${content.id} was created');
-      listener?.onData.call(_files);
+
+      listener?.onData.call(
+        ReceivedNearbyFilesPack(
+          sender: sender,
+          files: _files,
+        ),
+      );
       onDestroy(content.id);
     }
   }
@@ -76,13 +84,12 @@ class FilesSocket {
       final fileInfo = content.files[index];
       final directory = await getTemporaryDirectory();
       final file = File('${directory.path}/${fileInfo.name}');
-
       await file.writeAsBytes(bytes);
+      final updatedFileInfo = NearbyFileInfo(path: file.path);
 
-      final nearbyFile = NearbyFile(file: file, info: fileInfo);
-      _files.add(nearbyFile);
+      _files.add(updatedFileInfo);
 
-      Logger.info('File ${nearbyFile.info.name} was created');
+      Logger.info('File ${updatedFileInfo.name} was created');
     } catch (e) {
       Logger.error(e);
     }

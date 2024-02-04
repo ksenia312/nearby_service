@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:nearby_service/nearby_service.dart';
 
 ///
@@ -8,46 +7,7 @@ import 'package:nearby_service/nearby_service.dart';
 /// From the communication channel, you usually get
 /// the [NearbyMessageFilesRequest] request first.
 /// After that, you can send positive [NearbyMessageFilesResponse] and
-/// get the list of [NearbyFile].
-///
-final class NearbyFile {
-  ///
-  /// Pass [info] assigned to file to be sent.
-  ///
-  const NearbyFile({
-    required this.info,
-    required this.file,
-  });
-
-  ///
-  /// Quick info about the file
-  ///
-  final NearbyFileInfo info;
-
-  ///
-  /// A file that you can save in your phone if needed
-  ///
-  final File file;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is NearbyFile &&
-          runtimeType == other.runtimeType &&
-          info == other.info &&
-          file == other.file;
-
-  @override
-  int get hashCode => info.hashCode ^ file.hashCode;
-
-  @override
-  String toString() {
-    return 'NearbyFile{info: $info, file: $file}';
-  }
-}
-
-///
-/// Quick info about the file
+/// get the list of [NearbyFileInfo].
 ///
 class NearbyFileInfo {
   ///
