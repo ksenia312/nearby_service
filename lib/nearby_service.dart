@@ -8,9 +8,11 @@ import 'package:nearby_service/src/utils/logger.dart';
 
 export 'package:nearby_service/src/platforms/android/android.dart';
 export 'package:nearby_service/src/platforms/ios/ios.dart';
-export 'src/models/models.dart';
+export 'src/model/model.dart';
 export 'src/utils/utils.dart';
 export 'src/types/types.dart';
+export 'src/base/base.dart';
+export 'src/interface/interface.dart';
 
 ///
 /// The main tool for working with a P2P network.
@@ -126,26 +128,26 @@ abstract class NearbyService {
   ///
   /// A single retrieval of the current list of devices in a P2P network.
   ///
-  /// Returns the list of [NearbyDevice] that have been stored so far.
+  /// Returns the list of [NearbyDeviceBase] that have been stored so far.
   /// If you want to use a constantly updated list of devices, use [getPeersStream].
   ///
-  Future<List<NearbyDevice>> getPeers() {
+  Future<List<NearbyDeviceBase>> getPeers() {
     return NearbyServicePlatform.instance.getPeers();
   }
 
   ///
-  /// Returns a constantly updating list of [NearbyDevice] that
+  /// Returns a constantly updating list of [NearbyDeviceBase] that
   /// the platform-specific service has found at each point in time.
   ///
-  Stream<List<NearbyDevice>> getPeersStream() {
+  Stream<List<NearbyDeviceBase>> getPeersStream() {
     return NearbyServicePlatform.instance.getPeersStream();
   }
 
   ///
-  /// Returns the  constantly updating [NearbyDevice] you are currently connected to.
+  /// Returns the  constantly updating [NearbyDeviceBase] you are currently connected to.
   /// If it returns null, then there is no connection at the moment.
   ///
-  Stream<NearbyDevice?> getConnectedDeviceStream(NearbyDevice device) {
+  Stream<NearbyDeviceBase?> getConnectedDeviceStream(NearbyDeviceBase device) {
     return NearbyServicePlatform.instance.getConnectedDeviceStream(device);
   }
 
@@ -185,7 +187,7 @@ abstract class NearbyService {
   /// Note that if [Platform.isIOS] == true, [NearbyIOSDevice] should be passed.
   /// If [Platform.isAndroid] == true, [NearbyAndroidDevice] should be passed.
   ///
-  Future<bool> connect(NearbyDevice device);
+  Future<bool> connect(NearbyDeviceBase device);
 
   ///
   /// Disconnects from passed [device] using a platform-specific service.
@@ -193,7 +195,7 @@ abstract class NearbyService {
   /// Note that if [Platform.isIOS] == true, [NearbyIOSDevice] should be passed.
   /// If [Platform.isAndroid] == true, [NearbyAndroidDevice] should be passed.
   ///
-  Future<bool> disconnect(NearbyDevice device);
+  Future<bool> disconnect(NearbyDeviceBase device);
 
   ///
   /// If the device is already connected, it does not mean that you can

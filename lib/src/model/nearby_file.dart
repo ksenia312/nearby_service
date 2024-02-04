@@ -10,7 +10,7 @@ import 'package:nearby_service/nearby_service.dart';
 /// After that, you can send positive [NearbyMessageFilesResponse] and
 /// get the list of [NearbyFile].
 ///
-class NearbyFile {
+final class NearbyFile {
   ///
   /// Pass [info] assigned to file to be sent.
   ///

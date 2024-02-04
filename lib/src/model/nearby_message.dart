@@ -1,47 +1,10 @@
 import 'package:nearby_service/nearby_service.dart';
 
 ///
-/// Basic Message Abstraction.
-///
-abstract class NearbyMessage {
-  ///
-  /// The basic message contains only [content] - the content
-  /// to be sent or received.
-  ///
-  const NearbyMessage({required this.content});
-
-  ///
-  /// Model representing content to be sent or received
-  ///
-  final NearbyMessageContent content;
-
-  ///
-  /// Checks if [content] is not empty
-  ///
-  bool get isValid {
-    return content.isValid;
-  }
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is NearbyMessage &&
-          runtimeType == other.runtimeType &&
-          content == other.content;
-
-  @override
-  int get hashCode => content.hashCode;
-
-  @override
-  String toString() {
-    return 'NearbyMessage{content: $content}';
-  }
-}
-
-///
 /// The message that will be sent from the current device.
 ///
-class OutgoingNearbyMessage extends NearbyMessage {
+final class OutgoingNearbyMessage<Content extends NearbyMessageContentBase>
+    extends NearbyMessageBase<Content> implements NearbyOutgoingInterface {
   ///
   /// To send a message, in addition to [content], you need to pass [receiver]
   /// to know to whom the message is addressed.
@@ -54,6 +17,7 @@ class OutgoingNearbyMessage extends NearbyMessage {
   ///
   /// Data of the user to whom the message is addressed.
   ///
+  @override
   final NearbyDeviceInfo receiver;
 
   ///
@@ -86,7 +50,8 @@ class OutgoingNearbyMessage extends NearbyMessage {
 ///
 /// Message received by the current device.
 ///
-class ReceivedNearbyMessage extends NearbyMessage {
+final class ReceivedNearbyMessage<Content extends NearbyMessageContentBase>
+    extends NearbyMessageBase<Content> implements NearbyReceivedInterface {
   ///
   /// The received message contains a [sender] in addition to [content],
   /// to know from whom the message came.
@@ -101,7 +66,7 @@ class ReceivedNearbyMessage extends NearbyMessage {
   ///
   factory ReceivedNearbyMessage.fromJson(Map<String, dynamic>? json) {
     return ReceivedNearbyMessage(
-      content: NearbyMessageContent.fromJson(json?['content']),
+      content: NearbyMessageContentBase.fromJson(json?['content']),
       sender: NearbyDeviceInfo.fromJson(json?['sender']),
     );
   }
@@ -109,6 +74,7 @@ class ReceivedNearbyMessage extends NearbyMessage {
   ///
   /// Data of the user from whom the message came.
   ///
+  @override
   final NearbyDeviceInfo sender;
 
   @override

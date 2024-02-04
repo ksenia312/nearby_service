@@ -5,7 +5,7 @@ import 'package:nearby_service/src/utils/unknown.dart';
 ///
 /// A device on a P2P network obtained from the Android platform.
 ///
-class NearbyAndroidDevice extends NearbyDevice {
+final class NearbyAndroidDevice extends NearbyDeviceBase {
   ///
   /// The class representing the Android class
   /// [WifiP2pDevice](https://developer.android.com/reference/android/net/wifi/p2p/WifiP2pDevice).
@@ -139,7 +139,7 @@ class NearbyAndroidDevice extends NearbyDevice {
 ///
 class NearbyAndroidMapper implements NearbyDeviceMapper {
   @override
-  List<NearbyDevice> mapToDeviceList(dynamic value) {
+  List<NearbyDeviceBase> mapToDeviceList(dynamic value) {
     final decoded = JSONDecoder.decodeList(value);
     return [
       ...?decoded?.map(
@@ -149,7 +149,7 @@ class NearbyAndroidMapper implements NearbyDeviceMapper {
   }
 
   @override
-  NearbyDevice? mapToDevice(dynamic value) {
+  NearbyDeviceBase? mapToDevice(dynamic value) {
     final decoded = JSONDecoder.decodeMap(value);
     if (decoded == null) return null;
 

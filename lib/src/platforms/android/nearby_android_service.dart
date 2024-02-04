@@ -54,7 +54,7 @@ class NearbyAndroidService extends NearbyService {
   /// Note! Requires [NearbyAndroidDevice] to be passed.
   ///
   @override
-  Future<bool> connect(NearbyDevice device) {
+  Future<bool> connect(NearbyDeviceBase device) {
     _requireAndroidDevice(device);
     return NearbyServiceAndroidPlatform.instance.connect(device.info.id);
   }
@@ -65,7 +65,7 @@ class NearbyAndroidService extends NearbyService {
   /// Note! Requires [NearbyAndroidDevice] to be passed.
   ///
   @override
-  Future<bool> disconnect(NearbyDevice device) {
+  Future<bool> disconnect(NearbyDeviceBase device) {
     _requireAndroidDevice(device);
     return NearbyServiceAndroidPlatform.instance.disconnect(device.info.id);
   }
@@ -134,7 +134,7 @@ class NearbyAndroidService extends NearbyService {
     return NearbyServiceAndroidPlatform.instance.getConnectionInfoStream();
   }
 
-  void _requireAndroidDevice(NearbyDevice device) {
+  void _requireAndroidDevice(NearbyDeviceBase device) {
     assert(
       device is NearbyAndroidDevice,
       'The Nearby Android Service can only work with the NearbyAndroidDevice and not with ${device.runtimeType}',

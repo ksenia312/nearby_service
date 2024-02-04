@@ -4,7 +4,7 @@ import 'package:nearby_service/src/utils/json_decoder.dart';
 ///
 /// A device on a P2P network obtained from the IOS platform.
 ///
-class NearbyIOSDevice extends NearbyDevice {
+final class NearbyIOSDevice extends NearbyDeviceBase {
   ///
   /// A class representing an IOS device on a P2P network.
   ///
@@ -74,7 +74,7 @@ class NearbyIOSDevice extends NearbyDevice {
 ///
 class NearbyIOSMapper implements NearbyDeviceMapper {
   @override
-  List<NearbyDevice> mapToDeviceList(dynamic value) {
+  List<NearbyDeviceBase> mapToDeviceList(dynamic value) {
     final decoded = JSONDecoder.decodeList(value);
     return [
       ...?decoded?.map(
@@ -84,7 +84,7 @@ class NearbyIOSMapper implements NearbyDeviceMapper {
   }
 
   @override
-  NearbyDevice? mapToDevice(dynamic value) {
+  NearbyDeviceBase? mapToDevice(dynamic value) {
     final decoded = JSONDecoder.decodeMap(value);
     if (decoded == null) return null;
 

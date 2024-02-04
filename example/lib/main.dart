@@ -194,8 +194,8 @@ class AppService extends ChangeNotifier {
     ..communicationChannelState.addListener(notifyListeners);
 
   AppState state = AppState.idle;
-  List<NearbyDevice>? peers;
-  NearbyDevice? connectedDevice;
+  List<NearbyDeviceBase>? peers;
+  NearbyDeviceBase? connectedDevice;
   NearbyDeviceInfo? currentDeviceInfo;
   NearbyConnectionAndroidInfo? connectionAndroidInfo;
 
@@ -338,7 +338,7 @@ class AppService extends ChangeNotifier {
     connectionInfoSubscription = null;
   }
 
-  Future<void> connect(NearbyDevice device) async {
+  Future<void> connect(NearbyDeviceBase device) async {
     try {
       await _nearbyService.connect(device);
     } catch (e) {
@@ -366,7 +366,7 @@ class AppService extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> startListeningConnectedDevice(NearbyDevice device) async {
+  Future<void> startListeningConnectedDevice(NearbyDeviceBase device) async {
     updateState(AppState.loadingConnection);
     try {
       connectedDeviceSubscription =
@@ -404,7 +404,7 @@ class AppService extends ChangeNotifier {
 
   Future<void> startCommunicationChannel({
     ValueChanged<ReceivedNearbyMessage>? listener,
-    ValueChanged<List<File>>? onFilesSaved,
+    ValueChanged<List<NearbyFileInfo>>? onFilesSaved,
   }) async {
     final messagesListener = NearbyServiceMessagesListener(
       onCreated: () {
@@ -419,7 +419,7 @@ class AppService extends ChangeNotifier {
     );
     final filesListener = NearbyServiceFilesListener(
       onData: (event) async {
-        final files = <File>[];
+        final files = <NearbyFileInfo>[];
         final directory = Platform.isAndroid
             ? Directory('storage/emulated/0/Download')
             : await getApplicationDocumentsDirectory();
@@ -431,7 +431,7 @@ class AppService extends ChangeNotifier {
           if (!await newFile.exists()) {
             await newFile.create();
           }
-          files.add(newFile);
+          files.add(NearbyFileInfo(path: newFile.path));
         }
         onFilesSaved?.call(files);
       },
@@ -492,7 +492,7 @@ class AppService extends ChangeNotifier {
     );
   }
 
-  Future<void> disconnect(NearbyDevice device) async {
+  Future<void> disconnect(NearbyDeviceBase device) async {
     try {
       await _nearbyService.disconnect(device);
     } catch (e) {
@@ -862,7 +862,7 @@ class _ConnectedBody extends StatelessWidget {
       onFilesRequest: (content) {
         ActionDialog.show(
           context,
-          title: 'Files request. Files count: ${content.files.length}',
+          title: 'Request to send ${content.files.length} files',
           subtitle: senderSubtitle,
         ).then((value) {
           if (value is bool) {
@@ -883,10 +883,10 @@ class _ConnectedBody extends StatelessWidget {
     );
   }
 
-  void _onFileSaved(BuildContext context, List<File> files) {
+  void _onFileSaved(BuildContext context, List<NearbyFileInfo> files) {
     AppShackBar.show(
       Scaffold.of(context).context,
-      '${files.length} files saved! \n ${files.map((e) => e.path).join('\n')}',
+      '${files.length} files saved! \n${files.map((e) => e.name).join('\n')}',
     );
   }
 }
@@ -999,7 +999,7 @@ class _ConnectedSocketBodyState extends State<_ConnectedSocketBody> {
 class _DevicePreview extends StatelessWidget {
   const _DevicePreview({required this.device, this.largeView = false});
 
-  final NearbyDevice device;
+  final NearbyDeviceBase device;
   final bool largeView;
 
   @override

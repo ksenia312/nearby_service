@@ -40,20 +40,20 @@ abstract class NearbyServicePlatform extends PlatformInterface {
         'openServicesSettings() has not been implemented.');
   }
 
-  Future<List<NearbyDevice>> getPeers() {
+  Future<List<NearbyDeviceBase>> getPeers() {
     throw UnimplementedError('getPeers() has not been implemented.');
   }
 
-  Stream<List<NearbyDevice>> getPeersStream() {
+  Stream<List<NearbyDeviceBase>> getPeersStream() {
     throw UnimplementedError('streamPeers() has not been implemented.');
   }
 
-  Stream<NearbyDevice?> getConnectedDeviceStream(NearbyDevice device) {
+  Stream<NearbyDeviceBase?> getConnectedDeviceStream(NearbyDeviceBase device) {
     throw UnimplementedError(
         'getConnectedDeviceStream() has not been implemented.');
   }
 
-  Future<bool> disconnect(NearbyDevice device) {
+  Future<bool> disconnect(NearbyDeviceBase device) {
     throw UnimplementedError('disconnect() has not been implemented.');
   }
 }

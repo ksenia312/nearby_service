@@ -35,14 +35,14 @@ class MethodChannelNearbyService extends NearbyServicePlatform {
   }
 
   @override
-  Future<List<NearbyDevice>> getPeers() async {
+  Future<List<NearbyDeviceBase>> getPeers() async {
     return NearbyDeviceMapper.instance.mapToDeviceList(
       await methodChannel.invokeMethod('fetchPeers'),
     );
   }
 
   @override
-  Stream<List<NearbyDevice>> getPeersStream() {
+  Stream<List<NearbyDeviceBase>> getPeersStream() {
     const peersChannel = EventChannel("nearby_service_peers");
     return peersChannel.receiveBroadcastStream().map((e) {
       return NearbyDeviceMapper.instance.mapToDeviceList(e);
@@ -50,7 +50,7 @@ class MethodChannelNearbyService extends NearbyServicePlatform {
   }
 
   @override
-  Stream<NearbyDevice?> getConnectedDeviceStream(NearbyDevice device) {
+  Stream<NearbyDeviceBase?> getConnectedDeviceStream(NearbyDeviceBase device) {
     const connectedDeviceChannel = EventChannel(
       "nearby_service_connected_device",
     );

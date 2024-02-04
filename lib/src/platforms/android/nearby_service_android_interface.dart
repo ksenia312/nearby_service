@@ -1,4 +1,4 @@
-import 'package:nearby_service/src/platforms/android/models/nearby_connection_info.dart';
+import 'package:nearby_service/nearby_service.dart';
 import 'package:nearby_service/src/platforms/android/nearby_service_android_method_channel.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
