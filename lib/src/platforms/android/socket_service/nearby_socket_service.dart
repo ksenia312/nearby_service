@@ -58,7 +58,9 @@ class NearbySocketService {
     _androidData = data.androidData;
     _connectedDeviceId = data.connectedDeviceId;
 
-    _fileSocketsManager.setListener(data.filesListener);
+    _fileSocketsManager
+      ..setListener(data.filesListener)
+      ..setConnectionData(data.androidData);
 
     final info = await _service.getConnectionInfo();
 
@@ -239,7 +241,6 @@ class NearbySocketService {
         message.content as NearbyMessageFilesContent,
         isReceived: message is ReceivedNearbyMessage,
         sender: message is ReceivedNearbyMessage ? message.sender : null,
-        androidData: _androidData,
       );
     }
   }

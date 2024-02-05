@@ -9,18 +9,21 @@ import Foundation
 import Flutter
 
 extension NearbyServicePlugin {
+    
     @objc func onMessageReceived(notification: Notification) {
         DispatchQueue.main.async {
             if let userInfo = NearbyUserInfo.fromDictionary(userInfo: notification.userInfo) {
                 if let message = NearbyMessage.fromUserInfo(userInfo: userInfo) {
                     if message.content is NearbyMessageFilesResponse {
                         let response = message.content as! NearbyMessageFilesResponse
-                        if (response.response) {
+                        let cachedRequest = NearbyRequestsStore.instance.find(for: response.id)
+                        if (response.response && cachedRequest != nil) {
                             self.manager.sendFiles(
-                                id: response.id,
-                                paths: response.files,
+                                id: cachedRequest!.id,
+                                paths: cachedRequest!.files,
                                 with: message.senderPeerID.displayName
                             )
+                            NearbyRequestsStore.instance.remove(for: cachedRequest!.id)
                         }
                     }
                     self.channel.invokeMethod(DART_COMMAND_MESSAGE_RECEIVED, arguments: message.toDartFormat())
@@ -33,7 +36,6 @@ extension NearbyServicePlugin {
     }
     
     @objc func onResourceReceived(notification: Notification) {
-
         DispatchQueue.main.async {
             if let userInfo = NearbyUserInfo.fromDictionary(userInfo: notification.userInfo) {
 

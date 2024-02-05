@@ -58,57 +58,64 @@ class NearbyMessageTextContent : NearbyMessageContent {
 
 class NearbyMessageFilesContent : NearbyMessageContent {
     
-    init(files: Array<String>, id: String, type: MessageContentType) {
-        self.files = files
+    init(id: String, type: MessageContentType) {
         self.id = id
         super.init(type: type)
     }
     
     static func fromJsonRaw(type: MessageContentType, json: [String: Any]) -> NearbyMessageFilesContent? {
-        if let filesObjects: Array = json["files"] as? Array<Dictionary<String, AnyObject>> {
-            let files : [String]? = filesObjects.map({ $0["path"] as? String }).compactMap({$0})
-            if let id: String = json["id"] as? String{
-                if let requireFiles = files {
-                    return NearbyMessageFilesContent(files: requireFiles, id: id, type: type)
-                }
-            }
+        if let id: String = json["id"] as? String{
+            return NearbyMessageFilesContent(id: id, type: type)
         }
         return nil;
     }
     
     override func toJson() ->  [String : Any] {
         return [
-            "files": files.map{["path": $0]},
             "id": id,
         ].merging( super.toJson()) { (current, _) in current}
     }
     
-    let files: Array<String>
+    
     let id: String
 }
 
 class NearbyMessageFilesRequest : NearbyMessageFilesContent {
     init(files: Array<String>, id: String) {
-        super.init(files: files, id: id, type: MessageContentType.filesRequest)
+        self.files = files
+        super.init(id: id, type: MessageContentType.filesRequest)
     }
-    static func fromJson( json: [String: Any]) -> NearbyMessageFilesRequest? {
+    static func fromJson(json: [String: Any]) -> NearbyMessageFilesRequest? {
         let message = NearbyMessageFilesContent.fromJsonRaw(type: MessageContentType.filesRequest, json: json)
-        if let requireMessage = message {
-            return NearbyMessageFilesRequest(files: requireMessage.files, id: requireMessage.id)
+        if let filesObjects: Array = json["files"] as? Array<Dictionary<String, AnyObject>> {
+            let files : [String]? = filesObjects.map({ $0["path"] as? String }).compactMap({$0})
+            if let requireMessage = message {
+                if let requireFiles = files {
+                    return NearbyMessageFilesRequest(files: requireFiles, id: requireMessage.id)
+                }
+            }
         }
-        return nil
+        return nil;
+    }
+    let files: Array<String>
+    
+    override func toJson() ->  [String : Any] {
+        return [
+            "files": files.map{["path": $0]},
+        ].merging( super.toJson()) { (current, _) in current}
     }
 }
+
 class NearbyMessageFilesResponse : NearbyMessageFilesContent {
-    init(files: Array<String>, id: String, response: Bool) {
+    init(id: String, response: Bool) {
         self.response = response
-        super.init(files: files, id: id, type: MessageContentType.filesResponse)
+        super.init(id: id, type: MessageContentType.filesResponse)
     }
     static func fromJson( json: [String: Any]) -> NearbyMessageFilesResponse? {
         let message = NearbyMessageFilesContent.fromJsonRaw(type: MessageContentType.filesResponse, json: json)
         if let requireMessage = message,
            let response = json["response"] as? Bool {
-            return NearbyMessageFilesResponse(files: requireMessage.files, id: requireMessage.id, response: response)
+            return NearbyMessageFilesResponse(id: requireMessage.id, response: response)
         }
         return nil
     }

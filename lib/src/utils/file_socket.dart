@@ -9,7 +9,7 @@ import 'package:path_provider/path_provider.dart';
 class FilesSocket {
   FilesSocket.startListening({
     required this.sender,
-    required this.content,
+    required this.filesRequest,
     required this.listener,
     required this.onDestroy,
     required WebSocket socket,
@@ -29,7 +29,7 @@ class FilesSocket {
 
   static String separateCommandOf(int index) => '$separateCommand$index';
 
-  final NearbyMessageFilesContent content;
+  final NearbyMessageFilesRequest filesRequest;
   final void Function(String) onDestroy;
   final NearbyServiceFilesListener? listener;
   final NearbyDeviceInfo sender;
@@ -52,7 +52,7 @@ class FilesSocket {
     final logStep = min(pow(10, _chunksCount.toString().length - 1), 100);
     if (_chunksCount % logStep == 0) {
       Logger.debug(
-        'Got $_chunksCount chunks for the file ${content.files[_currentFileIndex].name}',
+        'Got $_chunksCount chunks for the file ${filesRequest.files[_currentFileIndex].name}',
       );
     }
   }
@@ -66,7 +66,7 @@ class FilesSocket {
       _bytesTable['$_currentFileIndex'] = [];
     } else if (event == finishCommand) {
       await Future.wait(_futures);
-      Logger.info('Files pack ${content.id} was created');
+      Logger.info('Files pack ${filesRequest.id} was created');
 
       listener?.onData.call(
         ReceivedNearbyFilesPack(
@@ -74,14 +74,14 @@ class FilesSocket {
           files: _files,
         ),
       );
-      onDestroy(content.id);
+      onDestroy(filesRequest.id);
     }
   }
 
   Future<void> _createFile(int index) async {
     try {
       final bytes = _bytesTable['$index']!;
-      final fileInfo = content.files[index];
+      final fileInfo = filesRequest.files[index];
       final directory = await getTemporaryDirectory();
       final file = File('${directory.path}/${fileInfo.name}');
       await file.writeAsBytes(bytes);

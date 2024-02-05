@@ -107,6 +107,10 @@ class NearbyManager: NSObject {
         do {
             if let requireDevice = device {
                 let message = NearbyMessage(content: content, senderName: self.device.name, senderPeerID: self.device.peerID)
+                
+                if (content is NearbyMessageFilesRequest) {
+                   NearbyRequestsStore.instance.add(request: message.content as! NearbyMessageFilesRequest)
+               }
                 try requireDevice.session?.session?.send(
                     try JSONSerialization.data(withJSONObject: message.toDictionary()),
                     toPeers: [requireDevice.peerID],

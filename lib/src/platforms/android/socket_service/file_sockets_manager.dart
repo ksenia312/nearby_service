@@ -12,15 +12,23 @@ class FileSocketsManager {
 
   NearbyServiceFilesListener? _filesListener;
   NearbyDeviceInfo? _sender;
+  NearbyMessageFilesRequest? _cachedFilesRequest;
+  Future? _socketCreationFuture;
+  var _connectionData = const NearbyAndroidCommunicationChannelData();
 
   void setListener(NearbyServiceFilesListener? listener) {
     _filesListener = listener;
+  }
+
+  void setConnectionData(NearbyAndroidCommunicationChannelData? data) {
+    _connectionData = data ?? _connectionData;
   }
 
   void onWsRequest(HttpRequest request) {
     final type = NearbySocketType.fromRequest(request);
     final filesPackId = NearbyFilesPackId.fromRequest(request);
     if (type == NearbySocketType.file && filesPackId != null) {
+      Logger.debug('Save a connection request $filesPackId from client');
       _serverWaitingRequests[filesPackId] = request;
     }
   }
@@ -28,41 +36,61 @@ class FileSocketsManager {
   Future<void> handleFileMessageContent(
     NearbyMessageFilesContent content, {
     required NearbyDeviceInfo? sender,
-    required NearbyAndroidCommunicationChannelData androidData,
     required bool isReceived,
   }) async {
     if (sender != null) {
       _sender = sender;
       Logger.debug('Sender was set to $_sender');
     }
+    final socketExists = _filesSockets[content.id] != null;
 
-    final shouldStartSocket = content.byType(
-          onFilesResponse: (response) => response.response,
-          onFilesRequest: (_) => true,
-        ) ??
-        false;
+    final isRequest = content is NearbyMessageFilesRequest;
 
-    final alreadyExists = _filesSockets[content.id] != null;
+    final isPositiveResponse =
+        content is NearbyMessageFilesResponse && content.response;
 
-    if (shouldStartSocket && !alreadyExists) {
+    if (isRequest) {
+      _cachedFilesRequest = content;
+      Logger.debug('Files pack request ${content.id} was cached');
+    }
+    if (!socketExists) {
       final info = await _service.getConnectionInfo();
       if (info != null && info.groupFormed) {
         if (info.isGroupOwner) {
-          await _startFilesServer(content);
-          if (isReceived && content is NearbyMessageFilesResponse) {
-            await _startDataTransfer(content);
+          if (isPositiveResponse && _cachedFilesRequest != null) {
+            _socketCreationFuture = _startFilesServerSocket(
+              _cachedFilesRequest!,
+            );
           }
         } else {
-          await _connectToFilesSocket(
-            content,
-            connectionData: androidData,
-            ownerIpAddress: info.ownerIpAddress,
-          );
-          if (!isReceived && content is NearbyMessageFilesRequest) {
-            await _startDataTransfer(content);
+          NearbyMessageFilesRequest? request;
+
+          if (!isReceived &&
+              isPositiveResponse &&
+              _cachedFilesRequest != null) {
+            request = _cachedFilesRequest!;
+          } else if (isRequest) {
+            request = content;
+          }
+
+          if (request != null) {
+            _socketCreationFuture = _connectToFilesSocket(
+              request,
+              ownerIpAddress: info.ownerIpAddress,
+            );
           }
         }
       }
+    }
+
+    if (isReceived && isPositiveResponse && _cachedFilesRequest != null) {
+      await _socketCreationFuture?.whenComplete(
+        () async {
+          await _startDataTransfer(_cachedFilesRequest!);
+          _socketCreationFuture = null;
+          _cachedFilesRequest = null;
+        },
+      );
     }
   }
 
@@ -72,39 +100,39 @@ class FileSocketsManager {
     }
     _filesSockets.clear();
     _filesListener = null;
+    _cachedFilesRequest = null;
+    _socketCreationFuture = null;
   }
 
   Future<void> _connectToFilesSocket(
-    NearbyMessageFilesContent content, {
-    required NearbyAndroidCommunicationChannelData connectionData,
+    NearbyMessageFilesRequest filesRequest, {
     required String ownerIpAddress,
   }) async {
     try {
       final response = await _network.pingServer(
         address: ownerIpAddress,
-        port: connectionData.port,
+        port: _connectionData.port,
       );
       if (await _pingManager.checkPong(response)) {
-        await _tryStartFileSocket(
-          content,
+        await _startFilesSocket(
+          filesRequest,
           onCreateSocket: () => _network.connectToSocket(
             ownerIpAddress: ownerIpAddress,
-            port: connectionData.port,
+            port: _connectionData.port,
             socketType: NearbySocketType.file,
             headers: {
-              NearbyFilesPackId.key: content.id,
+              NearbyFilesPackId.key: filesRequest.id,
             },
           ),
         );
       } else {
         Logger.debug(
-          'Files server is unavailable, reconnect in ${connectionData.clientReconnectInterval}s',
+          'Files server is unavailable, reconnect in ${_connectionData.clientReconnectInterval}s',
         );
         await Future.delayed(
-          connectionData.clientReconnectInterval,
+          _connectionData.clientReconnectInterval,
           () => _connectToFilesSocket(
-            content,
-            connectionData: connectionData,
+            filesRequest,
             ownerIpAddress: ownerIpAddress,
           ),
         );
@@ -114,50 +142,52 @@ class FileSocketsManager {
     }
   }
 
-  Future<void> _startFilesServer(NearbyMessageFilesContent content) async {
-    final request = _serverWaitingRequests[content.id];
+  Future<void> _startFilesServerSocket(
+    NearbyMessageFilesRequest filesRequest,
+  ) async {
+    final connectionRequest = _serverWaitingRequests[filesRequest.id];
 
-    if (request != null) {
-      Logger.debug('Found cached server file request ${content.id}');
+    if (connectionRequest != null) {
+      Logger.debug('Found cached server files request ${filesRequest.id}');
 
-      final result = await _tryStartFileSocket(
-        content,
-        onCreateSocket: () => WebSocketTransformer.upgrade(request),
+      final result = await _startFilesSocket(
+        filesRequest,
+        onCreateSocket: () => WebSocketTransformer.upgrade(connectionRequest),
       );
       if (result) {
-        _serverWaitingRequests.remove(content.id);
+        _serverWaitingRequests.remove(filesRequest.id);
       }
     }
   }
 
-  Future<bool> _tryStartFileSocket(
-    NearbyMessageFilesContent content, {
+  Future<bool> _startFilesSocket(
+    NearbyMessageFilesRequest filesRequest, {
     required Future<WebSocket?> Function() onCreateSocket,
   }) async {
     final socket = await onCreateSocket();
     if (socket != null && _sender != null) {
-      _filesSockets[content.id] = FilesSocket.startListening(
+      _filesSockets[filesRequest.id] = FilesSocket.startListening(
         sender: _sender!,
-        content: content,
+        filesRequest: filesRequest,
         socket: socket,
         listener: _filesListener,
         onDestroy: _filesSockets.remove,
       );
-      Logger.info('Created a socket for the files pack ${content.id}');
+      Logger.info('Created a socket for the files pack ${filesRequest.id}');
       return true;
     }
     return false;
   }
 
-  Future<void> _startDataTransfer(NearbyMessageFilesContent content) async {
-    final filesSocket = _filesSockets[content.id];
+  Future<void> _startDataTransfer(NearbyMessageFilesRequest request) async {
+    final filesSocket = _filesSockets[request.id];
     if (filesSocket != null) {
-      Logger.debug('Start transferring the files pack ${content.id}');
-      for (var i = 0; i < content.files.length; i++) {
+      Logger.debug('Start transferring the files pack ${request.id}');
+      for (var i = 0; i < request.files.length; i++) {
         try {
-          final fileInfo = content.files[i];
+          final fileInfo = request.files[i];
           await _streamFile(
-            content.id,
+            request.id,
             filesSocket: filesSocket,
             file: File(fileInfo.path),
           )?.asFuture();
@@ -170,7 +200,7 @@ class FileSocketsManager {
         }
       }
       filesSocket.sendData(FilesSocket.finishCommand);
-      Logger.debug('Sent finish command for the pack ${content.id}');
+      Logger.debug('Sent finish command for the pack ${request.id}');
     }
   }
 

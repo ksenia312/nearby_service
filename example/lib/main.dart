@@ -479,15 +479,15 @@ class AppService extends ChangeNotifier {
   }
 
   void sendFilesResponse(
-    NearbyMessageFilesRequest request, {
+    String requestId, {
     required bool response,
   }) {
     if (connectedDevice == null) return;
     _nearbyService.send(
       OutgoingNearbyMessage(
         receiver: connectedDevice!.info,
-        content: NearbyMessageFilesResponse.fromRequest(
-          request,
+        content: NearbyMessageFilesResponse(
+          id: requestId,
           response: response,
         ),
       ),
@@ -869,7 +869,7 @@ class _ConnectedBody extends StatelessWidget {
         ).then((value) {
           if (value is bool) {
             context.read<AppService>().sendFilesResponse(
-                  content,
+                  content.id,
                   response: value,
                 );
           }
