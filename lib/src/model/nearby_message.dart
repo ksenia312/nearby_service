@@ -3,8 +3,8 @@ import 'package:nearby_service/nearby_service.dart';
 ///
 /// The message that will be sent from the current device.
 ///
-final class OutgoingNearbyMessage<C extends NearbyMessageContentBase>
-    extends NearbyMessageBase<C> implements NearbyOutgoingInterface {
+final class OutgoingNearbyMessage<C extends NearbyMessageContent>
+    extends NearbyMessage<C> implements NearbyOutgoingInterface {
   ///
   /// To send a message, in addition to [content], you need to pass [receiver]
   /// to know to whom the message is addressed.
@@ -50,8 +50,8 @@ final class OutgoingNearbyMessage<C extends NearbyMessageContentBase>
 ///
 /// Message received by the current device.
 ///
-final class ReceivedNearbyMessage<C extends NearbyMessageContentBase>
-    extends NearbyMessageBase<C> implements NearbyReceivedInterface {
+final class ReceivedNearbyMessage<C extends NearbyMessageContent>
+    extends NearbyMessage<C> implements NearbyReceivedInterface {
   ///
   /// The received message contains a [sender] in addition to [content],
   /// to know from whom the message came.
@@ -66,7 +66,7 @@ final class ReceivedNearbyMessage<C extends NearbyMessageContentBase>
   ///
   factory ReceivedNearbyMessage.fromJson(Map<String, dynamic>? json) {
     return ReceivedNearbyMessage(
-      content: NearbyMessageContentBase.fromJson(json?['content']),
+      content: NearbyMessageContent.fromJson(json?['content']),
       sender: NearbyDeviceInfo.fromJson(json?['sender']),
     );
   }

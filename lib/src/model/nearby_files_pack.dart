@@ -25,6 +25,9 @@ class ReceivedNearbyFilesPack implements NearbyReceivedInterface {
   @override
   final NearbyDeviceInfo sender;
 
+  ///
+  /// Received list of [NearbyFileInfo].
+  ///
   final List<NearbyFileInfo> files;
 
   Map<String, dynamic> toJson() {

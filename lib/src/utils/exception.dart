@@ -31,8 +31,7 @@ class NearbyServiceException implements Exception {
     );
   }
 
-  factory NearbyServiceException.invalidMessage(
-      NearbyMessageContentBase content) {
+  factory NearbyServiceException.invalidMessage(NearbyMessageContent content) {
     return NearbyServiceException(
       'The message="$content" is not valid',
     );

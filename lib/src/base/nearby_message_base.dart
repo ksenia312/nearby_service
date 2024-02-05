@@ -3,12 +3,12 @@ import 'package:nearby_service/nearby_service.dart';
 ///
 /// Basic Message Abstraction.
 ///
-abstract base class NearbyMessageBase<C extends NearbyMessageContentBase> {
+abstract base class NearbyMessage<C extends NearbyMessageContent> {
   ///
   /// The basic message contains only [content] - the content
   /// to be sent or received.
   ///
-  const NearbyMessageBase({required this.content});
+  const NearbyMessage({required this.content});
 
   ///
   /// Model representing content to be sent or received
@@ -25,7 +25,7 @@ abstract base class NearbyMessageBase<C extends NearbyMessageContentBase> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is NearbyMessageBase &&
+      other is NearbyMessage &&
           runtimeType == other.runtimeType &&
           content == other.content;
 

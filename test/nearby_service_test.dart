@@ -8,19 +8,19 @@ class MockNearbyServicePlatform
     with MockPlatformInterfaceMixin
     implements NearbyServicePlatform {
   @override
-  Stream<NearbyDeviceBase?> getConnectedDeviceStream(device) {
+  Stream<NearbyDevice?> getConnectedDeviceStream(device) {
     // TODO: implement getConnectedDeviceStream
     throw UnimplementedError();
   }
 
   @override
-  Future<List<NearbyDeviceBase>> getPeers() {
+  Future<List<NearbyDevice>> getPeers() {
     // TODO: implement getPeers
     throw UnimplementedError();
   }
 
   @override
-  Stream<List<NearbyDeviceBase>> getPeersStream() {
+  Stream<List<NearbyDevice>> getPeersStream() {
     // TODO: implement getPeersStream
     throw UnimplementedError();
   }
@@ -44,7 +44,7 @@ class MockNearbyServicePlatform
   }
 
   @override
-  Future<bool> disconnect(NearbyDeviceBase device) {
+  Future<bool> disconnect(NearbyDevice device) {
     // TODO: implement disconnect
     throw UnimplementedError();
   }

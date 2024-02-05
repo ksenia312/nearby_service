@@ -194,8 +194,8 @@ class AppService extends ChangeNotifier {
     ..communicationChannelState.addListener(notifyListeners);
 
   AppState state = AppState.idle;
-  List<NearbyDeviceBase>? peers;
-  NearbyDeviceBase? connectedDevice;
+  List<NearbyDevice>? peers;
+  NearbyDevice? connectedDevice;
   NearbyDeviceInfo? currentDeviceInfo;
   NearbyConnectionAndroidInfo? connectionAndroidInfo;
 
@@ -333,7 +333,7 @@ class AppService extends ChangeNotifier {
     updateState(AppState.discoveringPeers);
   }
 
-  Future<void> connect(NearbyDeviceBase device) async {
+  Future<void> connect(NearbyDevice device) async {
     try {
       await _nearbyService.connect(device);
     } catch (e) {
@@ -366,7 +366,7 @@ class AppService extends ChangeNotifier {
     connectionInfoSubscription = null;
   }
 
-  Future<void> startListeningConnectedDevice(NearbyDeviceBase device) async {
+  Future<void> startListeningConnectedDevice(NearbyDevice device) async {
     updateState(AppState.loadingConnection);
     try {
       connectedDeviceSubscription =
@@ -468,7 +468,7 @@ class AppService extends ChangeNotifier {
     if (connectedDevice == null) return;
     _nearbyService.send(
       OutgoingNearbyMessage(
-        content: NearbyMessageFilesRequest(
+        content: NearbyMessageFilesRequest.create(
           files: [
             ...paths.map((e) => NearbyFileInfo(path: e)),
           ],
@@ -494,7 +494,7 @@ class AppService extends ChangeNotifier {
     );
   }
 
-  Future<void> disconnect([NearbyDeviceBase? device]) async {
+  Future<void> disconnect([NearbyDevice? device]) async {
     try {
       await _nearbyService.disconnect(device);
     } catch (e) {
@@ -1004,7 +1004,7 @@ class _ConnectedSocketBodyState extends State<_ConnectedSocketBody> {
 class _DevicePreview extends StatelessWidget {
   const _DevicePreview({required this.device, this.largeView = false});
 
-  final NearbyDeviceBase device;
+  final NearbyDevice device;
   final bool largeView;
 
   @override

@@ -23,12 +23,12 @@ abstract interface class NearbyDeviceMapper {
   }
 
   ///
-  /// Converts JSON to a list of [NearbyDeviceBase].
+  /// Converts JSON to a list of [NearbyDevice].
   ///
-  List<NearbyDeviceBase> mapToDeviceList(dynamic value);
+  List<NearbyDevice> mapToDeviceList(dynamic value);
 
   ///
-  /// Converts JSON to a [NearbyDeviceBase].
+  /// Converts JSON to a [NearbyDevice].
   ///
-  NearbyDeviceBase? mapToDevice(dynamic value);
+  NearbyDevice? mapToDevice(dynamic value);
 }

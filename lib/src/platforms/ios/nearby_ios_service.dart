@@ -118,7 +118,7 @@ class NearbyIOSService extends NearbyService {
   /// Note! Requires [NearbyIOSDevice] to be passed.
   ///
   @override
-  Future<bool> connect(NearbyDeviceBase device) async {
+  Future<bool> connect(NearbyDevice device) async {
     _requireIOSDevice(device);
     final result = _isBrowser.value
         ? await NearbyServiceIOSPlatform.instance.invite(device.info.id)
@@ -140,7 +140,7 @@ class NearbyIOSService extends NearbyService {
   /// Note! Requires [NearbyIOSDevice] to be passed.
   ///
   @override
-  Future<bool> disconnect([NearbyDeviceBase? device]) async {
+  Future<bool> disconnect([NearbyDevice? device]) async {
     if (device == null) return false;
     _requireIOSDevice(device);
     final result = await NearbyServiceIOSPlatform.instance.disconnect(
@@ -272,7 +272,7 @@ class NearbyIOSService extends NearbyService {
     }
   }
 
-  void _requireIOSDevice(NearbyDeviceBase device) {
+  void _requireIOSDevice(NearbyDevice device) {
     assert(
       device is NearbyIOSDevice,
       'The Nearby IOS Service can only work with the NearbyIOSDevice and not with ${device.runtimeType}',

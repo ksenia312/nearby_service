@@ -6,7 +6,7 @@ import 'package:nearby_service/src/utils/random.dart';
 ///
 /// Contains [value] - the message to be sent or received.
 ///
-final class NearbyMessageTextContent extends NearbyMessageContentBase {
+final class NearbyMessageTextContent extends NearbyMessageContent {
   const NearbyMessageTextContent({required this.value});
 
   ///
@@ -22,9 +22,6 @@ final class NearbyMessageTextContent extends NearbyMessageContentBase {
   /// The message to be sent or received
   ///
   final String value;
-
-  @override
-  NearbyMessageContentType get type => NearbyMessageContentType.text;
 
   @override
   bool get isValid => value.isNotEmpty;
@@ -56,13 +53,12 @@ final class NearbyMessageTextContent extends NearbyMessageContentBase {
 ///
 /// Sealed class for files content in NearbyMessage.
 ///
-sealed class NearbyMessageFilesContent extends NearbyMessageContentBase {
+sealed class NearbyMessageFilesContent extends NearbyMessageContent {
   ///
-  /// Here [type] = [NearbyMessageContentType.filesResponse] or
-  /// [type] =  [NearbyMessageContentType.filesRequest]
+  /// Here type is [NearbyMessageContentType.filesResponse] or
+  /// [NearbyMessageContentType.filesRequest]
   ///
-  /// Also [NearbyMessageFilesContent] contains [id] of the files pack and
-  /// list of [NearbyFileInfo] to determine the files.
+  /// Also [NearbyMessageFilesContent] contains [id] of the files pack.
   ///
   const NearbyMessageFilesContent({required this.id});
 
@@ -103,6 +99,9 @@ sealed class NearbyMessageFilesContent extends NearbyMessageContentBase {
 /// Contains info about the [files].
 ///
 final class NearbyMessageFilesRequest extends NearbyMessageFilesContent {
+  ///
+  /// Adds a [NearbyFileInfo] list to [id] to identify files.
+  ///
   const NearbyMessageFilesRequest._({
     required super.id,
     required this.files,
@@ -110,8 +109,9 @@ final class NearbyMessageFilesRequest extends NearbyMessageFilesContent {
 
   ///
   /// Basic constructor with [files] to be sent or received.
+  /// Generates [id] in constructor.
   ///
-  NearbyMessageFilesRequest({required this.files})
+  NearbyMessageFilesRequest.create({required this.files})
       : super(
           id: RandomUtils.instance.nextInt(1000000, 9999999).toString(),
         );
@@ -136,9 +136,6 @@ final class NearbyMessageFilesRequest extends NearbyMessageFilesContent {
   final List<NearbyFileInfo> files;
 
   @override
-  NearbyMessageContentType get type => NearbyMessageContentType.filesRequest;
-
-  @override
   String toString() {
     return 'NearbyMessageFileRequest{id: $id, files: $files}';
   }
@@ -157,9 +154,7 @@ final class NearbyMessageFilesRequest extends NearbyMessageFilesContent {
   bool get isValid =>
       super.isValid &&
       files.isNotEmpty &&
-      files.every(
-        (element) => element.path.isNotEmpty,
-      );
+      files.every((element) => element.path.isNotEmpty);
 
   @override
   bool operator ==(Object other) =>
@@ -175,12 +170,11 @@ final class NearbyMessageFilesRequest extends NearbyMessageFilesContent {
 
 ///
 /// Nearby message File Response. Used for file sending responses.
-/// Does not contain files' bytes!
 ///
 final class NearbyMessageFilesResponse extends NearbyMessageFilesContent {
   ///
   /// Used to send a response to a previously received request.
-  /// Provide [id] from [NearbyMessageFilesRequest] or
+  /// Provide [id] from [NearbyMessageFilesRequest].
   ///
   NearbyMessageFilesResponse({
     required super.id,
@@ -201,9 +195,6 @@ final class NearbyMessageFilesResponse extends NearbyMessageFilesContent {
   /// The main response to the received [NearbyMessageFilesRequest].
   ///
   final bool response;
-
-  @override
-  NearbyMessageContentType get type => NearbyMessageContentType.filesResponse;
 
   @override
   Map<String, dynamic> toJson() {

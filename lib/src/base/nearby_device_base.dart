@@ -5,12 +5,12 @@ import 'package:nearby_service/nearby_service.dart';
 ///
 /// The model of the device found in the P2P network.
 ///
-abstract base class NearbyDeviceBase {
+abstract base class NearbyDevice {
   ///
   /// The base device contains [info] and [status].
   /// These are parameters that devices will have independent of the platform.
   ///
-  const NearbyDeviceBase({required this.info, required this.status});
+  const NearbyDevice({required this.info, required this.status});
 
   ///
   /// The minimum information about the device required
@@ -26,7 +26,7 @@ abstract base class NearbyDeviceBase {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is NearbyDeviceBase &&
+      other is NearbyDevice &&
           runtimeType == other.runtimeType &&
           info == other.info &&
           status == other.status;
@@ -43,17 +43,17 @@ abstract base class NearbyDeviceBase {
   /// If you want to get different data
   /// **depending on the platform**, use [byPlatform].
   ///
-  /// * The [onAndroid] callback returns this instance of [NearbyDeviceBase],
+  /// * The [onAndroid] callback returns this instance of [NearbyDevice],
   /// cast as [NearbyAndroidDevice] if [Platform.isAndroid] is true.
   ///
-  /// * The [onIOS] callback returns this instance of [NearbyDeviceBase],
+  /// * The [onIOS] callback returns this instance of [NearbyDevice],
   /// cast as [NearbyIOSDevice] if [Platform.isIOS] is true.
   ///
-  /// * The [onAny] callback returns this instance of [NearbyDeviceBase] with
+  /// * The [onAny] callback returns this instance of [NearbyDevice] with
   /// no casting if both [Platform.isAndroid] and [Platform.isIOS] are false.
   ///
   T? byPlatform<T>({
-    T Function(NearbyDeviceBase)? onAny,
+    T Function(NearbyDevice)? onAny,
     T Function(NearbyAndroidDevice)? onAndroid,
     T Function(NearbyIOSDevice)? onIOS,
   }) {

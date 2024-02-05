@@ -235,7 +235,7 @@ class NearbySocketService {
     }
   }
 
-  void _handleMessage(NearbyMessageBase message) {
+  void _handleMessage(NearbyMessage message) {
     if (message.content is NearbyMessageFilesContent) {
       _fileSocketsManager.handleFileMessageContent(
         message.content as NearbyMessageFilesContent,

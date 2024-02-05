@@ -128,26 +128,26 @@ abstract class NearbyService {
   ///
   /// A single retrieval of the current list of devices in a P2P network.
   ///
-  /// Returns the list of [NearbyDeviceBase] that have been stored so far.
+  /// Returns the list of [NearbyDevice] that have been stored so far.
   /// If you want to use a constantly updated list of devices, use [getPeersStream].
   ///
-  Future<List<NearbyDeviceBase>> getPeers() {
+  Future<List<NearbyDevice>> getPeers() {
     return NearbyServicePlatform.instance.getPeers();
   }
 
   ///
-  /// Returns a constantly updating list of [NearbyDeviceBase] that
+  /// Returns a constantly updating list of [NearbyDevice] that
   /// the platform-specific service has found at each point in time.
   ///
-  Stream<List<NearbyDeviceBase>> getPeersStream() {
+  Stream<List<NearbyDevice>> getPeersStream() {
     return NearbyServicePlatform.instance.getPeersStream();
   }
 
   ///
-  /// Returns the  constantly updating [NearbyDeviceBase] you are currently connected to.
+  /// Returns the  constantly updating [NearbyDevice] you are currently connected to.
   /// If it returns null, then there is no connection at the moment.
   ///
-  Stream<NearbyDeviceBase?> getConnectedDeviceStream(NearbyDeviceBase device) {
+  Stream<NearbyDevice?> getConnectedDeviceStream(NearbyDevice device) {
     return NearbyServicePlatform.instance.getConnectedDeviceStream(device);
   }
 
@@ -187,7 +187,7 @@ abstract class NearbyService {
   /// Note that if [Platform.isIOS] == true, [NearbyIOSDevice] should be passed.
   /// If [Platform.isAndroid] == true, [NearbyAndroidDevice] should be passed.
   ///
-  Future<bool> connect(NearbyDeviceBase device);
+  Future<bool> connect(NearbyDevice device);
 
   ///
   /// Disconnects from passed [device] using a platform-specific service.
@@ -195,8 +195,8 @@ abstract class NearbyService {
   /// Note that if [Platform.isIOS] == true, [NearbyIOSDevice] should be passed.
   /// If [Platform.isAndroid] == true, [NearbyAndroidDevice] should be passed.
   ///
-  /// For IOS [device] is required!!!
-  Future<bool> disconnect([NearbyDeviceBase? device]);
+  /// **For IOS [device] is required!!!**
+  Future<bool> disconnect([NearbyDevice? device]);
 
   ///
   /// If the device is already connected, it does not mean that you can

@@ -2,28 +2,30 @@ import 'package:nearby_service/nearby_service.dart';
 
 ///
 /// Abstraction for the message content.
-/// The [type] is used to determine, what type of content is it.
+/// The [NearbyMessageContentType] is used to
+/// determine, what type of content is it.
 ///
-abstract base class NearbyMessageContentBase {
-  const NearbyMessageContentBase();
+abstract base class NearbyMessageContent {
+  const NearbyMessageContent();
 
   ///
   /// Contains the conditional logic of creating [NearbyMessageFilesRequest],
   /// [NearbyMessageFilesResponse] or [NearbyMessageTextContent]
   /// by `type` field of [json].
   ///
-  static Content fromJson<Content extends NearbyMessageContentBase>(
-      Map<String, dynamic>? json) {
+  static C fromJson<C extends NearbyMessageContent>(
+    Map<String, dynamic>? json,
+  ) {
     try {
       final type = NearbyMessageContentType.values.firstWhere(
         (e) => e.name == json?['type'],
       );
       if (type.isText) {
-        return NearbyMessageTextContent.fromJson(json) as Content;
+        return NearbyMessageTextContent.fromJson(json) as C;
       } else if (type.isFilesRequest) {
-        return NearbyMessageFilesRequest.fromJson(json) as Content;
+        return NearbyMessageFilesRequest.fromJson(json) as C;
       } else if (type.isFilesResponse) {
-        return NearbyMessageFilesResponse.fromJson(json) as Content;
+        return NearbyMessageFilesResponse.fromJson(json) as C;
       } else {
         throw NearbyServiceException.unsupportedDecoding(json);
       }
@@ -32,7 +34,19 @@ abstract base class NearbyMessageContentBase {
     }
   }
 
-  NearbyMessageContentType get type;
+  NearbyMessageContentType get _type {
+    final type = byType(
+      onText: (_) => NearbyMessageContentType.text,
+      onFilesRequest: (_) => NearbyMessageContentType.filesRequest,
+      onFilesResponse: (_) => NearbyMessageContentType.filesResponse,
+    );
+    if (type != null) {
+      return type;
+    }
+    throw NearbyServiceException(
+      'Unknown type on NearbyMessageContent - $runtimeType',
+    );
+  }
 
   ///
   /// Check for the content if it is valid for sending or receiving.
@@ -40,13 +54,13 @@ abstract base class NearbyMessageContentBase {
   bool get isValid;
 
   ///
-  /// * The [onText] callback returns this instance of [NearbyMessageContentBase],
+  /// * The [onText] callback returns this instance of [NearbyMessageContent],
   /// cast as [NearbyMessageTextContent] if is a text.
   ///
-  /// * The [onFilesRequest] callback returns this instance of [NearbyMessageContentBase],
+  /// * The [onFilesRequest] callback returns this instance of [NearbyMessageContent],
   /// cast as [NearbyMessageFilesRequest] if is a files pack request.
   ///
-  /// * The [onFilesResponse] callback returns this instance of [NearbyMessageContentBase],
+  /// * The [onFilesResponse] callback returns this instance of [NearbyMessageContent],
   /// cast as [NearbyMessageFilesResponse] if is a files pack response.
   ///
   T? byType<T>({
@@ -65,9 +79,9 @@ abstract base class NearbyMessageContentBase {
   }
 
   ///
-  /// Gets [Map] from [NearbyMessageContentBase]
+  /// Gets [Map] from [NearbyMessageContent]
   ///
   Map<String, dynamic> toJson() {
-    return {'type': type.name};
+    return {'type': _type.name};
   }
 }
