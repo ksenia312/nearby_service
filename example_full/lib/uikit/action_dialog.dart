@@ -1,4 +1,5 @@
-part of '../main.dart';
+import 'package:flutter/material.dart';
+import 'package:nearby_service_example_full/uikit/action_button.dart';
 
 class ActionDialog {
   ActionDialog._();
@@ -15,13 +16,14 @@ class ActionDialog {
           title: Text(title),
           content: Text(subtitle),
           actions: [
-            ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Yes'),
+            ActionButton(
+              onTap: () => Navigator.of(context).pop(true),
+              title: 'Yes',
             ),
-            ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('No'),
+            ActionButton(
+              onTap: () => Navigator.of(context).pop(false),
+              title: 'No',
+              type: ActionType.warning,
             ),
           ],
         );

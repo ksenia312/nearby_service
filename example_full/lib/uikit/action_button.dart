@@ -1,24 +1,27 @@
-part of '../main.dart';
+import 'package:flutter/material.dart';
+import 'package:nearby_service_example_full/presentation/app.dart';
 
-enum _ActionButtonType {
-  idle(Color(0xFF00C853)),
-  warning(Color(0xFFD50000));
+enum ActionType {
+  idle(kBlueColor),
+  warning(kPinkColor),
+  success(kGreenColor);
 
-  const _ActionButtonType(this.color);
+  const ActionType(this.color);
 
   final Color color;
 }
 
-class _ActionButton extends StatelessWidget {
-  const _ActionButton({
+class ActionButton extends StatelessWidget {
+  const ActionButton({
+    super.key,
     required this.onTap,
     required this.title,
-    this.type = _ActionButtonType.idle,
+    this.type = ActionType.idle,
   });
 
   final VoidCallback onTap;
   final String title;
-  final _ActionButtonType type;
+  final ActionType type;
 
   @override
   Widget build(BuildContext context) {
@@ -27,9 +30,9 @@ class _ActionButton extends StatelessWidget {
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.white,
         foregroundColor: Colors.white,
-        maximumSize: const Size(150, 70),
-        minimumSize: const Size(70, 70),
-        elevation: 3,
+        maximumSize: const Size(150, 50),
+        minimumSize: const Size(70, 50),
+        elevation: 2,
         surfaceTintColor: type.color.withOpacity(0.05),
       ),
       child: Text(

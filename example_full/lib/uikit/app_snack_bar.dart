@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'action_button.dart';
+
 class AppShackBar {
   AppShackBar._();
 
@@ -7,6 +9,7 @@ class AppShackBar {
     BuildContext context,
     String title, {
     String? subtitle,
+    ActionType actionType = ActionType.idle,
   }) {
     return ScaffoldMessenger.maybeOf(context)?.showSnackBar(
       SnackBar(
@@ -32,7 +35,7 @@ class AppShackBar {
           right: 12,
           bottom: 20,
         ),
-        backgroundColor: Colors.pink.shade800,
+        backgroundColor: actionType.color,
         duration: const Duration(seconds: 2),
       ),
     );

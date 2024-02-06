@@ -1,0 +1,26 @@
+name: nearby_service_example_full
+description: Demonstrates how to use the nearby_service plugin.
+publish_to: 'none'
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  provider: ^6.1.1
+  file_picker: ^6.1.1
+  flutter:
+    sdk: flutter
+
+  nearby_service:
+    path: ../
+  path_provider: ^2.1.2
+
+
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.1
+
+flutter:
+  uses-material-design: true
