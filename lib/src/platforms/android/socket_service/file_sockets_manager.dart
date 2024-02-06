@@ -34,10 +34,15 @@ class FileSocketsManager {
   }
 
   Future<void> handleFileMessageContent(
-    NearbyMessageFilesContent content, {
+    NearbyMessageContent content, {
     required NearbyDeviceInfo? sender,
     required bool isReceived,
   }) async {
+    assert(
+      content is NearbyMessageFilesResponse ||
+          content is NearbyMessageFilesRequest,
+      "Provide NearbyMessageFilesResponse or NearbyMessageFilesRequest to handleFileMessageContent()",
+    );
     if (sender != null) {
       _sender = sender;
       Logger.debug('Sender was set to $_sender');
@@ -47,7 +52,7 @@ class FileSocketsManager {
     final isRequest = content is NearbyMessageFilesRequest;
 
     final isPositiveResponse =
-        content is NearbyMessageFilesResponse && content.response;
+        content is NearbyMessageFilesResponse && content.isAccepted;
 
     if (isRequest) {
       _cachedFilesRequest = content;

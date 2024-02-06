@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:nearby_service/nearby_service.dart';
 import 'package:nearby_service_example_full/domain/app_service.dart';
+import 'package:nearby_service_example_full/presentation/listener/files_listener.dart';
+import 'package:nearby_service_example_full/presentation/listener/messages_listener.dart';
 import 'package:nearby_service_example_full/uikit/uikit.dart';
 import 'package:provider/provider.dart';
 
@@ -48,8 +50,14 @@ class ConnectedView extends StatelessWidget {
                       ActionButton(
                         title: 'Start communicate',
                         onTap: () => service.startCommunicationChannel(
-                          listener: (event) => _listener(context, event),
-                          onFilesSaved: (files) => _onFileSaved(context, files),
+                          listener: (event) => MessagesListener.call(
+                            context,
+                            event,
+                          ),
+                          onFilesSaved: (files) => FilesListener.call(
+                            context,
+                            files,
+                          ),
                         ),
                       )
                     else
@@ -62,52 +70,6 @@ class ConnectedView extends StatelessWidget {
               )
             : const SizedBox();
       },
-    );
-  }
-
-  void _listener(BuildContext context, ReceivedNearbyMessage message) {
-    final senderSubtitle = 'From ${message.sender.displayName} '
-        '(ID: ${message.sender.id})';
-    message.content.byType(
-      onText: (content) {
-        AppShackBar.show(
-          Scaffold.of(context).context,
-          content.value,
-          subtitle: senderSubtitle,
-        );
-      },
-      onFilesRequest: (content) {
-        ActionDialog.show(
-          context,
-          title: 'Request to send ${content.files.length} files',
-          subtitle: senderSubtitle,
-        ).then((value) {
-          if (value is bool) {
-            context.read<AppService>().sendFilesResponse(
-                  content.id,
-                  response: value,
-                );
-          }
-        });
-      },
-      onFilesResponse: (content) {
-        AppShackBar.show(
-          Scaffold.of(context).context,
-          content.response ? 'Request is accepted!' : 'Request was denied :(',
-          subtitle: senderSubtitle,
-          actionType: content.response ? ActionType.idle : ActionType.warning,
-        );
-      },
-    );
-  }
-
-  void _onFileSaved(BuildContext context, ReceivedNearbyFilesPack pack) {
-    final senderSubtitle = 'From ${pack.sender.displayName} '
-        '(ID: ${pack.sender.id})';
-    AppShackBar.show(
-      Scaffold.of(context).context,
-      '${pack.files.length} files saved! \n${pack.files.map((e) => e.name).join('\n')}',
-      subtitle: senderSubtitle,
     );
   }
 }

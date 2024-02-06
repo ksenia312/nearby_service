@@ -13,11 +13,15 @@ extension NearbyServicePlugin {
     @objc func onMessageReceived(notification: Notification) {
         DispatchQueue.main.async {
             if let userInfo = NearbyUserInfo.fromDictionary(userInfo: notification.userInfo) {
+                print(userInfo)
                 if let message = NearbyMessage.fromUserInfo(userInfo: userInfo) {
+                    print(message)
                     if message.content is NearbyMessageFilesResponse {
+                        print(message.content)
                         let response = message.content as! NearbyMessageFilesResponse
                         let cachedRequest = NearbyRequestsStore.instance.find(for: response.id)
                         if (response.response && cachedRequest != nil) {
+                            print("send")
                             self.manager.sendFiles(
                                 id: cachedRequest!.id,
                                 paths: cachedRequest!.files,

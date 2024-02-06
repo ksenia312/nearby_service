@@ -1,4 +1,5 @@
 import 'package:nearby_service/nearby_service.dart';
+import 'package:nearby_service/src/utils/random.dart';
 
 ///
 /// Abstraction for the message content.
@@ -6,11 +7,14 @@ import 'package:nearby_service/nearby_service.dart';
 /// determine, what type of content is it.
 ///
 abstract base class NearbyMessageContent {
-  const NearbyMessageContent();
+  const NearbyMessageContent({required this.id});
+
+  NearbyMessageContent.create()
+      : id = RandomUtils.instance.nextInt(1000000, 9999999).toString();
 
   ///
   /// Contains the conditional logic of creating [NearbyMessageFilesRequest],
-  /// [NearbyMessageFilesResponse] or [NearbyMessageTextContent]
+  /// [NearbyMessageFilesResponse] or [NearbyMessageTextRequest]
   /// by `type` field of [json].
   ///
   static C fromJson<C extends NearbyMessageContent>(
@@ -20,8 +24,10 @@ abstract base class NearbyMessageContent {
       final type = NearbyMessageContentType.values.firstWhere(
         (e) => e.name == json?['type'],
       );
-      if (type.isText) {
-        return NearbyMessageTextContent.fromJson(json) as C;
+      if (type.isTextRequest) {
+        return NearbyMessageTextRequest.fromJson(json) as C;
+      } else if (type.isTextResponse) {
+        return NearbyMessageTextResponse.fromJson(json) as C;
       } else if (type.isFilesRequest) {
         return NearbyMessageFilesRequest.fromJson(json) as C;
       } else if (type.isFilesResponse) {
@@ -34,9 +40,12 @@ abstract base class NearbyMessageContent {
     }
   }
 
+  final String id;
+
   NearbyMessageContentType get _type {
     final type = byType(
-      onText: (_) => NearbyMessageContentType.text,
+      onTextRequest: (_) => NearbyMessageContentType.textRequest,
+      onTextResponse: (_) => NearbyMessageContentType.textResponse,
       onFilesRequest: (_) => NearbyMessageContentType.filesRequest,
       onFilesResponse: (_) => NearbyMessageContentType.filesResponse,
     );
@@ -51,11 +60,11 @@ abstract base class NearbyMessageContent {
   ///
   /// Check for the content if it is valid for sending or receiving.
   ///
-  bool get isValid;
+  bool get isValid => id.isNotEmpty;
 
   ///
-  /// * The [onText] callback returns this instance of [NearbyMessageContent],
-  /// cast as [NearbyMessageTextContent] if is a text.
+  /// * The [onTextRequest] callback returns this instance of [NearbyMessageContent],
+  /// cast as [NearbyMessageTextRequest] if is a text.
   ///
   /// * The [onFilesRequest] callback returns this instance of [NearbyMessageContent],
   /// cast as [NearbyMessageFilesRequest] if is a files pack request.
@@ -64,12 +73,15 @@ abstract base class NearbyMessageContent {
   /// cast as [NearbyMessageFilesResponse] if is a files pack response.
   ///
   T? byType<T>({
-    T Function(NearbyMessageTextContent)? onText,
+    T Function(NearbyMessageTextRequest)? onTextRequest,
+    T Function(NearbyMessageTextResponse)? onTextResponse,
     T Function(NearbyMessageFilesRequest)? onFilesRequest,
     T Function(NearbyMessageFilesResponse)? onFilesResponse,
   }) {
-    if (this is NearbyMessageTextContent && onText != null) {
-      return onText(this as NearbyMessageTextContent);
+    if (this is NearbyMessageTextRequest && onTextRequest != null) {
+      return onTextRequest(this as NearbyMessageTextRequest);
+    } else if (this is NearbyMessageTextResponse && onTextResponse != null) {
+      return onTextResponse(this as NearbyMessageTextResponse);
     } else if (this is NearbyMessageFilesRequest && onFilesRequest != null) {
       return onFilesRequest(this as NearbyMessageFilesRequest);
     } else if (this is NearbyMessageFilesResponse && onFilesResponse != null) {
@@ -82,6 +94,6 @@ abstract base class NearbyMessageContent {
   /// Gets [Map] from [NearbyMessageContent]
   ///
   Map<String, dynamic> toJson() {
-    return {'type': _type.name};
+    return {'type': _type.name, 'id': id};
   }
 }

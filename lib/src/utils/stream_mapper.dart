@@ -4,15 +4,18 @@ import 'package:nearby_service/src/utils/json_decoder.dart';
 abstract class MessagesStreamMapper {
   static ReceivedNearbyMessage replaceId(
     ReceivedNearbyMessage message,
-    String id,
+    String? id,
   ) {
-    return ReceivedNearbyMessage(
-      content: message.content,
-      sender: NearbyDeviceInfo(
-        id: id,
-        displayName: message.sender.displayName,
-      ),
-    );
+    if (id != null) {
+      return ReceivedNearbyMessage(
+        content: message.content,
+        sender: NearbyDeviceInfo(
+          id: id,
+          displayName: message.sender.displayName,
+        ),
+      );
+    }
+    throw NearbyServiceException('The provided ID does not exist');
   }
 
   static ReceivedNearbyMessage? toMessage(dynamic event) {

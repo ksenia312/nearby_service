@@ -15,12 +15,12 @@ class AppShackBar {
       SnackBar(
         content: RichText(
           text: TextSpan(
-            text: '$title \n',
+            text: title,
             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             children: [
               if (subtitle != null)
                 TextSpan(
-                  text: subtitle,
+                  text: '\n$subtitle',
                   style: const TextStyle(
                     fontWeight: FontWeight.normal,
                     fontSize: 14,

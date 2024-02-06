@@ -69,7 +69,7 @@ class _CommunicationViewState extends State<CommunicationView> {
                   Flexible(
                     child: ActionButton(
                       title: 'Send',
-                      onTap: () => service.sendMessage(message),
+                      onTap: () => service.sendTextRequest(message),
                     ),
                   ),
                 ],

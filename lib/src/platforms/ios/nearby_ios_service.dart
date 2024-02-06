@@ -186,19 +186,23 @@ class NearbyIOSService extends NearbyService {
       cancelOnError: eventListener.cancelOnError,
     );
     _resourcesSubscription = NearbyServiceIOSPlatform.instance.resourcesStream
+        .map((event) {
+          print(event);
+          return event;
+        })
         .map(ResourcesStreamMapper.toFilesPack)
         .where((event) => event != null)
         .cast<ReceivedNearbyFilesPack>()
         .listen(
-      (e) => filesListener?.onData.call(e),
-      onDone: filesListener?.onDone,
-      onError: (e, s) {
-        Logger.error(e);
-        _state.value = CommunicationChannelState.notConnected;
-        filesListener?.onError?.call(e, s);
-      },
-      cancelOnError: filesListener?.cancelOnError,
-    );
+          (e) => filesListener?.onData.call(e),
+          onDone: filesListener?.onDone,
+          onError: (e, s) {
+            Logger.error(e);
+            _state.value = CommunicationChannelState.notConnected;
+            filesListener?.onError?.call(e, s);
+          },
+          cancelOnError: filesListener?.cancelOnError,
+        );
     if (_messagesSubscription != null) {
       Logger.info('Messages subscription was created successfully');
       eventListener.onCreated?.call();

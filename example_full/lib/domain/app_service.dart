@@ -314,20 +314,14 @@ extension CommunicationChannelExtension on AppService {
 }
 
 extension MessagingExtension on AppService {
-  void sendMessage(String message) {
-    try {
-      if (connectedDevice == null) return;
-      _nearbyService.send(
-        OutgoingNearbyMessage(
-          content: NearbyMessageTextContent(value: message),
-          receiver: connectedDevice!.info,
-        ),
-      );
-    } catch (e) {
-      if (kDebugMode) {
-        print(e);
-      }
-    }
+  void sendTextRequest(String message) {
+    if (connectedDevice == null) return;
+    _nearbyService.send(
+      OutgoingNearbyMessage(
+        content: NearbyMessageTextRequest.create(value: message),
+        receiver: connectedDevice!.info,
+      ),
+    );
   }
 
   void sendFilesRequest(List<String> paths) {
@@ -344,15 +338,24 @@ extension MessagingExtension on AppService {
     );
   }
 
-  void sendFilesResponse(String requestId, {required bool response}) {
+  void sendTextResponse(String requestId) {
     if (connectedDevice == null) return;
+
     _nearbyService.send(
       OutgoingNearbyMessage(
         receiver: connectedDevice!.info,
-        content: NearbyMessageFilesResponse(
-          id: requestId,
-          response: response,
-        ),
+        content: NearbyMessageTextResponse(id: requestId),
+      ),
+    );
+  }
+
+  void sendFilesResponse(String requestId, {required bool response}) {
+    if (connectedDevice == null) return;
+    print('send');
+    _nearbyService.send(
+      OutgoingNearbyMessage(
+        receiver: connectedDevice!.info,
+        content: NearbyMessageFilesResponse(id: requestId, isAccepted: response),
       ),
     );
   }

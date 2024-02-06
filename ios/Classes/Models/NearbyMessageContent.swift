@@ -10,8 +10,9 @@ import MultipeerConnectivity
 
 class NearbyMessageContent {
     
-    init(type: MessageContentType) {
+    init(id: String, type: MessageContentType) {
         self.type = type
+        self.id = id
     }
     
     let type: MessageContentType
@@ -19,8 +20,10 @@ class NearbyMessageContent {
     static func typedFromJson(json: [String: Any]) -> NearbyMessageContent? {
         if let typeString: String = json["type"] as? String {
             let type = MessageContentType.fromString(value: typeString)
-            if (type == MessageContentType.text) {
-                return NearbyMessageTextContent.fromJson(json: json)
+            if (type == MessageContentType.textRequest) {
+                return NearbyMessageTextRequest.fromJson(json: json)
+            }  else if (type == MessageContentType.textResponse) {
+                return NearbyMessageTextResponse.fromJson(json: json)
             } else if (type == MessageContentType.filesRequest) {
                 return NearbyMessageFilesRequest.fromJson(json: json)
             } else if (type == MessageContentType.filesResponse) {
@@ -30,21 +33,30 @@ class NearbyMessageContent {
         return nil;
     }
     
+    static func fromJsonRaw(type: MessageContentType, json: [String: Any]) -> NearbyMessageContent? {
+        if let id: String = json["id"] as? String {
+            return NearbyMessageContent(id: id, type: type)
+        }
+        return nil;
+    }
     
     func toJson() ->  [String : Any] {
-        return ["type": type.name]
-    }
-}
-
-class NearbyMessageTextContent : NearbyMessageContent {
-    init(value: String) {
-        self.value = value
-        super.init(type: MessageContentType.text)
+        return ["type": type.name, "id": id]
     }
     
-    static func fromJson(json:[String: Any]) -> NearbyMessageTextContent? {
-        if let message: String = json["value"] as? String {
-            return NearbyMessageTextContent(value: message)
+    let id: String
+}
+
+class NearbyMessageTextRequest : NearbyMessageContent {
+    init(id: String, value: String) {
+        self.value = value
+        super.init(id: id, type: MessageContentType.textRequest)
+    }
+    
+    static func fromJson(json:[String: Any]) -> NearbyMessageTextRequest? {
+        if let value: String = json["value"] as? String,
+           let content = NearbyMessageContent.fromJsonRaw(type: MessageContentType.textRequest, json:json) {
+            return NearbyMessageTextRequest(id: content.id, value: value)
         }
         return nil;
     }
@@ -56,42 +68,33 @@ class NearbyMessageTextContent : NearbyMessageContent {
     let value: String
 }
 
-class NearbyMessageFilesContent : NearbyMessageContent {
+class NearbyMessageTextResponse :NearbyMessageContent {
     
-    init(id: String, type: MessageContentType) {
-        self.id = id
-        super.init(type: type)
+     init(id: String) {
+         super.init(id: id, type: MessageContentType.textResponse)
     }
     
-    static func fromJsonRaw(type: MessageContentType, json: [String: Any]) -> NearbyMessageFilesContent? {
-        if let id: String = json["id"] as? String{
-            return NearbyMessageFilesContent(id: id, type: type)
+    static func fromJson( json: [String: Any]) -> NearbyMessageTextResponse? {
+        let content = NearbyMessageContent.fromJsonRaw(type: MessageContentType.textResponse, json: json)
+        if let requireContent = content {
+            return NearbyMessageTextResponse(id: requireContent.id)
         }
-        return nil;
+        return nil
     }
-    
-    override func toJson() ->  [String : Any] {
-        return [
-            "id": id,
-        ].merging( super.toJson()) { (current, _) in current}
-    }
-    
-    
-    let id: String
 }
 
-class NearbyMessageFilesRequest : NearbyMessageFilesContent {
+class NearbyMessageFilesRequest : NearbyMessageContent {
     init(files: Array<String>, id: String) {
         self.files = files
         super.init(id: id, type: MessageContentType.filesRequest)
     }
     static func fromJson(json: [String: Any]) -> NearbyMessageFilesRequest? {
-        let message = NearbyMessageFilesContent.fromJsonRaw(type: MessageContentType.filesRequest, json: json)
+        let content = NearbyMessageContent.fromJsonRaw(type: MessageContentType.filesRequest, json: json)
         if let filesObjects: Array = json["files"] as? Array<Dictionary<String, AnyObject>> {
             let files : [String]? = filesObjects.map({ $0["path"] as? String }).compactMap({$0})
-            if let requireMessage = message {
+            if let requireContent = content {
                 if let requireFiles = files {
-                    return NearbyMessageFilesRequest(files: requireFiles, id: requireMessage.id)
+                    return NearbyMessageFilesRequest(files: requireFiles, id: requireContent.id)
                 }
             }
         }
@@ -106,22 +109,22 @@ class NearbyMessageFilesRequest : NearbyMessageFilesContent {
     }
 }
 
-class NearbyMessageFilesResponse : NearbyMessageFilesContent {
+class NearbyMessageFilesResponse : NearbyMessageContent {
     init(id: String, response: Bool) {
         self.response = response
         super.init(id: id, type: MessageContentType.filesResponse)
     }
     static func fromJson( json: [String: Any]) -> NearbyMessageFilesResponse? {
-        let message = NearbyMessageFilesContent.fromJsonRaw(type: MessageContentType.filesResponse, json: json)
+        let message = NearbyMessageContent.fromJsonRaw(type: MessageContentType.filesResponse, json: json)
         if let requireMessage = message,
-           let response = json["response"] as? Bool {
+           let response = json["isAccepted"] as? Bool {
             return NearbyMessageFilesResponse(id: requireMessage.id, response: response)
         }
         return nil
     }
     override func toJson() ->  [String : Any] {
         return [
-            "response": response
+            "isAccepted": response
         ].merging( super.toJson()) { (current, _) in current}
     }
     
@@ -130,25 +133,29 @@ class NearbyMessageFilesResponse : NearbyMessageFilesContent {
 
 
 enum MessageContentType {
-    case text
+    case textRequest
+    case textResponse
     case filesRequest
     case filesResponse
     
     static func fromString(value: String) -> MessageContentType {
-        if (value == text.name) {
-            return text
-        } else if (value == filesRequest.name) {
+        if (value == textRequest.name) {
+            return textRequest
+        } else if (value == textResponse.name) {
+            return textResponse
+        }  else if (value == filesRequest.name) {
             return filesRequest
         } else if (value == filesResponse.name) {
             return filesResponse
         } else {
-            return text
+            return textRequest
         }
     }
     
     var name : String {
         switch self {
-        case .text: return "text"
+        case .textRequest: return "textRequest"
+        case .textResponse: return "textResponse"
         case .filesRequest: return "filesRequest"
         case .filesResponse: return "filesResponse"
         }
