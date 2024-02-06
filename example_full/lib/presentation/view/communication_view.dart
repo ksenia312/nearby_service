@@ -129,52 +129,30 @@ class _CommunicationViewState extends State<CommunicationView> {
                     (e) {
                       return Container(
                         decoration: BoxDecoration(
-                            border: Border.all(color: kGreenColor),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
+                          border: Border.all(color: kGreenColor),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(11),
                           child: FilesSaver.isImage(e.extension)
-                                ? Image.file(
-                                    File(e.path!),
-                                    fit: BoxFit.cover,
-                                  )
-                                : Container(
-                                    alignment: Alignment.center,
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Text(
-                                      e.name,
-                                      style: const TextStyle(
-                                        fontSize: 8,
-                                        fontWeight: FontWeight.bold,
-                                        color: kGreenColor,
-                                      ),
+                              ? Image.file(
+                                  File(e.path!),
+                                  fit: BoxFit.cover,
+                                )
+                              : Container(
+                                  alignment: Alignment.center,
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Text(
+                                    e.name,
+                                    style: const TextStyle(
+                                      fontSize: 8,
+                                      fontWeight: FontWeight.bold,
+                                      color: kGreenColor,
                                     ),
                                   ),
+                                ),
                         ),
                       );
-                      if (FilesSaver.isImage(e.extension)) {
-                        return Image.file(
-                          File(e.path!),
-                          fit: BoxFit.cover,
-                        );
-                      } else {
-                        return Container(
-                          decoration: BoxDecoration(
-                              border: Border.all(color: kBlueColor),
-                              borderRadius: BorderRadius.circular(16)),
-                          padding: const EdgeInsets.all(8.0),
-                          alignment: Alignment.center,
-                          child: Text(
-                            e.name,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: kBlueColor,
-                            ),
-                          ),
-                        );
-                      }
                     },
                   ),
                 ],
