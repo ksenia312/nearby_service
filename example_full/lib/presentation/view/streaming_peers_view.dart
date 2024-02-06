@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:nearby_service/nearby_service.dart';
 import 'package:nearby_service_example_full/domain/app_service.dart';
 import 'package:nearby_service_example_full/uikit/uikit.dart';
 import 'package:provider/provider.dart';
@@ -32,29 +33,35 @@ class _PeersBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<AppService>(
-      builder: (context, service, _) {
-        return (service.peers != null && service.peers!.isNotEmpty)
-            ? Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  ...service.peers!.map(
-                    (e) {
-                      return Container(
-                        padding: const EdgeInsets.only(bottom: 8.0),
-                        child: DevicePreview(device: e),
-                      );
-                    },
-                  ),
-                ],
-              )
-            : Text(
-                Platform.isAndroid || service.isIOSBrowser
-                    ? 'No one here ('
-                    : "Wait until someone invites you!",
-                textAlign: TextAlign.center,
-              );
+    return Selector<AppService, bool>(
+      selector: (context, service) => service.isIOSBrowser,
+      builder: (context, isIOSBrowser, _) {
+        return Selector<AppService, List<NearbyDevice>?>(
+          selector: (context, service) => service.peers,
+          builder: (context, peers, _) {
+            return (peers != null && peers.isNotEmpty)
+                ? Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      ...peers.map(
+                        (e) {
+                          return Container(
+                            padding: const EdgeInsets.only(bottom: 8.0),
+                            child: DevicePreview(device: e),
+                          );
+                        },
+                      ),
+                    ],
+                  )
+                : Text(
+                    Platform.isAndroid || isIOSBrowser
+                        ? 'No one here ('
+                        : "Wait until someone invites you!",
+                    textAlign: TextAlign.center,
+                  );
+          },
+        );
       },
     );
   }

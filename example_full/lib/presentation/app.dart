@@ -37,46 +37,60 @@ class App extends StatelessWidget {
               }),
             ],
           ),
-          body: Consumer<AppService>(builder: (context, service, _) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(16, 12, 16, 10),
-                  child: InfoPanel(),
-                ),
-                Flexible(
-                  child: MediaQuery.removePadding(
-                    context: context,
-                    removeLeft: true,
-                    child: Stepper(
-                      controlsBuilder: (context, _) => const SizedBox.shrink(),
-                      currentStep: service.state.step,
-                      steps: [
-                        ...AppState.steps.map((e) {
-                          final builder = AppStepViewBuilder(state: e);
-                          final isActive = e == service.state;
-                          return Step(
-                            state: isActive
-                                ? StepState.indexed
-                                : e.step < service.state.step
-                                    ? StepState.complete
-                                    : StepState.disabled,
-                            title: builder.buildTitle(),
-                            subtitle: builder.buildSubtitle(),
-                            content: builder.buildContent(),
-                            isActive: isActive,
-                          );
-                        }),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            );
-          }),
+          body: const _AppBody(),
         ),
       ),
+    );
+  }
+}
+
+class _AppBody extends StatelessWidget {
+  const _AppBody();
+
+  @override
+  Widget build(BuildContext context) {
+    return Selector<AppService, AppState>(
+      selector: (context, service) => service.state,
+      builder: (context, state, _) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 12, 16, 10),
+              child: InfoPanel(),
+            ),
+            Flexible(
+              child: MediaQuery.removePadding(
+                context: context,
+                removeLeft: true,
+                child: Stepper(
+                  controlsBuilder: (context, _) => const SizedBox.shrink(),
+                  currentStep: state.step,
+                  steps: [
+                    ...AppState.steps.map(
+                      (e) {
+                        final builder = AppStepViewBuilder(state: e);
+                        final isActive = e == state;
+                        return Step(
+                          state: isActive
+                              ? StepState.indexed
+                              : e.step < state.step
+                                  ? StepState.complete
+                                  : StepState.disabled,
+                          title: builder.buildTitle(),
+                          subtitle: builder.buildSubtitle(),
+                          content: builder.buildContent(),
+                          isActive: isActive,
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

@@ -8,16 +8,14 @@ class PermissionsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<AppService>(builder: (context, service, _) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          ActionButton(
-            onTap: service.requestPermissions,
-            title: 'Request permissions',
-          ),
-        ],
-      );
-    });
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ActionButton(
+          onTap: context.read<AppService>().requestPermissions,
+          title: 'Request permissions',
+        ),
+      ],
+    );
   }
 }

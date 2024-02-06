@@ -13,63 +13,68 @@ class ConnectedView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<AppService>(
-      builder: (context, service, _) {
-        final device = service.connectedDevice;
-        return device != null
-            ? Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    if (!device.status.isConnected)
-                      const Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(8.0),
-                          child: Text('Connection lost'),
-                        ),
-                      )
-                    else if (!device.status.isConnected)
-                      Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Text('Connection lost'),
-                          ActionButton(
-                            onTap: () {
-                              service.connect(device);
-                            },
-                            title: 'Reconnect',
-                          ),
-                        ],
-                      )
-                    else
-                      DevicePreview(device: device, largeView: true),
-                    const SizedBox(height: 10),
-                    if (service.communicationChannelState !=
-                        CommunicationChannelState.loading)
-                      ActionButton(
-                        title: 'Start communicate',
-                        onTap: () => service.startCommunicationChannel(
-                          listener: (event) => MessagesListener.call(
-                            context,
-                            event,
-                          ),
-                          onFilesSaved: (files) => FilesListener.call(
-                            context,
-                            files,
-                          ),
-                        ),
-                      )
-                    else
-                      Text(
-                        'Connecting socket.. '
-                        '${service.isAndroidGroupOwner != null ? service.isAndroidGroupOwner! ? "Waiting a client for connect" : "Waiting a server for connect" : "Waiting a connection"}',
-                      )
-                  ],
-                ),
-              )
-            : const SizedBox();
-      },
+    final device = context.select<AppService, NearbyDevice?>(
+      (service) => service.connectedDevice,
     );
+    final isAndroidGroupOwner = context.select<AppService, bool?>(
+      (service) => service.isAndroidGroupOwner,
+    );
+    final communicationChannelState =
+        context.select<AppService, CommunicationChannelState>(
+      (service) => service.communicationChannelState,
+    );
+    return device != null
+        ? Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (!device.status.isConnected)
+                  const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Text('Connection lost'),
+                    ),
+                  )
+                else if (!device.status.isConnected)
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('Connection lost'),
+                      ActionButton(
+                        onTap: () {
+                          context.read<AppService>().connect(device);
+                        },
+                        title: 'Reconnect',
+                      ),
+                    ],
+                  )
+                else
+                  DevicePreview(device: device, largeView: true),
+                const SizedBox(height: 10),
+                if (!communicationChannelState.isLoading)
+                  ActionButton(
+                    title: 'Start communicate',
+                    onTap: () =>
+                        context.read<AppService>().startCommunicationChannel(
+                              listener: (event) => MessagesListener.call(
+                                context,
+                                event,
+                              ),
+                              onFilesSaved: (files) => FilesListener.call(
+                                context,
+                                files,
+                              ),
+                            ),
+                  )
+                else
+                  Text(
+                    'Connecting socket.. '
+                    '${isAndroidGroupOwner != null ? isAndroidGroupOwner ? "Waiting a client for connect" : "Waiting a server for connect" : "Waiting a connection"}',
+                  )
+              ],
+            ),
+          )
+        : const SizedBox();
   }
 }

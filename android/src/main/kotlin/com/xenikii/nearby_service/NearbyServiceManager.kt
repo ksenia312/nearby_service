@@ -97,8 +97,9 @@ class NearbyServiceManager(private var context: Context) {
             }
         } catch (e: SecurityException) {
             if (!permissionsHandler.checkPermissions()) {
-                Logger.e("No permission to call 'discover'")
+                Logger.e("No permission to call 'getCurrentDevice'")
                 permissionsHandler.requestPermissions()
+                result.success(null)
             }
         }
     }

@@ -6,6 +6,19 @@ import 'package:path_provider/path_provider.dart';
 class FilesSaver {
   FilesSaver._();
 
+  static bool isImage(String? extension) {
+    return _imageExtensions.contains(extension?.toLowerCase());
+  }
+
+  static const _imageExtensions = [
+    'jpg',
+    'jpeg',
+    'png',
+    'gif',
+    'webp',
+    'bmp',
+  ];
+
   static Future<List<NearbyFileInfo>> savePack(
       ReceivedNearbyFilesPack pack) async {
     final files = <NearbyFileInfo>[];

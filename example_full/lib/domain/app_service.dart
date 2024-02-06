@@ -45,7 +45,6 @@ class AppService extends ChangeNotifier {
       await _nearbyService.initialize(
         data: NearbyInitializeData(iosDeviceName: iosDeviceName),
       );
-      await getCurrentDeviceInfo();
       updateState(
         Platform.isAndroid ? AppState.permissions : AppState.selectClientType,
       );
@@ -86,6 +85,7 @@ class AppService extends ChangeNotifier {
     if (result ?? false) {
       updateState(AppState.readyToDiscover);
       startListeningConnectionInfo();
+      await getCurrentDeviceInfo();
       return true;
     }
     return false;
