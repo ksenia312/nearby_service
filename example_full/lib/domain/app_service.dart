@@ -349,13 +349,15 @@ extension MessagingExtension on AppService {
     );
   }
 
-  void sendFilesResponse(String requestId, {required bool response}) {
+  void sendFilesResponse(String requestId, {required bool isAccepted}) {
     if (connectedDevice == null) return;
-    print('send');
     _nearbyService.send(
       OutgoingNearbyMessage(
         receiver: connectedDevice!.info,
-        content: NearbyMessageFilesResponse(id: requestId, isAccepted: response),
+        content: NearbyMessageFilesResponse(
+          id: requestId,
+          isAccepted: isAccepted,
+        ),
       ),
     );
   }

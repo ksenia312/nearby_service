@@ -205,25 +205,25 @@ class NearbySocketService {
           .cast<ReceivedNearbyMessage>()
           .map((e) => MessagesStreamMapper.replaceId(e, _connectedDeviceId))
           .listen(
-            (message) async {
-              try {
-                _handleFilesMessage(message);
-                socketListener.onData(message);
-              } catch (e) {
-                Logger.error(e);
-              }
-            },
-            onDone: () {
-              state.value = CommunicationChannelState.notConnected;
-              socketListener.onDone?.call();
-            },
-            onError: (e, s) {
-              Logger.error(e);
-              state.value = CommunicationChannelState.notConnected;
-              socketListener.onError?.call(e, s);
-            },
-            cancelOnError: socketListener.cancelOnError,
-          );
+        (message) async {
+          try {
+            _handleFilesMessage(message);
+            socketListener.onData(message);
+          } catch (e) {
+            Logger.error(e);
+          }
+        },
+        onDone: () {
+          state.value = CommunicationChannelState.notConnected;
+          socketListener.onDone?.call();
+        },
+        onError: (e, s) {
+          Logger.error(e);
+          state.value = CommunicationChannelState.notConnected;
+          socketListener.onError?.call(e, s);
+        },
+        cancelOnError: socketListener.cancelOnError,
+      );
     }
     if (_messagesSubscription != null) {
       state.value = CommunicationChannelState.connected;

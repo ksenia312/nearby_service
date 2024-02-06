@@ -36,7 +36,7 @@ class MessagesListener {
           // accept or dismiss the files request
           (isAccepted) => context.read<AppService>().sendFilesResponse(
                 filesRequest.id,
-                response: isAccepted ?? false,
+                isAccepted: isAccepted ?? false,
               ),
         );
       },
