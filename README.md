@@ -67,15 +67,6 @@ the `nearby_service` plugin to open the settings and prompt the user to turn Wi-
 All necessary Android permissions are already in the **AndroidManifest.xml** of the plugin,
 so you don't need to add anything **to work with p2p network**.
 
-> Note that if you want to use the plugin **to send files**, you need to add
-> ```xml
-> <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" /> 
-> <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" /> 
-> ```
-> to your **AndroidManifest.xml**.
-> If you are using an external package to work with the device's file system,
-> follow that package's documentation about managing with permissions.
-
 ### IOS <a id="ios_setup"></a>
 
 For IOS, you need to add the following values to **Info.plist**:
@@ -109,8 +100,8 @@ For IOS, you need to add the following values to **Info.plist**:
   This key is needed to inform users why your application will use the local network. You must provide a string value
   that explains why your application needs LAN access.
 
-> Note that if you want to use the plugin **to send files**, you also need to follow the instructions of the filesystem
-> management package you are using.
+> Note that if you want to use the plugin **to send files**, you also need to follow the instructions about permissions
+> of the filesystem management package you are using.
 
 ## Usage
 
@@ -291,7 +282,7 @@ one of 4 types:
 
 We will talk more about them later.
 
-Second, there is another type of message, `ReceivedNearbyMessage`. This is what came to you from
+Second, there is another type of message, `ReceivedNearbyMessage`. This is what comes to you from
 the `NearbyServiceMessagesListener`. It contains a `sender` field so that you can identify who the message came from and
 use that information.
 
@@ -416,8 +407,8 @@ final messagesListener = NearbyServiceMessagesListener(
 
 At this time under the hood, the sending of files will begin and the recipient will receive `ReceivedNearbyFilesPack` in
 the `NearbyServiceFilesListener` when sending is complete. `ReceivedNearbyFilesPack` holds the paths of the received
-files already stored in the device. You can overwrite them to the desired location, delete them, or do anything else you
-like.
+files already stored on the device's temporary directory. You can overwrite them to the desired location, delete them,
+or do anything else you like.
 
 ```dart
 // DEVICE B
