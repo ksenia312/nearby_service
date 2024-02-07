@@ -1,4 +1,4 @@
-![logo](.github/assets/logo.png)
+![logo](.github/assets/nearby_service_logo.png)
 
 # Nearby Service
 #### Connecting phones in a P2P network
