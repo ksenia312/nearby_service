@@ -114,7 +114,7 @@ For IOS, you need to add the following values to **Info.plist**:
 
 ## Usage
 
-> The full example demonstrating the full functionality can be viewed at
+> The full example demonstrating the functionality can be viewed at
 > the [link](https://github.com/ksenia312/nearby_service/tree/main/example_full).
 
 > **Important note:** for functionality that is only available for one of the platforms, you should use the
