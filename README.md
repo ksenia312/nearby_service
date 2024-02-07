@@ -8,7 +8,7 @@
 [![LICENSE BSD](https://img.shields.io/badge/License-BSD-4577d9)](https://github.com/ksenia312/nearby_service/blob/main/LICENSE)
 
 Nearby Service Flutter Plugin is used to create connections in a P2P network.
-With this plugin,
+The plugin supports sending text messages and files. With it,
 you can easily create any kind of information sharing application **without Internet connection**.
 
 ## Table of Contents
