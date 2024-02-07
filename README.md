@@ -19,7 +19,9 @@ kind of information sharing application **without Internet connection**.
   - [Android](#android--1)
   - [IOS](#ios--1)
 - [Usage](#usage)
-- [Features](#features)
+- [Data sharing](#data-sharing)
+  - [Text messages](#text-messages)
+  - [Resource messages](#resource-messages)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -159,11 +161,14 @@ await _nearbyService.initialize(
 ```dart
 final granted = await _nearbyService.android?.requestPermissions();
 if (granted ?? false) {
-  updateState(AppState.checkServices);
+  // go to the checking Wi-fi step
 }
+```
+
+```dart
 final isWifiEnabled = await _nearbyService.android?.checkWifiService();
 if (isWifiEnabled ?? false) {
-  updateState(AppState.readyToDiscover);
+  // go to the starting discovery step
 }
 ```
 
@@ -182,7 +187,7 @@ The code for selecting a role:
 
 ```dart
 _nearbyService.ios?.setIsBrowser(value: isBrowser);
-updateState(AppState.readyToDiscover);
+// go to the starting discovery step
 ```
 
 4. Start discover the P2P network.
@@ -190,7 +195,233 @@ updateState(AppState.readyToDiscover);
 ```dart
 final result = await _nearbyService.discover();
 if (result) {
-   updateState(AppState.discoveringPeers);
+   // go to the listening peers step
 }
 ```
 
+5. Start listening peers:
+
+```dart
+_nearbyService.getPeersStream().listen((event) => peers = event);
+```
+
+6. Each of the peers is a `NearbyDevice` and you can connect to it:
+
+> Remember that when used on the Android platform, you can only pass `NearbyAndroidDevice` to the `connect()` method.
+> Similarly for iOS, `NearbyIOSDevice`. Devices automatically come from the discovery state in the correct type, so you
+> just need to use the received data.
+
+```dart
+final result = await _nearbyService.connect(device);
+if (result) {
+  // go the the listening the device step
+}
+```
+
+7. Once you are connected via P2P network, you can start listening to the connected device. If `null` comes from the
+   stream, it means the devices lost connection.
+
+```dart
+_connectedDeviceSubscription = _nearbyService.getConnectedDeviceStream(device).listen(
+  (event) async {
+    final wasConnected = connectedDevice?.status.isConnected ?? false;
+    final nowConnected = event?.status.isConnected ?? false;
+    if (wasConnected && !nowConnected) {
+      // return to the discovery state
+    }
+    connectedDevice = event;
+  },
+);
+```
+
+8. Once you have connected over a P2P network, you still need to create a **communication channel** to transfer data.
+   For Android, this is a **socket** embedded in `NearbyService`, for iOS it's a setup to listen to messages and
+   resources from the desired device. There is a method `startCommunicationChannel()` for this purpose. You should pass
+   to it listeners for messages and resources received from the connected device.
+
+```dart
+final messagesListener = NearbyServiceMessagesListener(
+  onData: (message) {
+    // handle the message from NearbyServiceMessagesListener
+  },
+);
+final filesListener = NearbyServiceFilesListener(
+  onData: (pack) async {
+    // handle the files pack from NearbyServiceFilesListener
+  }, 
+);
+
+await _nearbyService.startCommunicationChannel(
+  NearbyCommunicationChannelData(
+    connectedDevice.info.id,
+    messagesListener: messagesListener,
+    filesListener: filesListener,
+  ),
+);
+```
+
+9. I think you've already guessed that since there are listeners of messages from another device, we can send them
+   ourselves too :) There is a method `send()` for that:
+
+```dart
+_nearbyService.send(
+  OutgoingNearbyMessage(
+    content: NearbyMessageTextRequest.create(value: message),
+    receiver: connectedDevice.info,
+  ),
+);
+```
+
+## Data sharing
+
+This is a very important topic for the `nearby_service` plugin because it provides unique functionality for sharing
+typed data.
+
+First, it's essential to say that when you send a message, you are required to pass the `OutgoingNearbyMessage` model.
+This contains the `receiver` - the recipient to whom the message is addressed. The receiver is someone with whom you
+already have an established communication channel. Also `OutgoingNearbyMessage` contains a content field, it can be one
+of 4 types:
+
+- `NearbyMessageTextRequest`
+- `NearbyMessageTextResponse`
+- `NearbyMessageFilesRequest`
+- `NearbyMessageFilesResponse`
+
+We will talk more about them later.
+
+Second, there is another type of message, `ReceivedNearbyMessage`. This is what came to you from
+the `NearbyServiceMessagesListener`. It contains a `sender` field so that you can identify who the message came from and
+use that information.
+
+### Text messages
+
+Description of the operating logic:
+
+1. One of the devices sends a message using the send() method:
+
+```dart
+// DEVICE A
+_nearbyService.send(
+  OutgoingNearbyMessage(
+    content: NearbyMessageTextRequest.create(value: message),
+    receiver: connectedDevice.info,
+  ),
+);
+```
+
+2. Another device receives the `ReceivedNearbyMessage` with content cast as `NearbyMessageTextRequest` from the
+   `NearbyServiceMessagesListener`.
+
+```dart
+// DEVICE B
+final messagesListener = NearbyServiceMessagesListener(
+  onData: (message) {
+    // message is ReceivedNearbyMessage with content cast as NearbyMessageTextRequest here
+  },
+);
+```
+
+3. If you want the sender to make sure the message has been received, you can send them `NearbyMessageTextResponse`. You
+   need to add the `id` from the received `NearbyMessageTextRequest` to it:
+
+```dart
+// DEVICE B
+_nearbyService.send(
+  OutgoingNearbyMessage(
+    receiver: connectedDevice.info,
+    content: NearbyMessageTextResponse(id: requestId),
+  ),
+);
+```
+
+4. If everything is fine, the sender will receive your `NearbyMessageTextResponse` from
+   their `NearbyServiceMessagesListener`:
+
+```dart
+// DEVICE A
+final messagesListener = NearbyServiceMessagesListener(
+  onData: (message) {
+    // message is ReceivedNearbyMessage with content cast as NearbyMessageTextResponse here
+  },
+);
+```
+
+> Throughout the process, you can use the `id`s of the messages to identify them.
+
+### Resource messages
+
+Description of the operating logic:
+
+1. One of the devices sends a message with `NearbyMessageFilesRequest` using the send() method:
+
+```dart
+// DEVICE A
+_nearbyService.send(
+  OutgoingNearbyMessage(
+    // files here is List<NearbyFileInfo>, it can be easily created from the file path: NearbyFileInfo(path: file.path)
+    content: NearbyMessageFilesRequest.create(files: files),
+    receiver: connectedDevice.info,
+  ),
+);
+```
+
+2. Another device receives the `ReceivedNearbyMessage` with content cast as `NearbyMessageFilesRequest` from the
+   `NearbyServiceMessagesListener`.
+
+> The file request comes from the `NearbyServiceMessagesListener` because it doesn't contain the transferred files, only
+> the request to send them! For files, confirmation by the other party before starting the data transfer is required!
+
+```dart
+// DEVICE B
+final messagesListener = NearbyServiceMessagesListener(
+  onData: (message) {
+    // message is ReceivedNearbyMessage with content cast as NearbyMessageFilesRequest here
+  },
+);
+```
+
+3. In order to receive the files, the other party must confirm that it wants to do so and send a message
+   with `NearbyMessageFilesResponse` content. The `NearbyMessageFilesResponse` contains the `isAccepted` field,
+   which will determine whether the file sending will start or not.
+
+> If you don't want to use confirmation logic to send files, just send the automatic positive responses
+> to `NearbyMessageFilesRequest` in `NearbyServiceMessagesListener`.
+
+```dart
+// DEVICE B
+_nearbyService.send(
+  OutgoingNearbyMessage(
+    receiver: connectedDevice!.info,
+    content: NearbyMessageFilesResponse(
+      id: request.id,
+      isAccepted: isAccepted,
+    ),
+  ),
+);
+```
+
+4. The sender will receive `NearbyMessageFilesResponse` in their `NearbyServiceMessagesListener` and can notify the
+   user.
+
+```dart
+// DEVICE A
+final messagesListener = NearbyServiceMessagesListener(
+  onData: (message) {
+    // message is ReceivedNearbyMessage with content cast as NearbyMessageFilesResponse here
+  },
+);
+```
+
+At this time under the hood, the sending of files will begin and the recipient will receive `ReceivedNearbyFilesPack` in
+the `NearbyServiceFilesListener` when sending is complete. `ReceivedNearbyFilesPack` holds the paths of the received
+files already stored in the device. You can overwrite them to the desired location, delete them, or do anything else you
+like.
+
+```dart
+// DEVICE B
+final filesListener = NearbyServiceFilesListener(
+  onData: (pack) async {
+  // pack is ReceivedNearbyFilesPack here
+  },
+);
+```
