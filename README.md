@@ -106,6 +106,9 @@ For IOS, you need to add the following values to **Info.plist**:
   This key is needed to inform users why your application will use the local network. You must provide a string value
   that explains why your application needs LAN access.
 
+> Note that if you want to use the plugin **to send files**, you also need to follow the instructions of the filesystem
+> management package you are using.
+
 ## Usage
 
 
