@@ -77,7 +77,7 @@ so you don't need to add anything **to work with p2p network**.
 
 For IOS, you need to add the following values to **Info.plist**:
 
-```plist
+```
 <key>NSBonjourServices</key>
   <array>
     <string>_mp-connection._tcp</string>
