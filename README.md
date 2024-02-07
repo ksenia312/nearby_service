@@ -66,7 +66,7 @@ so you don't need to add anything **to work with p2p network**.
 
 > Note that if you want to use the plugin **to send files**, you need to add
 > ```xml
-> <uses-permission android:name=" android.permission.READ_EXTERNAL_STORAGE" /> 
+> <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" /> 
 > <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" /> 
 > ```
 > to your **AndroidManifest.xml**.
@@ -75,9 +75,39 @@ so you don't need to add anything **to work with p2p network**.
 
 ### IOS <a id="ios_setup"></a>
 
+For IOS, you need to add the following values to **Info.plist**:
+
+```plist
+<key>NSBonjourServices</key>
+  <array>
+    <string>_mp-connection._tcp</string>
+  </array>
+<key>UIRequiresPersistentWiFi</key>
+<true/>
+<key>NSLocalNetworkUsageDescription</key>
+<string>[Your description here]</string>
+```
+
+- `NSBonjourServices`
+
+  For the `nearby_service` plugin, you should add the value `<string>_mp-connection._tcp</string>`. This key is
+  required for **Multipeer Connectivity**. It defines the Bonjour services
+  that your application will look for. Bonjour is Apple's implementation of zero-configuration networking, which allows
+  devices on a LAN to discover each other and establish connections without requiring manual configuration.
+
+- `UIRequiresPersistentWiFi`
+
+  This key is not strictly required for **Multipeer Connectivity** to work. This key is used
+  to indicate that your application requires a persistent Wi-Fi connection even when the screen is off. This can be
+  useful for maintaining a network connection for continuous data transfer.
+
+- `NSLocalNetworkUsageDescription`
+
+  This key is needed to inform users why your application will use the local network. You must provide a string value
+  that explains why your application needs LAN access.
+
 ## Usage
 
-[Provide a simple usage example to get started quickly.]
 
 
 
