@@ -22,15 +22,21 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
-
 	<key>LSRequiresIPhoneOS</key>
     <true/>
+
     <key>LSSupportsOpeningDocumentsInPlace</key>
     <true/>
     <key>UIFileSharingEnabled</key>
     <true/>
-    <key>NSPhotoLibraryUsageDescription</key>
-    <string>Permission to use the photo library is required to send the photos</string>
+    <key>NSBonjourServices</key>
+        <array>
+            <string>_mp-connection._tcp</string>
+        </array>
+    <key>UIRequiresPersistentWiFi</key>
+    <true/>
+    <key>NSLocalNetworkUsageDescription</key>
+    <string>[Your description here]</string>
 
     <key>UIApplicationSupportsIndirectInputEvents</key>
     <true/>

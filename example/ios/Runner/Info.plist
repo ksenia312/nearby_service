@@ -26,22 +26,26 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
-	<key>LSSupportsOpeningDocumentsInPlace</key>
-    <true/>
+
     <key>UIFileSharingEnabled</key>
     <true/>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+    <true/>
+    <key>NSLocalNetworkUsageDescription</key>
+    <string>[Your description here]</string>
+    <key>NSBonjourServices</key>
+        <array>
+            <string>_mp-connection._tcp</string>
+        </array>
+    <key>UIRequiresPersistentWiFi</key>
+    <true/>
+
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
 	<string>Main</string>
-	<key>NSBonjourServices</key>
-    	<array>
-    		<string>_mp-connection._tcp</string>
-    	</array>
-    <key>UIRequiresPersistentWiFi</key>
-    <true/>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
