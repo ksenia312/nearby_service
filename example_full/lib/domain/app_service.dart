@@ -24,6 +24,8 @@ class AppService extends ChangeNotifier {
   StreamSubscription? _connectedDeviceSubscription;
   StreamSubscription? _connectionInfoSubscription;
 
+  final filesLoadings = <String, int>{};
+
   @override
   void dispose() {
     stopListeningAll();
@@ -85,7 +87,6 @@ class AppService extends ChangeNotifier {
     if (result ?? false) {
       updateState(AppState.readyToDiscover);
       startListeningConnectionInfo();
-      await getCurrentDeviceInfo();
       return true;
     }
     return false;
@@ -102,6 +103,7 @@ class AppService extends ChangeNotifier {
 
   Future<void> discover() async {
     try {
+      await getCurrentDeviceInfo();
       final result = await _nearbyService.discover();
       if (result) {
         updateState(AppState.discoveringPeers);
@@ -287,7 +289,11 @@ extension CommunicationChannelExtension on AppService {
       onData: (event) async {
         final files = await FilesSaver.savePack(event);
         onFilesSaved?.call(
-          ReceivedNearbyFilesPack(sender: event.sender, files: files),
+          ReceivedNearbyFilesPack(
+            id: event.id,
+            sender: event.sender,
+            files: files,
+          ),
         );
       },
     );
@@ -349,16 +355,32 @@ extension MessagingExtension on AppService {
     );
   }
 
-  void sendFilesResponse(String requestId, {required bool isAccepted}) {
+  void sendFilesResponse(
+    NearbyMessageFilesRequest request, {
+    required bool isAccepted,
+  }) {
     if (connectedDevice == null) return;
     _nearbyService.send(
       OutgoingNearbyMessage(
         receiver: connectedDevice!.info,
         content: NearbyMessageFilesResponse(
-          id: requestId,
+          id: request.id,
           isAccepted: isAccepted,
         ),
       ),
     );
+    if (isAccepted) {
+      setFilesLoading(request);
+    }
+  }
+
+  void setFilesLoading(NearbyMessageFilesRequest request) {
+    filesLoadings[request.id] = request.files.length;
+    _notify();
+  }
+
+  void endFilesLoading(ReceivedNearbyFilesPack pack) {
+    filesLoadings.remove(pack.id);
+    _notify();
   }
 }

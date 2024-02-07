@@ -129,6 +129,7 @@ class NearbyManager: NSObject {
             let device = NearbyDevicesStore.instance.find(for: receiverId)
             if let requireDevice = device {
                 let command = NearbyStartCommand(
+                    id: id,
                     senderName: self.device.name,
                     filesCount: paths.count
                 ).toDictionary()

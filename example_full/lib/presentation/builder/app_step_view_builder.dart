@@ -7,7 +7,9 @@ class AppStepViewBuilder {
 
   final AppState state;
 
-  Widget buildContent() {
+  Widget buildContent({
+    required GlobalKey<ScaffoldState> scaffoldKey,
+  }) {
     return switch (state) {
       (AppState.idle) => const IdleView(),
       (AppState.permissions) => const PermissionsView(),
@@ -19,7 +21,9 @@ class AppStepViewBuilder {
       (AppState.loadingConnection) => const Center(
           child: CircularProgressIndicator.adaptive(),
         ),
-      (AppState.connected) => const ConnectedView(),
+      (AppState.connected) => ConnectedView(
+          scaffoldKey: scaffoldKey,
+        ),
       (AppState.communicationChannelCreated) => const CommunicationView(),
     };
   }

@@ -8,6 +8,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final service = AppService();
   await service.getPlatformInfo();
+
   runApp(
     App(service: service),
   );

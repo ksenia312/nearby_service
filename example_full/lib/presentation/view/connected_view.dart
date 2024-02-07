@@ -9,7 +9,9 @@ import 'package:provider/provider.dart';
 import '../components/device_preview.dart';
 
 class ConnectedView extends StatelessWidget {
-  const ConnectedView({super.key});
+  const ConnectedView({super.key, required this.scaffoldKey});
+
+  final GlobalKey<ScaffoldState> scaffoldKey;
 
   @override
   Widget build(BuildContext context) {
@@ -23,6 +25,8 @@ class ConnectedView extends StatelessWidget {
         context.select<AppService, CommunicationChannelState>(
       (service) => service.communicationChannelState,
     );
+
+    final service = context.read<AppService>();
     return device != null
         ? Center(
             child: Column(
@@ -43,7 +47,7 @@ class ConnectedView extends StatelessWidget {
                       const Text('Connection lost'),
                       ActionButton(
                         onTap: () {
-                          context.read<AppService>().connect(device);
+                          service.connect(device);
                         },
                         title: 'Reconnect',
                       ),
@@ -55,17 +59,24 @@ class ConnectedView extends StatelessWidget {
                 if (!communicationChannelState.isLoading)
                   ActionButton(
                     title: 'Start communicate',
-                    onTap: () =>
-                        context.read<AppService>().startCommunicationChannel(
-                              listener: (event) => MessagesListener.call(
-                                context,
-                                event,
-                              ),
-                              onFilesSaved: (files) => FilesListener.call(
-                                context,
-                                files,
-                              ),
-                            ),
+                    onTap: () {
+                      service.startCommunicationChannel(
+                        listener: (event) {
+                          MessagesListener.call(
+                            scaffoldKey.currentState!.context,
+                            service: service,
+                            message: event,
+                          );
+                        },
+                        onFilesSaved: (pack) {
+                          FilesListener.call(
+                            scaffoldKey.currentState!.context,
+                            service: service,
+                            pack: pack,
+                          );
+                        },
+                      );
+                    },
                   )
                 else
                   Text(

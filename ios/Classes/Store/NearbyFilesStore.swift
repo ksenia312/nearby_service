@@ -15,9 +15,11 @@ class NearbyFilesStore {
     private var senderName: String? = nil
     private var maxCount: Int = 0
     private var count: Int = 0
+    private var id: String? = nil
     
     func startReceiving(command: NearbyStartCommand) {
         self.paths.removeAll()
+        self.id = command.id
         self.senderName = command.senderName
         self.maxCount = command.filesCount
         self.count = 0
@@ -33,6 +35,7 @@ class NearbyFilesStore {
     }
     
     func clear() {
+        self.id = nil
         self.paths.removeAll()
         self.senderName = nil
         self.maxCount = 0
@@ -40,8 +43,9 @@ class NearbyFilesStore {
     }
     
     func toDartFormat(peerID: MCPeerID) -> String? {
-        if (senderName != nil) {
+        if (senderName != nil && id != nil) {
             let object = [
+                "id": id!,
                 "files":  paths.map { ["path": $0]},
                 "sender": ["id": peerID.displayName, "displayName": senderName!]
             ] as [String : Any]

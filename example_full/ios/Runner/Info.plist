@@ -22,12 +22,16 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+
 	<key>LSRequiresIPhoneOS</key>
     <true/>
     <key>LSSupportsOpeningDocumentsInPlace</key>
     <true/>
     <key>UIFileSharingEnabled</key>
     <true/>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>Permission to use the photo library is required to send the photos</string>
+
     <key>UIApplicationSupportsIndirectInputEvents</key>
     <true/>
 	<key>UILaunchStoryboardName</key>

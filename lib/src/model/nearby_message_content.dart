@@ -177,6 +177,6 @@ final class NearbyMessageFilesResponse extends NearbyMessageContent {
 
   @override
   String toString() {
-    return 'NearbyMessageFileResponse{response: $isAccepted, id: $id}';
+    return 'NearbyMessageFileResponse{isAccepted: $isAccepted, id: $id}';
   }
 }

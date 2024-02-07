@@ -12,20 +12,28 @@ const kWhiteColor = Color(0xFFFFFFFF);
 const kGreyColor = Color(0xFF607D8B);
 const kGreenColor = Color(0xFF07B988);
 
-class App extends StatelessWidget {
+class App extends StatefulWidget {
   const App({super.key, required this.service});
 
   final AppService service;
 
   @override
+  State<App> createState() => _AppState();
+}
+
+class _AppState extends State<App> {
+  final scaffoldKey = GlobalKey<ScaffoldState>();
+
+  @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider.value(
-      value: service,
+      value: widget.service,
       child: MaterialApp(
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: kBlueColor),
         ),
         home: Scaffold(
+          key: scaffoldKey,
           appBar: AppBar(
             title: const Text('Nearby service example app'),
             actions: [
@@ -37,7 +45,7 @@ class App extends StatelessWidget {
               }),
             ],
           ),
-          body: const _AppBody(),
+          body: _AppBody(scaffoldKey),
         ),
       ),
     );
@@ -45,7 +53,9 @@ class App extends StatelessWidget {
 }
 
 class _AppBody extends StatelessWidget {
-  const _AppBody();
+  const _AppBody(this.scaffoldKey);
+
+  final GlobalKey<ScaffoldState> scaffoldKey;
 
   @override
   Widget build(BuildContext context) {
@@ -72,15 +82,17 @@ class _AppBody extends StatelessWidget {
                         final builder = AppStepViewBuilder(state: e);
                         final isActive = e == state;
                         return Step(
+                          isActive: isActive,
+                          title: builder.buildTitle(),
+                          subtitle: builder.buildSubtitle(),
+                          content: builder.buildContent(
+                            scaffoldKey: scaffoldKey,
+                          ),
                           state: isActive
                               ? StepState.indexed
                               : e.step < state.step
                                   ? StepState.complete
                                   : StepState.disabled,
-                          title: builder.buildTitle(),
-                          subtitle: builder.buildSubtitle(),
-                          content: builder.buildContent(),
-                          isActive: isActive,
                         );
                       },
                     ),

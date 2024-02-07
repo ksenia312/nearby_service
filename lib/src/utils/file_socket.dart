@@ -63,13 +63,16 @@ class FilesSocket {
     } else if (event == separateCommandOf(_currentFileIndex)) {
       _futures.add(_createFile(_currentFileIndex));
       _currentFileIndex = _currentFileIndex + 1;
+      _chunksCount = 0;
       _bytesTable['$_currentFileIndex'] = [];
+      Logger.info('Completed receiving file №${_currentFileIndex - 1}');
     } else if (event == finishCommand) {
       await Future.wait(_futures);
       Logger.info('Files pack ${filesRequest.id} was created');
 
       listener?.onData.call(
         ReceivedNearbyFilesPack(
+          id: filesRequest.id,
           sender: sender,
           files: _files,
         ),
