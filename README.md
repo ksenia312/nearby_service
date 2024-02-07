@@ -23,8 +23,6 @@ you can easily create any kind of information sharing application **without Inte
 - [Data sharing](#data-sharing)
   - [Text messages](#text-messages)
   - [Resource messages](#resource-messages)
-- [Contributing](#contributing)
-- [License](#license)
 
 ## About
 
@@ -48,6 +46,9 @@ To check permissions and Wi-fi status, the
 - `requestPermissions()` (Android only): requests permissions for location and nearby devices and returns true if
   granted
 - `openServicesSettings()`: opens Wi-fi settings for Android and general settings for iOS
+
+> Testing the plugin **is not possible** on Android emulators, as they usually do not contain the Wi-fi Direct function
+> in general! Use physical devices for that.
 
 ### IOS <a id="ios_about"></a>
 
