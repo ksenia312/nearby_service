@@ -13,11 +13,11 @@ kind of information sharing application **without Internet connection**.
 ## Table of Contents
 
 - [About](#about)
-  - [Android](#android_about)
-  - [IOS](#ios_about)
+  - [Android](#android-)
+  - [IOS](#ios-)
 - [Setup](#setup)
-  - [Android](#android_setup)
-  - [IOS](#ios_setup)
+  - [Android](#android--1)
+  - [IOS](#ios--1)
 - [Usage](#usage)
 - [Features](#features)
 - [Contributing](#contributing)
