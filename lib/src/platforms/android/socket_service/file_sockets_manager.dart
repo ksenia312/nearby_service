@@ -176,7 +176,10 @@ class FileSocketsManager {
         filesRequest: filesRequest,
         socket: socket,
         listener: _filesListener,
-        onDestroy: _filesSockets.remove,
+        onDestroy: (id) {
+          socket.close();
+          _filesSockets.remove(id);
+        },
       );
       Logger.info('Created a socket for the files pack ${filesRequest.id}');
       return true;
