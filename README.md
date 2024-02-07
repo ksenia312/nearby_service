@@ -111,6 +111,86 @@ For IOS, you need to add the following values to **Info.plist**:
 
 ## Usage
 
+> The full example demonstrating the full functionality can be viewed at
+> the [link](https://github.com/ksenia312/nearby_service/tree/main/example_full).
 
+> **Important note:** for functionality that is only available for one of the platforms, you should use the
+> corresponding
+> API element from `NearbyService`.
+>
+> For Android:
+>
+> ```dart
+> final _nearbyService = NearbyService.getInstance()
+> _nearbyService.android..
+> ```
+> For IOS:
+>
+> ```dart
+> final _nearbyService = NearbyService.getInstance()
+> _nearbyService.ios..
+> ```
 
+1. Import the package:
+
+```dart
+import 'package:nearby_service/nearby_service.dart';
+```
+
+2. Create an instance of NearbyService:
+
+```dart
+// getInstance() returns an instance for the current platform.
+final _nearbyService = NearbyService.getInstance()
+```
+
+3. Initialize the plugin:
+
+```dart
+// You can change the device name on a P2P network only for iOS. 
+// Optionally pass iosDeviceName.
+await _nearbyService.initialize(
+        data: NearbyInitializeData(iosDeviceName: iosDeviceName),
+      );
+```
+
+**Extra step for Android:** ask for permissions and make sure Wi-fi is enabled:
+
+```dart
+final granted = await _nearbyService.android?.requestPermissions();
+if (granted ?? false) {
+  updateState(AppState.checkServices);
+}
+final isWifiEnabled = await _nearbyService.android?.checkWifiService();
+if (isWifiEnabled ?? false) {
+  updateState(AppState.readyToDiscover);
+}
+```
+
+**Extra step for IOS:** ask the user to choose whether they are a Browser or Advertiser:
+
+> In IOS Multipeer Connectivity, there are 2 roles for the discovery process and connection between devices: **browser**
+> and **advertiser**.
+>
+> **Browser**: This component discovers nearby devices that report their availability. It is
+> responsible for finding peers that advertise themselves and inviting them to join the shared session.
+>
+> **Advertiser**: This component advertises the availability of the device to nearby peers. It is used to let
+> the browser know that the device is available for inviting and connecting.
+
+The code for selecting a role:
+
+```dart
+_nearbyService.ios?.setIsBrowser(value: isBrowser);
+updateState(AppState.readyToDiscover);
+```
+
+4. Start discover the P2P network.
+
+```dart
+final result = await _nearbyService.discover();
+if (result) {
+   updateState(AppState.discoveringPeers);
+}
+```
 
