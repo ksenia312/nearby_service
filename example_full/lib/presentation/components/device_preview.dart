@@ -5,8 +5,11 @@ import 'package:nearby_service_example_full/presentation/app.dart';
 import 'package:provider/provider.dart';
 
 class DevicePreview extends StatelessWidget {
-  const DevicePreview(
-      {super.key, required this.device, this.largeView = false});
+  const DevicePreview({
+    super.key,
+    required this.device,
+    this.largeView = false,
+  });
 
   final NearbyDevice device;
   final bool largeView;
