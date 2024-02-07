@@ -14,16 +14,16 @@ you can easily create any kind of information sharing application **without Inte
 ## Table of Contents
 
 - [About](#about)
-  - [Android](#android-)
-  - [IOS](#ios-)
+    - [Android](#android-)
+    - [IOS](#ios-)
 - [Setup](#setup)
-  - [Android](#android--1)
-  - [IOS](#ios--1)
+    - [Android](#android--1)
+    - [IOS](#ios--1)
 - [Usage](#usage)
 - [Data sharing](#data-sharing)
-  - [Text messages](#text-messages)
-  - [Resource messages](#resource-messages)
-
+    - [Text messages](#text-messages)
+    - [Resource messages](#resource-messages)
+- [Additional features](#additional-features)
 ## About
 
 > A peer-to-peer (P2P) network is a decentralized network architecture in which each participant, called a peer, can act
@@ -238,7 +238,8 @@ _connectedDeviceSubscription = _nearbyService.getConnectedDeviceStream(device).l
 8. Once you have connected over a P2P network, you still need to create a **communication channel** to transfer data.
    For Android, this is a **socket** embedded in `NearbyService`, for iOS it's a setup to listen to messages and
    resources from the desired device. There is a method `startCommunicationChannel()` for this purpose. You should pass
-   to it listeners for messages and resources received from the connected device.
+   to it listeners for messages and resources received from the connected device. There can only be one communication
+   channel, if you create a new one, the previous one will be **cancelled**.
 
 ```dart
 final messagesListener = NearbyServiceMessagesListener(
@@ -426,3 +427,48 @@ final filesListener = NearbyServiceFilesListener(
   },
 );
 ```
+
+## Additional features
+
+- Each `NearbyDevice` contains `NearbyDeviceInfo` that presents different meanings depending on the platform. For
+  Android `id` is the MAC address of the device, and for iOS it is the unique identifier of its MCPeerID. In general, id
+  identifies the device
+  in its platform.
+- Use the getter `communicationChannelState` of `NearbyService` to know the state of the communication channel. It may
+  be:
+
+    ```dart
+    enum CommunicationChannelState {
+      notConnected,
+      loading,
+      connected;
+    
+      bool get isNotConnected => this == CommunicationChannelState.notConnected;
+    
+      bool get isLoading => this == CommunicationChannelState.loading;
+    
+      bool get isConnected => this == CommunicationChannelState.connected;
+    }
+    ```
+
+  The getter is `ValueListenable` so you can listen to its state.
+- There are methods `getPlatformVersion()` and `getPlatformModel()` of `NearbyService` to determine the version and
+  model of the device respectively. You can use them to specify a
+  name for the IOS.
+- Use `getCurrentDeviceInfo()` of `NearbyService` to get information about the current device on the P2P network. Note
+  that the ID obtained from `getCurrentDeviceInfo()` for Android will always be **02:00:00:00:00:00** for privacy
+  issues.
+- For Android, it is possible to listen to the current state of the connection using
+  method `getConnectionInfoStream` of `NearbyAndroidService`.
+- When you are creating a service with `getInstance()`, you can define the logging level in the plugin using
+  field `logLevel`.
+  Possible logging levels:
+
+  ```dart
+  enum NearbyServiceLogLevel {
+    debug,
+    info,
+    error,
+    disabled,
+  }
+  ```
