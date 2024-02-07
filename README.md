@@ -148,7 +148,7 @@ final _nearbyService = NearbyService.getInstance()
 
 ```dart
 // You can change the device name on a P2P network only for iOS. 
-// Optionally pass iosDeviceName.
+// Optionally pass the [iosDeviceName].
 await _nearbyService.initialize(
         data: NearbyInitializeData(iosDeviceName: iosDeviceName),
       );
