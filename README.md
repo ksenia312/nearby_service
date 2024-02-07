@@ -7,8 +7,9 @@
 [![Xenikii Website](https://img.shields.io/badge/-xenikii.one-bd2727?style=flat&logoColor=white)](https://xenikii.one)
 [![LICENSE BSD](https://img.shields.io/badge/License-BSD-4577d9)](https://github.com/ksenia312/nearby_service/blob/main/LICENSE)
 
-Nearby Service Flutter Plugin is used to create connections in a P2P network. With this plugin you can easily create any
-kind of information sharing application **without Internet connection**.
+Nearby Service Flutter Plugin is used to create connections in a P2P network.
+With this plugin,
+you can easily create any kind of information sharing application **without Internet connection**.
 
 ## Table of Contents
 
@@ -52,9 +53,8 @@ To check permissions and Wi-fi status, the
 
 For IOS, the P2P connection is implemented through the `Multipeer Connectivity` framework.
 
-This framework **automatically selects** the best network technology depending on the situation - using **Wi-Fi** if
-both
-devices are on the same network, or using **peer-to-peer Wi-Fi** or **Bluetooth** otherwise.
+This framework **automatically selects** the best network technology depending on the situation—using **Wi-Fi**
+if both devices are on the same network, or using **peer-to-peer Wi-Fi** or **Bluetooth** otherwise.
 
 The module will work even with Wi-fi turned off (via Bluetooth), but you can still use `openServicesSettings()` from
 the `nearby_service` plugin to open the settings and prompt the user to turn Wi-fi on.
@@ -63,7 +63,7 @@ the `nearby_service` plugin to open the settings and prompt the user to turn Wi-
 
 ### Android <a id="android_setup"></a>
 
-All necessary Android permissions are already in the **AndroidManifest.xml** of the plugin
+All necessary Android permissions are already in the **AndroidManifest.xml** of the plugin,
 so you don't need to add anything **to work with p2p network**.
 
 > Note that if you want to use the plugin **to send files**, you need to add
@@ -123,13 +123,13 @@ For IOS, you need to add the following values to **Info.plist**:
 > For Android:
 >
 > ```dart
-> final _nearbyService = NearbyService.getInstance()
+> final _nearbyService = NearbyService.getInstance();
 > _nearbyService.android..
 > ```
 > For IOS:
 >
 > ```dart
-> final _nearbyService = NearbyService.getInstance()
+> final _nearbyService = NearbyService.getInstance();
 > _nearbyService.ios..
 > ```
 
@@ -143,7 +143,7 @@ import 'package:nearby_service/nearby_service.dart';
 
 ```dart
 // getInstance() returns an instance for the current platform.
-final _nearbyService = NearbyService.getInstance()
+final _nearbyService = NearbyService.getInstance();
 ```
 
 3. Initialize the plugin:
@@ -180,8 +180,8 @@ if (isWifiEnabled ?? false) {
 > **Browser**: This component discovers nearby devices that report their availability. It is
 > responsible for finding peers that advertise themselves and inviting them to join the shared session.
 >
-> **Advertiser**: This component advertises the availability of the device to nearby peers. It is used to let
-> the browser know that the device is available for inviting and connecting.
+> **Advertiser**: This component advertises the availability of the device to nearby peers. It is used to let know
+> the browser that the device is available for inviting and connecting.
 
 The code for selecting a role:
 
@@ -190,7 +190,7 @@ _nearbyService.ios?.setIsBrowser(value: isBrowser);
 // go to the starting discovery step
 ```
 
-4. Start discover the P2P network.
+4. Start to discover the P2P network.
 
 ```dart
 final result = await _nearbyService.discover();
@@ -199,7 +199,7 @@ if (result) {
 }
 ```
 
-5. Start listening peers:
+5. Start listening to peers:
 
 ```dart
 _nearbyService.getPeersStream().listen((event) => peers = event);
@@ -279,8 +279,8 @@ typed data.
 
 First, it's essential to say that when you send a message, you are required to pass the `OutgoingNearbyMessage` model.
 This contains the `receiver` - the recipient to whom the message is addressed. The receiver is someone with whom you
-already have an established communication channel. Also `OutgoingNearbyMessage` contains a content field, it can be one
-of 4 types:
+already have an established communication channel. Also `OutgoingNearbyMessage` contains a `content` field, it can be
+one of 4 types:
 
 - `NearbyMessageTextRequest`
 - `NearbyMessageTextResponse`
@@ -297,7 +297,7 @@ use that information.
 
 Description of the operating logic:
 
-1. One of the devices sends a message using the send() method:
+1. One of the devices sends a message using the `send()` method:
 
 ```dart
 // DEVICE A
@@ -352,7 +352,7 @@ final messagesListener = NearbyServiceMessagesListener(
 
 Description of the operating logic:
 
-1. One of the devices sends a message with `NearbyMessageFilesRequest` using the send() method:
+1. One of the devices sends a message with `NearbyMessageFilesRequest` using the `send()` method:
 
 ```dart
 // DEVICE A
