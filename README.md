@@ -14,8 +14,8 @@ you can easily create any kind of information sharing application **without Inte
 ## Table of Contents
 
 - [About](#about)
-    - [Android](#android-about)
-    - [IOS](#ios-about)
+    - [Android](#about-android-plugin)
+    - [IOS](#about-ios-plugin)
 - [Setup](#setup)
     - [Android](#android-setup)
     - [IOS](#ios-setup)
@@ -31,7 +31,7 @@ you can easily create any kind of information sharing application **without Inte
 > as both a client and a server. This means that peer-to-peer networks can exchange resources such as files, data or
 > services directly with each other without needing a central authority or server.
 
-### Android <a id="android-about"></a>
+### About Android Plugin
 
 For Android, **Wi-fi Direct** is used as a P2P network.
 
@@ -51,7 +51,7 @@ To check permissions and Wi-fi status, the
 > Testing the plugin **is not possible** on Android emulators, as they usually do not contain the Wi-fi Direct function
 > in general! Use physical devices for that.
 
-### IOS <a id="ios-about"></a>
+### About IOS Plugin
 
 For IOS, the P2P connection is implemented through the `Multipeer Connectivity` framework.
 
@@ -63,12 +63,12 @@ the `nearby_service` plugin to open the settings and prompt the user to turn Wi-
 
 ## Setup
 
-### Android <a id="android-setup"></a>
+### Android setup
 
 All necessary Android permissions are already in the **AndroidManifest.xml** of the plugin,
 so you don't need to add anything **to work with p2p network**.
 
-### IOS <a id="ios-setup"></a>
+### IOS setup
 
 For IOS, you need to add the following values to **Info.plist**:
 
