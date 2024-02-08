@@ -134,28 +134,30 @@ class NearbySocketService {
     required NearbyServiceMessagesListener socketListener,
     required NearbyConnectionAndroidInfo info,
   }) async {
-    final response = await _network.pingServer(
-      address: info.ownerIpAddress,
-      port: _androidData.port,
-    );
-
-    if (await _pingManager.checkPong(response)) {
-      _socket = await _network.connectToSocket(
-        ownerIpAddress: info.ownerIpAddress,
+    if (state.value.isLoading) {
+      final response = await _network.pingServer(
+        address: info.ownerIpAddress,
         port: _androidData.port,
-        socketType: NearbySocketType.message,
       );
-      _createSocketSubscription(socketListener);
-    } else {
-      Logger.debug(
-        'Retry to connect to the server in ${_androidData.clientReconnectInterval.inSeconds}s',
-      );
-      Future.delayed(_androidData.clientReconnectInterval, () {
-        _tryConnectClient(
-          socketListener: socketListener,
-          info: info,
+
+      if (await _pingManager.checkPong(response)) {
+        _socket = await _network.connectToSocket(
+          ownerIpAddress: info.ownerIpAddress,
+          port: _androidData.port,
+          socketType: NearbySocketType.message,
         );
-      });
+        _createSocketSubscription(socketListener);
+      } else {
+        Logger.debug(
+          'Retry to connect to the server in ${_androidData.clientReconnectInterval.inSeconds}s',
+        );
+        Future.delayed(_androidData.clientReconnectInterval, () {
+          _tryConnectClient(
+            socketListener: socketListener,
+            info: info,
+          );
+        });
+      }
     }
   }
 
