@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.wifi.p2p.WifiP2pDevice
 import android.net.wifi.p2p.WifiP2pDeviceList
+import android.net.wifi.p2p.WifiP2pGroup
 import android.net.wifi.p2p.WifiP2pInfo
 import android.net.wifi.p2p.WifiP2pManager
 import android.net.wifi.p2p.WifiP2pManager.Channel
@@ -107,6 +108,17 @@ class NearbyServiceBroadcastReceiver(
                 writeDevices()
             }
             wifiInfo = info
+            if (info.isGroupOwner && peers.isEmpty())
+                try {
+                    wifiManager.requestGroupInfo(wifiChannel) { group: WifiP2pGroup ->
+                        peers = group.clientList.map { t: WifiP2pDevice -> t.toJsonString() }
+                            .toMutableList()
+
+                    }
+                } catch (e: SecurityException) {
+                    e.message?.let { Logger.e(it) }
+                }
         }
+
     }
 }
