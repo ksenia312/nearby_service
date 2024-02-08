@@ -1,4 +1,4 @@
-![logo](.github/assets/logo.png)
+![logo](assets/logo.png)
 
 # Nearby Service
 
@@ -469,8 +469,8 @@ final filesListener = NearbyServiceFilesListener(
 
 ### Android
 
-![android_demo](.github/assets/demo_android.gif)
+![android_demo](assets/demo_android.gif)
 
 ### IOS
 
-![IOS_demo](.github/assets/demo_ios.gif)
+![IOS_demo](assets/demo_ios.gif)
