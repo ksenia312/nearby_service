@@ -469,8 +469,8 @@ final filesListener = NearbyServiceFilesListener(
 
 ### Android
 
-![android_demo](.github/assets/android_demo.gif)
+![android_demo](.github/assets/demo_android.gif)
 
 ### IOS
 
-![IOS_demo](.github/assets/ios_demo.gif)
+![IOS_demo](.github/assets/demo_ios.gif)
