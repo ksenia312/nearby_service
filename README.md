@@ -24,6 +24,7 @@ you can easily create any kind of information sharing application **without Inte
     - [Text messages](#text-messages)
     - [Resource messages](#resource-messages)
 - [Additional features](#additional-features)
+- [Demo](#demo)
 ## About
 
 > A peer-to-peer (P2P) network is a decentralized network architecture in which each participant, called a peer, can act
@@ -463,3 +464,13 @@ final filesListener = NearbyServiceFilesListener(
     disabled,
   }
   ```
+
+## Demo
+
+### Android
+
+![android_demo](.github/assets/android_demo.gif)
+
+### IOS
+
+![IOS_demo](.github/assets/ios_demo.gif)
