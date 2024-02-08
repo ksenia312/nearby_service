@@ -1,16 +1,33 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:nearby_service/nearby_service.dart';
-import 'package:path_provider/path_provider.dart';
 
+/// All UI components and utilities are moved out of main
+/// to focus on the nearby_service plugin.
+/// If you are interested to see them,
+/// see https://github.com/ksenia312/nearby_service/blob/main/example/lib/.
+import 'components/connected_device_view.dart';
+import 'components/files_messaging_view.dart';
+import 'components/ios_role_selector.dart';
+import 'components/peer_widget.dart';
+import 'components/text_messaging_view.dart';
+import 'utils/app_snack_bar.dart';
+import 'utils/file_saver.dart';
+
+/// Short example variant for pub.dev
+/// See the full example at
+/// https://github.com/ksenia312/nearby_service/tree/main/example_full
 Future<void> main() async {
   runApp(const App());
 }
 
-enum AppState { idle, ready, discovering, connected }
+/// Simplified application states, main 3:
+/// - Preparatory
+/// - Device search
+/// - Communicating with the connected device
+enum AppState { idle, discovering, connected }
 
 class App extends StatelessWidget {
   const App({super.key});
@@ -39,19 +56,25 @@ class AppBody extends StatefulWidget {
 }
 
 class _AppBodyState extends State<AppBody> {
+  /// Our service
   final _nearbyService = NearbyService.getInstance(
+    /// Define log level here
     logLevel: NearbyServiceLogLevel.debug,
   );
   AppState _state = AppState.idle;
 
+  /// Browser OR Advertiser for IOS
   bool _isIosBrowser = true;
+
+  /// List of discovered devices
   List<NearbyDevice> _peers = [];
-  NearbyDevice? _connectedDevice;
   StreamSubscription? _peersSubscription;
 
-  List<PlatformFile> _pickedFiles = [];
-  String _message = '';
+  /// Temporary solution to check the connection,
+  /// use [NearbyService.getConnectedDeviceStream] for this purpose
+  /// in your application
   Timer? _connectionCheckTimer;
+  NearbyDevice? _connectedDevice;
 
   @override
   void initState() {
@@ -73,46 +96,26 @@ class _AppBodyState extends State<AppBody> {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (Platform.isIOS)
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Center(
-                  child: Text(
-                    'You are ${_isIosBrowser ? 'Browser' : 'Advertiser'}',
-                  ),
-                ),
-                Switch(
-                  value: _isIosBrowser,
-                  onChanged: (value) => setState(() => _isIosBrowser = value),
-                ),
-              ],
+            IOSRoleSelector(
+              isIosBrowser: _isIosBrowser,
+              onSelect: (value) => setState(() => _isIosBrowser = value),
             ),
           ElevatedButton(
-            onPressed: _preparePlatforms,
-            child: const Text('Prepare Platforms'),
+            onPressed: _startProcess,
+            child: const Text('Start'),
           ),
         ],
-      );
-    } else if (_state == AppState.ready) {
-      return ElevatedButton(
-        onPressed: _discovery,
-        child: const Text('Start discovery'),
       );
     } else if (_state == AppState.discovering) {
       return ListView(
         children: [
           if (Platform.isIOS)
-            Text(
-              'You are ${_isIosBrowser ? 'Browser' : 'Advertiser'}',
-            ),
+            Text('You are ${_isIosBrowser ? 'Browser' : 'Advertiser'}'),
           ..._peers.map(
-            (e) => ListTile(
-              title: Text(
-                '${_isIosBrowser ? 'Found device' : 'Pending invitation'} | ${e.info.displayName} | ${e.status.name}',
-              ),
-              onTap: () => _connect(e),
-              tileColor: Colors.blueAccent,
-              textColor: Colors.white,
+            (e) => PeerWidget(
+              device: e,
+              isIosBrowser: _isIosBrowser,
+              onConnect: _connect,
             ),
           ),
         ],
@@ -123,81 +126,28 @@ class _AppBodyState extends State<AppBody> {
           mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            DecoratedBox(
-              decoration: const BoxDecoration(
-                color: Colors.blueAccent,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      _connectedDevice!.info.displayName,
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                    ElevatedButton(
-                      onPressed: _disconnect,
-                      child: const Text('Disconnect'),
-                    ),
-                  ],
-                ),
-              ),
+            // Preview of the connected device
+            ConnectedDeviceView(
+              device: _connectedDevice!,
+              onDisconnect: _disconnect,
             ),
             const SizedBox(height: 50),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                TextField(
-                  onChanged: (value) => setState(() => _message = value),
-                  decoration: const InputDecoration(
-                    hintText: 'Enter your message',
-                  ),
-                ),
-                const SizedBox(height: 10),
-                ElevatedButton(
-                  onPressed: () {
-                    _send(NearbyMessageTextRequest.create(value: _message));
-                  },
-                  child: const Text('Send message'),
-                ),
-              ],
+            // Send messages section
+            TextMessagingView(
+              onSend: (message) => _send(
+                NearbyMessageTextRequest.create(value: message),
+              ),
             ),
+
             const SizedBox(height: 50),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                ElevatedButton(
-                  onPressed: () async {
-                    final result = await FilePicker.platform.pickFiles(
-                      allowMultiple: true,
-                    );
-                    if (result != null) {
-                      setState(
-                        () => _pickedFiles = result.files,
-                      );
-                    }
-                  },
-                  child: const Text('Pick the files'),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    _send(
-                      NearbyMessageFilesRequest.create(
-                        files: [
-                          ..._pickedFiles.map(
-                            (e) => NearbyFileInfo(path: e.path!),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                  child: const Text('Send files'),
-                ),
-                const Text('Picked files:', style: TextStyle(fontSize: 16)),
-                ..._pickedFiles.map((e) => Text(e.name)),
-              ],
-            )
+            // Send files section
+            FilesMessagingView(
+              onSend: (files) {
+                _send(
+                  NearbyMessageFilesRequest.create(files: files),
+                );
+              },
+            ),
           ],
         ),
       );
@@ -209,27 +159,27 @@ class _AppBodyState extends State<AppBody> {
     await _nearbyService.initialize();
   }
 
-  Future<void> _preparePlatforms() async {
-    bool result;
-
-    if (Platform.isAndroid) {
-      final isGranted = await _nearbyService.android?.requestPermissions();
-      final wifiEnabled = await _nearbyService.android?.checkWifiService();
-      result = (isGranted ?? false) && (wifiEnabled ?? false);
-    } else if (Platform.isIOS) {
-      _nearbyService.ios?.setIsBrowser(value: _isIosBrowser);
-      result = true;
-    } else {
-      result = false;
-    }
-    if (result) {
-      setState(() {
-        _state = AppState.ready;
-      });
+  Future<void> _startProcess() async {
+    final platformsReady = await _checkPlatforms();
+    if (platformsReady) {
+      await _discover();
     }
   }
 
-  Future<void> _discovery() async {
+  Future<bool> _checkPlatforms() async {
+    if (Platform.isAndroid) {
+      final isGranted = await _nearbyService.android?.requestPermissions();
+      final wifiEnabled = await _nearbyService.android?.checkWifiService();
+      return (isGranted ?? false) && (wifiEnabled ?? false);
+    } else if (Platform.isIOS) {
+      _nearbyService.ios?.setIsBrowser(value: _isIosBrowser);
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  Future<void> _discover() async {
     final result = await _nearbyService.discover();
     if (result) {
       setState(() {
@@ -238,58 +188,68 @@ class _AppBodyState extends State<AppBody> {
       _peersSubscription = _nearbyService.getPeersStream().listen((event) {
         setState(() {
           _peers = event;
+          // Check and filter your peers here
         });
       });
     }
   }
 
   Future<void> _connect(NearbyDevice device) async {
+    // Be careful with already connected devices,
+    // double connection may be unnecessary
     final result = await _nearbyService.connect(device);
-    if (result) {
+    if (result || device.status.isConnected) {
       _connectionCheckTimer = Timer.periodic(
         const Duration(seconds: 3),
         (_) {
+          NearbyDevice? selectedDevice;
           try {
-            final selectedDevice = _peers.firstWhere(
+            selectedDevice = _peers.firstWhere(
               (element) => element.info.id == device.info.id,
             );
-            if (selectedDevice.status.isConnected) {
+          } finally {}
+
+          if (selectedDevice.status.isConnected) {
+            try {
+              _startCommunicationChannel(device);
+            } finally {
               _connectionCheckTimer?.cancel();
               _connectionCheckTimer = null;
-              _nearbyService.startCommunicationChannel(
-                NearbyCommunicationChannelData(
-                  device.info.id,
-                  messagesListener: NearbyServiceMessagesListener(
-                    onCreated: () {
-                      setState(() {
-                        _connectedDevice = device;
-                        _state = AppState.connected;
-                      });
-                    },
-                    onData: _messagesListener,
-                    onError: (e, [StackTrace? s]) {
-                      setState(() {
-                        _connectedDevice = null;
-                        _state = AppState.discovering;
-                      });
-                    },
-                    onDone: () {
-                      setState(() {
-                        _connectedDevice = null;
-                        _state = AppState.discovering;
-                      });
-                    },
-                  ),
-                  filesListener: NearbyServiceFilesListener(
-                    onData: _filesListener,
-                  ),
-                ),
-              );
             }
-          } finally {}
+          }
         },
       );
     }
+  }
+
+  void _startCommunicationChannel(NearbyDevice device) {
+    _nearbyService.startCommunicationChannel(
+      NearbyCommunicationChannelData(
+        device.info.id,
+        filesListener: NearbyServiceFilesListener(onData: _filesListener),
+        messagesListener: NearbyServiceMessagesListener(
+          onData: _messagesListener,
+          onCreated: () {
+            setState(() {
+              _connectedDevice = device;
+              _state = AppState.connected;
+            });
+          },
+          onError: (e, [StackTrace? s]) {
+            setState(() {
+              _connectedDevice = null;
+              _state = AppState.idle;
+            });
+          },
+          onDone: () {
+            setState(() {
+              _connectedDevice = null;
+              _state = AppState.idle;
+            });
+          },
+        ),
+      ),
+    );
   }
 
   Future<void> _disconnect() async {
@@ -307,6 +267,7 @@ class _AppBodyState extends State<AppBody> {
 
   void _messagesListener(ReceivedNearbyMessage<NearbyMessageContent> message) {
     if (_connectedDevice == null) return;
+    // Very useful stuff! Process messages according to the type of content
     message.content.byType(
       onTextRequest: (request) {
         AppSnackBar.show(
@@ -356,66 +317,11 @@ class _AppBodyState extends State<AppBody> {
 
   Future<void> _send(NearbyMessageContent content) async {
     if (_connectedDevice == null) return;
-
     await _nearbyService.send(
-      OutgoingNearbyMessage(content: content, receiver: _connectedDevice!.info),
-    );
-  }
-}
-
-class AppSnackBar {
-  AppSnackBar._();
-
-  static Future<void> show(
-    BuildContext context, {
-    required String title,
-    String? subtitle,
-    String? actionName,
-    VoidCallback? onAcceptAction,
-  }) async {
-    final content = Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(title, style: const TextStyle(fontSize: 16)),
-        if (subtitle != null) Text(subtitle),
-      ],
-    );
-    final action = onAcceptAction != null && actionName != null
-        ? SnackBarAction(
-            label: actionName,
-            onPressed: onAcceptAction,
-          )
-        : null;
-    final messenger = ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
+      OutgoingNearbyMessage(
         content: content,
-        action: action,
+        receiver: _connectedDevice!.info,
       ),
     );
-    return messenger.closed.then((value) => null);
-  }
-}
-
-class FilesSaver {
-  FilesSaver._();
-
-  static Future<List<NearbyFileInfo>> savePack(
-    ReceivedNearbyFilesPack pack,
-  ) async {
-    final files = <NearbyFileInfo>[];
-    final directory = Platform.isAndroid
-        ? Directory('storage/emulated/0/Download')
-        : await getApplicationDocumentsDirectory();
-
-    for (final nearbyFile in pack.files) {
-      final newFile = await File(nearbyFile.path).copy(
-        '${directory.path}/${DateTime.now().microsecondsSinceEpoch}.${nearbyFile.extension}',
-      );
-      if (!await newFile.exists()) {
-        await newFile.create();
-      }
-      files.add(NearbyFileInfo(path: newFile.path));
-    }
-    return files;
   }
 }
