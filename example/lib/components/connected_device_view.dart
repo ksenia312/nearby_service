@@ -24,7 +24,7 @@ class ConnectedDeviceView extends StatelessWidget {
             style: const TextStyle(color: Colors.white),
           ),
           ElevatedButton(
-            onPressed:onDisconnect,
+            onPressed: onDisconnect,
             child: const Text('Disconnect'),
           ),
         ],
