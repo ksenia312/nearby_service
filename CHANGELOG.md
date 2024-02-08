@@ -1,3 +1,7 @@
+## 0.0.4
+
+- Update README: fix table of contents
+
 ## 0.0.3
 
 - Update README: fix images
