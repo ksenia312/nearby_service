@@ -24,6 +24,7 @@ class AppSnackBar {
       SnackBar(
         content: content,
         action: action,
+        duration: Duration(seconds: action != null ? 10 : 2),
       ),
     );
     return messenger.closed.then((value) => null);

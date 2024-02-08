@@ -7,21 +7,30 @@ class PeerWidget extends StatelessWidget {
     required this.device,
     required this.isIosBrowser,
     required this.onConnect,
+    required this.communicationChannelState,
   });
 
   final NearbyDevice device;
   final bool isIosBrowser;
   final ValueChanged<NearbyDevice> onConnect;
+  final CommunicationChannelState communicationChannelState;
 
   @override
   Widget build(BuildContext context) {
+    final connectedStateCaption = communicationChannelState.isLoading
+        ? 'Wait for connection'
+        : 'Tap to chat';
+
     final status =
-        device.status.isConnected ? 'Tap to chat' : device.status.name;
+        device.status.isConnected ? connectedStateCaption : device.status.name;
+
+    final canTap = !communicationChannelState.isLoading;
+
     return ListTile(
       title: Text(
         '${isIosBrowser ? 'Found device' : 'Pending invitation'} | ${device.info.displayName} | $status',
       ),
-      onTap: () => onConnect(device),
+      onTap: canTap ? () => onConnect(device) : null,
       tileColor: Colors.blueAccent,
       textColor: Colors.white,
     );

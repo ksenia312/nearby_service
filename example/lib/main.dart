@@ -57,10 +57,11 @@ class AppBody extends StatefulWidget {
 
 class _AppBodyState extends State<AppBody> {
   /// Our service
-  final _nearbyService = NearbyService.getInstance(
+  late final _nearbyService = NearbyService.getInstance(
     /// Define log level here
     logLevel: NearbyServiceLogLevel.debug,
-  );
+  )..communicationChannelState.addListener(() => setState(() {}));
+
   AppState _state = AppState.idle;
 
   /// Browser OR Advertiser for IOS
@@ -116,6 +117,7 @@ class _AppBodyState extends State<AppBody> {
               device: e,
               isIosBrowser: _isIosBrowser,
               onConnect: _connect,
+              communicationChannelState: _communicationChannelState,
             ),
           ),
         ],
@@ -153,6 +155,10 @@ class _AppBodyState extends State<AppBody> {
       );
     }
     return Container();
+  }
+
+  CommunicationChannelState get _communicationChannelState {
+    return _nearbyService.communicationChannelState.value;
   }
 
   Future<void> _initialize() async {
@@ -199,30 +205,42 @@ class _AppBodyState extends State<AppBody> {
     // double connection may be unnecessary
     final result = await _nearbyService.connect(device);
     if (result || device.status.isConnected) {
-      _connectionCheckTimer = Timer.periodic(
-        const Duration(seconds: 3),
-        (_) {
-          NearbyDevice? selectedDevice;
-          try {
-            selectedDevice = _peers.firstWhere(
-              (element) => element.info.id == device.info.id,
-            );
-          } finally {}
-
-          if (selectedDevice.status.isConnected) {
-            try {
-              _startCommunicationChannel(device);
-            } finally {
-              _connectionCheckTimer?.cancel();
-              _connectionCheckTimer = null;
-            }
-          }
-        },
-      );
+      final channelStarting = _tryCommunicate(device);
+      if (!channelStarting) {
+        _connectionCheckTimer = Timer.periodic(
+          const Duration(seconds: 3),
+          (_) => _tryCommunicate(device),
+        );
+      }
     }
   }
 
+  bool _tryCommunicate(NearbyDevice device) {
+    NearbyDevice? selectedDevice;
+
+    try {
+      selectedDevice = _peers.firstWhere(
+        (element) => element.info.id == device.info.id,
+      );
+    } catch (_) {
+      return false;
+    }
+
+    if (selectedDevice.status.isConnected) {
+      try {
+        _startCommunicationChannel(device);
+      } finally {
+        _connectionCheckTimer?.cancel();
+        _connectionCheckTimer = null;
+      }
+      return true;
+    }
+    return false;
+  }
+
   void _startCommunicationChannel(NearbyDevice device) {
+    if (!_communicationChannelState.isNotConnected) return;
+
     _nearbyService.startCommunicationChannel(
       NearbyCommunicationChannelData(
         device.info.id,
@@ -260,6 +278,7 @@ class _AppBodyState extends State<AppBody> {
       await _nearbyService.stopDiscovery();
       await _peersSubscription?.cancel();
       setState(() {
+        _peers = [];
         _state = AppState.idle;
       });
     }
