@@ -1,4 +1,4 @@
-![logo](assets/logo.png)
+![logo](https://github.com/ksenia312/nearby_service/blob/main/assets/logo.png?raw=true)
 
 # Nearby Service
 
@@ -469,8 +469,8 @@ final filesListener = NearbyServiceFilesListener(
 
 ### Android
 
-![android_demo](assets/demo_android.gif)
+![android_demo](https://github.com/ksenia312/nearby_service/blob/main/assets/demo_android.gif?raw=true)
 
 ### IOS
 
-![IOS_demo](assets/demo_ios.gif)
+![IOS_demo](https://github.com/ksenia312/nearby_service/blob/main/assets/demo_ios.gif?raw=true)

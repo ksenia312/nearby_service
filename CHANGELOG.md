@@ -1,3 +1,7 @@
+## 0.0.2+1
+
+- Update README: fix images
+
 ## 0.0.2
 
 - Update README and assets
