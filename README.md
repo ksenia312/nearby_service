@@ -16,6 +16,7 @@ you can easily create any kind of information sharing application **without Inte
 - [About](#about)
     - [Android](#about-android-plugin)
     - [IOS](#about-ios-plugin)
+- [Features](#features)
 - [Setup](#setup)
     - [Android](#android-setup)
     - [IOS](#ios-setup)
@@ -23,7 +24,7 @@ you can easily create any kind of information sharing application **without Inte
 - [Data sharing](#data-sharing)
     - [Text messages](#text-messages)
     - [Resource messages](#resource-messages)
-- [Additional features](#additional-features)
+- [Additional options](#additional-options)
 - [Demo](#demo)
 ## About
 
@@ -60,6 +61,29 @@ if both devices are on the same network, or using **peer-to-peer Wi-Fi** or **Bl
 
 The module will work even with Wi-fi turned off (via Bluetooth), but you can still use `openServicesSettings()` from
 the `nearby_service` plugin to open the settings and prompt the user to turn Wi-fi on.
+
+## Features
+
+- **Device Preparation**
+    - Requesting permissions to use Wi-Fi Direct (Android only)
+    - Checking Wi-Fi status (Android only)
+    - Opening settings to enable Wi-Fi (Android and iOS)
+    - Role selection - Browser or Advertiser (IOS only)
+
+- **Connecting to the Device from a P2P Network**
+    - Listening for discovered devices (peers)
+    - Creating connections over the P2P network
+    - Monitoring the status of the connected device
+
+- **The Data Transmission Channel**
+    - Establishing the channel for data exchange
+    - Monitoring the status of the channel
+
+- **Typed Data Exchange**
+    - Transmitting text data over the P2P network
+    - Receiving confirmation of successful text message delivery
+    - Transmitting files over the P2P network
+    - The option to confirm or deny receiving of files over the network
 
 ## Setup
 
@@ -420,7 +444,7 @@ final filesListener = NearbyServiceFilesListener(
 );
 ```
 
-## Additional features
+## Additional options
 
 - Each `NearbyDevice` contains `NearbyDeviceInfo` that presents different meanings depending on the platform. For
   Android `id` is the MAC address of the device, and for iOS it is the unique identifier of its MCPeerID. In general, id

@@ -1,3 +1,7 @@
+## 0.0.5
+
+- Update README: add Features section
+
 ## 0.0.4
 
 - Update README: fix table of contents
