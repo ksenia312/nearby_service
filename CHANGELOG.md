@@ -1,3 +1,7 @@
+## 0.0.6
+
+- Update README: add a Feedback form
+
 ## 0.0.5
 
 - Update README: add Features section
