@@ -112,6 +112,7 @@ class _AppBodyState extends State<AppBody> {
         children: [
           if (Platform.isIOS)
             Text('You are ${_isIosBrowser ? 'Browser' : 'Advertiser'}'),
+          if (_peers.isEmpty) const Text('Searching for peers...'),
           ..._peers.map(
             (e) => PeerWidget(
               device: e,

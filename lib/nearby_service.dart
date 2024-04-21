@@ -168,6 +168,13 @@ abstract class NearbyService {
   /// Note that the [NearbyIOSService] implementation starts **browsing** or
   /// **advertising** depending on the [NearbyIOSService.isBrowser].
   ///
+  /// On Android can throw mapped from native platform exceptions:
+  /// 1. [NearbyServiceBusyException]
+  /// 2. [NearbyServiceP2PUnsupportedException]
+  /// 3. [NearbyServiceNoServiceRequestsException]
+  /// 4. [NearbyServiceGenericErrorException]
+  /// 5. [NearbyServiceUnknownException]
+  ///
   Future<bool> discover();
 
   ///
@@ -175,6 +182,13 @@ abstract class NearbyService {
   ///
   /// Note that the [NearbyIOSService] implementation stops **browsing** or
   /// **advertising** depending on the [NearbyIOSService.isBrowser].
+  ///
+  /// On Android can throw mapped from native platform exceptions:
+  /// 1. [NearbyServiceBusyException]
+  /// 2. [NearbyServiceP2PUnsupportedException]
+  /// 3. [NearbyServiceNoServiceRequestsException]
+  /// 4. [NearbyServiceGenericErrorException]
+  /// 5. [NearbyServiceUnknownException]
   ///
   Future<bool> stopDiscovery();
 
@@ -187,6 +201,13 @@ abstract class NearbyService {
   /// Note that if [Platform.isIOS] == true, [NearbyIOSDevice] should be passed.
   /// If [Platform.isAndroid] == true, [NearbyAndroidDevice] should be passed.
   ///
+  /// On Android can throw mapped from native platform exceptions:
+  /// 1. [NearbyServiceBusyException]
+  /// 2. [NearbyServiceP2PUnsupportedException]
+  /// 3. [NearbyServiceNoServiceRequestsException]
+  /// 4. [NearbyServiceGenericErrorException]
+  /// 5. [NearbyServiceUnknownException]
+  ///
   Future<bool> connect(NearbyDevice device);
 
   ///
@@ -196,6 +217,14 @@ abstract class NearbyService {
   /// If [Platform.isAndroid] == true, [NearbyAndroidDevice] should be passed.
   ///
   /// **For IOS [device] is required!!!**
+  ///
+  /// On Android can throw mapped from native platform exceptions:
+  /// 1. [NearbyServiceBusyException]
+  /// 2. [NearbyServiceP2PUnsupportedException]
+  /// 3. [NearbyServiceNoServiceRequestsException]
+  /// 4. [NearbyServiceGenericErrorException]
+  /// 5. [NearbyServiceUnknownException]
+  ///
   Future<bool> disconnect([NearbyDevice? device]);
 
   ///

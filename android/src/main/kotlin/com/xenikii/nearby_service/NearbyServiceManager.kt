@@ -248,7 +248,7 @@ class NearbyServiceManager(private var context: Context) {
                 val reason = when (reasonCode) {
                     WifiP2pManager.P2P_UNSUPPORTED -> "Wi-Fi P2P is not supported on this device. Please ensure your device supports Wi-Fi P2P."
                     WifiP2pManager.ERROR -> "A generic error occurred. This could be due to various reasons such as hardware issues, Wi-Fi being turned off, or temporary issues with the Wi-Fi P2P framework."
-                    WifiP2pManager.BUSY -> "The Wi-Fi P2P framework is currently busy. Please wait for the current operation to complete before initiating another."
+                    WifiP2pManager.BUSY -> "The Wi-Fi P2P framework is currently busy. Please wait for the current operation to complete before initiating another. Usually this means that you have sent a request to some device and now one of the peers is CONNECTING."
                     WifiP2pManager.NO_SERVICE_REQUESTS -> "No service discovery requests have been made. Ensure that you have initiated a service discovery request before attempting to connect."
                     else -> "An unknown error occurred. Please check the device's Wi-Fi P2P settings and ensure the device supports Wi-Fi P2P."
                 }

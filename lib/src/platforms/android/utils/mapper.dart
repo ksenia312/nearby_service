@@ -12,7 +12,7 @@ class NearbyServiceAndroidExceptionMapper {
     } catch (_) {}
     return switch (enumValue) {
       AndroidFailureCodes.BUSY => NearbyServiceBusyException(),
-      AndroidFailureCodes.ERROR => NearbyServiceWifiException(),
+      AndroidFailureCodes.ERROR => NearbyServiceGenericErrorException(),
       AndroidFailureCodes.P2P_UNSUPPORTED =>
         NearbyServiceP2PUnsupportedException(),
       AndroidFailureCodes.NO_SERVICE_REQUESTS =>
