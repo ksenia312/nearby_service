@@ -47,7 +47,6 @@ class AppService extends ChangeNotifier {
       await _nearbyService.initialize(
         data: NearbyInitializeData(iosDeviceName: iosDeviceName),
       );
-      await getCurrentDeviceInfo();
       updateState(
         Platform.isAndroid ? AppState.permissions : AppState.selectClientType,
       );
@@ -117,6 +116,7 @@ class AppService extends ChangeNotifier {
 
   Future<void> discover() async {
     try {
+      await getCurrentDeviceInfo();
       final hasRunning = await hasRunningJobs();
       if (hasRunning) {
         updateState(AppState.discoveringPeers);
