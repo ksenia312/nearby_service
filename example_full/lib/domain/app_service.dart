@@ -99,6 +99,7 @@ class AppService extends ChangeNotifier {
   Future<bool> hasRunningJobs() async {
     try {
       final result = await _nearbyService.getPeers();
+      // if one of devices is connecting, service is busy (android only)
       if (result.any(
         (element) => element.status == NearbyDeviceStatus.connecting,
       )) {
