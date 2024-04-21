@@ -11,7 +11,11 @@ Nearby Service Flutter Plugin is used to create connections in a P2P network.
 The plugin supports sending text messages and files. With it,
 you can easily create any kind of information sharing application **without Internet connection**.
 
-Your feedback and suggestions would be greatly appreciated! [You can leave your opinion here](https://forms.gle/FbAtW2dG5RYCxb1DA)
+The package does not support communication between Android and IOS devices, the connection is available for
+**Android-Android** and **IOS-IOS** relations.
+
+Your feedback and suggestions would be greatly
+appreciated! [You can leave your opinion here](https://forms.gle/FbAtW2dG5RYCxb1DA)
 
 ## Table of Contents
 
