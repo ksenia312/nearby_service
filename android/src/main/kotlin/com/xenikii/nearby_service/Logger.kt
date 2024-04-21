@@ -19,19 +19,19 @@ class Logger {
         var level = LogLevel.DEBUG
         fun d(message: String) {
             if (level.value <= LogLevel.DEBUG.value) {
-                Log.d(TAG, message)
+                Log.d(TAG, "\u001B[37m$message\u001B[0m")
             }
         }
 
         fun i(message: String) {
             if (level.value <= LogLevel.INFO.value) {
-                Log.i(TAG, message)
+                Log.i(TAG, "\u001B[32m$message\u001B[0m")
             }
         }
 
         fun e(message: String) {
             if (level.value <= LogLevel.ERROR.value) {
-                Log.e(TAG, message)
+                Log.e(TAG, "\u001B[31m$message\u001B[0m")
             }
         }
     }

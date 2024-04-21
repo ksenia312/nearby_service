@@ -121,7 +121,11 @@ class NearbyServiceManager(private var context: Context) {
     fun discover(result: Result) {
         try {
             wifiManager.discoverPeers(
-                wifiChannel, getActionListener(result)
+                wifiChannel, getActionListener(
+                    result,
+                    "Discovery has started successfully!",
+                    "Discovery starting failed"
+                )
             )
         } catch (e: SecurityException) {
             if (!permissionsHandler.checkPermissions()) {
@@ -136,7 +140,11 @@ class NearbyServiceManager(private var context: Context) {
      */
     fun stopDiscovery(result: Result) {
         wifiManager.stopPeerDiscovery(
-            wifiChannel, getActionListener(result)
+            wifiChannel, getActionListener(
+                result,
+                "Discovery has successfully stopped",
+                "Discovery stopping failed"
+            )
         )
     }
 
@@ -167,7 +175,7 @@ class NearbyServiceManager(private var context: Context) {
         }
         val actionListener = getActionListener(
             result,
-            "Connected to device $deviceAddress",
+            "Connection request sent to device $deviceAddress",
             "Connecting to device $deviceAddress failed"
         )
         config.deviceAddress = deviceAddress
@@ -216,12 +224,17 @@ class NearbyServiceManager(private var context: Context) {
             permissionsHandler,
         )
         context.registerReceiver(receiver, intentFilter)
+        try {
+            receiver.init()
+        } catch (error: Throwable) {
+            Logger.e("Failed to write initial info, error=${error.message}")
+        }
     }
 
     private fun getActionListener(
         result: Result?,
         successMessage: String? = null,
-        errorMessage: String? = null,
+        errorMessage: String
     ): WifiP2pManager.ActionListener {
         return object : WifiP2pManager.ActionListener {
             override fun onSuccess() {
@@ -232,10 +245,22 @@ class NearbyServiceManager(private var context: Context) {
             }
 
             override fun onFailure(reasonCode: Int) {
-                if (errorMessage != null) {
-                    Logger.e("ERROR: $errorMessage Reason code: $reasonCode")
+                val reason = when (reasonCode) {
+                    WifiP2pManager.P2P_UNSUPPORTED -> "Wi-Fi P2P is not supported on this device. Please ensure your device supports Wi-Fi P2P."
+                    WifiP2pManager.ERROR -> "A generic error occurred. This could be due to various reasons such as hardware issues, Wi-Fi being turned off, or temporary issues with the Wi-Fi P2P framework."
+                    WifiP2pManager.BUSY -> "The Wi-Fi P2P framework is currently busy. Please wait for the current operation to complete before initiating another."
+                    WifiP2pManager.NO_SERVICE_REQUESTS -> "No service discovery requests have been made. Ensure that you have initiated a service discovery request before attempting to connect."
+                    else -> "An unknown error occurred. Please check the device's Wi-Fi P2P settings and ensure the device supports Wi-Fi P2P."
                 }
-                result?.success(false)
+                val stringifyReasonCode = when (reasonCode) {
+                    WifiP2pManager.P2P_UNSUPPORTED -> "P2P_UNSUPPORTED"
+                    WifiP2pManager.ERROR -> "ERROR"
+                    WifiP2pManager.BUSY -> "BUSY"
+                    WifiP2pManager.NO_SERVICE_REQUESTS -> "NO_SERVICE_REQUESTS"
+                    else -> "UNKNOWN"
+                }
+                Logger.e("$errorMessage, Reason code: $reasonCode, Reason: $reason")
+                result?.success(stringifyReasonCode)
             }
         }
     }

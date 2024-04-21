@@ -6,7 +6,7 @@ import 'package:nearby_service/nearby_service.dart';
 /// Contains [value] - the message to be sent or received.
 ///
 final class NearbyMessageTextRequest extends NearbyMessageContent {
-  const NearbyMessageTextRequest._({
+  const NearbyMessageTextRequest.createManually({
     required this.value,
     required super.id,
   });
@@ -17,7 +17,7 @@ final class NearbyMessageTextRequest extends NearbyMessageContent {
   /// Gets [NearbyMessageTextRequest] from [json]
   ///
   factory NearbyMessageTextRequest.fromJson(Map<String, dynamic>? json) {
-    return NearbyMessageTextRequest._(
+    return NearbyMessageTextRequest.createManually(
       id: json?['id'],
       value: json?['value'],
     );
@@ -76,7 +76,7 @@ final class NearbyMessageFilesRequest extends NearbyMessageContent {
   ///
   /// Adds a [NearbyFileInfo] list to [id] to identify files.
   ///
-  const NearbyMessageFilesRequest._({
+  const NearbyMessageFilesRequest.createManually({
     required super.id,
     required this.files,
   });
@@ -91,7 +91,7 @@ final class NearbyMessageFilesRequest extends NearbyMessageContent {
   /// Gets [NearbyMessageFilesRequest] from [json].
   ///
   factory NearbyMessageFilesRequest.fromJson(Map<String, dynamic>? json) {
-    return NearbyMessageFilesRequest._(
+    return NearbyMessageFilesRequest.createManually(
       id: json?['id'],
       files: [
         ...?(json?['files'] as List?)?.map(

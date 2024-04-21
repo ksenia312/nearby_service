@@ -143,7 +143,7 @@ class NearbyAndroidMapper implements NearbyDeviceMapper {
     final decoded = JSONDecoder.decodeList(value);
     return [
       ...?decoded?.map(
-        (e) => NearbyAndroidDevice.fromJson(e as Map<String, dynamic>?),
+        (e) => NearbyAndroidDevice.fromJson(JSONDecoder.decodeMap(e)),
       ),
     ];
   }

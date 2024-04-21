@@ -47,13 +47,12 @@ class AppService extends ChangeNotifier {
       await _nearbyService.initialize(
         data: NearbyInitializeData(iosDeviceName: iosDeviceName),
       );
+      await getCurrentDeviceInfo();
       updateState(
         Platform.isAndroid ? AppState.permissions : AppState.selectClientType,
       );
-    } catch (e) {
-      if (kDebugMode) {
-        print(e);
-      }
+    } catch (e, s) {
+      _log(e, s);
     } finally {
       notifyListeners();
     }
@@ -62,10 +61,8 @@ class AppService extends ChangeNotifier {
   Future<void> getCurrentDeviceInfo() async {
     try {
       currentDeviceInfo = await _nearbyService.getCurrentDeviceInfo();
-    } catch (e) {
-      if (kDebugMode) {
-        print(e);
-      }
+    } catch (e, s) {
+      _log(e, s);
     }
   }
 
@@ -75,10 +72,8 @@ class AppService extends ChangeNotifier {
       if (result ?? false) {
         updateState(AppState.checkServices);
       }
-    } catch (e) {
-      if (kDebugMode) {
-        print(e);
-      }
+    } catch (e, s) {
+      _log(e, s);
     }
   }
 
@@ -101,17 +96,39 @@ class AppService extends ChangeNotifier {
     updateState(AppState.readyToDiscover);
   }
 
+  Future<bool> hasRunningJobs() async {
+    try {
+      final result = await _nearbyService.getPeers();
+      if (result.any(
+        (element) => element.status == NearbyDeviceStatus.connecting,
+      )) {
+        if (kDebugMode) {
+          print('Service has already running jobs');
+        }
+        return true;
+      }
+      return false;
+    } catch (e, s) {
+      _log(e, s);
+      return false;
+    }
+  }
+
   Future<void> discover() async {
     try {
-      await getCurrentDeviceInfo();
-      final result = await _nearbyService.discover();
-      if (result) {
+      final hasRunning = await hasRunningJobs();
+      if (hasRunning) {
         updateState(AppState.discoveringPeers);
+      } else {
+        final result = await _nearbyService.discover();
+        if (result) {
+          updateState(AppState.discoveringPeers);
+        }
       }
-    } catch (e) {
-      if (kDebugMode) {
-        print(e);
-      }
+    } on NearbyServiceBusyException catch (_) {
+      _logBusyException();
+    } catch (e, s) {
+      _log(e, s);
     }
   }
 
@@ -121,20 +138,20 @@ class AppService extends ChangeNotifier {
       if (result) {
         updateState(AppState.readyToDiscover);
       }
-    } catch (e) {
-      if (kDebugMode) {
-        print(e);
-      }
+    } on NearbyServiceBusyException catch (_) {
+      _logBusyException();
+    } catch (e, s) {
+      _log(e, s);
     }
   }
 
   Future<void> connect(NearbyDevice device) async {
     try {
       await _nearbyService.connect(device);
-    } catch (e) {
-      if (kDebugMode) {
-        print(e);
-      }
+    } on NearbyServiceBusyException catch (_) {
+      _logBusyException();
+    } catch (e, s) {
+      _log(e, s);
     }
     notifyListeners();
   }
@@ -142,10 +159,10 @@ class AppService extends ChangeNotifier {
   Future<void> disconnect([NearbyDevice? device]) async {
     try {
       await _nearbyService.disconnect(device);
-    } catch (e) {
-      if (kDebugMode) {
-        print(e);
-      }
+    } on NearbyServiceBusyException catch (_) {
+      _logBusyException();
+    } catch (e, s) {
+      _log(e, s);
     } finally {
       await stopListeningAll();
     }
@@ -194,10 +211,8 @@ extension ConnectionInfoExtension on AppService {
           _notify();
         },
       );
-    } catch (e) {
-      if (kDebugMode) {
-        print(e);
-      }
+    } catch (e, s) {
+      _log(e, s);
     }
     _notify();
   }
@@ -218,10 +233,8 @@ extension PeersExtension on AppService {
         },
       );
       updateState(AppState.streamingPeers);
-    } catch (e) {
-      if (kDebugMode) {
-        print(e);
-      }
+    } catch (e, s) {
+      _log(e, s);
     }
   }
 
@@ -310,10 +323,8 @@ extension CommunicationChannelExtension on AppService {
   Future<void> endCommunicationChannel() async {
     try {
       await _nearbyService.endCommunicationChannel();
-    } catch (e) {
-      if (kDebugMode) {
-        print(e);
-      }
+    } catch (e, s) {
+      _log(e, s);
     }
     _notify();
   }
@@ -382,5 +393,21 @@ extension MessagingExtension on AppService {
   void endFilesLoading(ReceivedNearbyFilesPack pack) {
     filesLoadings.remove(pack.id);
     _notify();
+  }
+}
+
+extension LoggingExtension on AppService {
+  void _log(e, StackTrace s) {
+    if (kDebugMode) {
+      print('$e, \nStacktrace: $s');
+    }
+  }
+
+  void _logBusyException() {
+    if (kDebugMode) {
+      print(
+        'Nearby service is busy, wait a little and retry (You can implement retry in your code)',
+      );
+    }
   }
 }

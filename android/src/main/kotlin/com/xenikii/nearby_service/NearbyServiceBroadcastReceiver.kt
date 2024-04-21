@@ -51,6 +51,11 @@ class NearbyServiceBroadcastReceiver(
         }
     }
 
+    fun init() {
+        writeDevices()
+        writeConnectionInfo()
+    }
+
     private fun logState(intent: Intent) {
         when (intent.getIntExtra(WifiP2pManager.EXTRA_WIFI_STATE, -1)) {
             WifiP2pManager.WIFI_P2P_STATE_ENABLED -> {
