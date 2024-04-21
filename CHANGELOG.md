@@ -1,8 +1,7 @@
 ## 0.0.7
 
 - Log all errors on the Android platform
-- Add mapping for native Android exceptions in methods: discover(), stopDiscovery(), connect(),
-  disconnect()
+- Add mapping for native Android exceptions in methods: discover(), stopDiscovery(), connect(), disconnect()
 - Fix getPeers() method: correct decoding from JSON
 - Update example: show empty peers state
 - Update example_full: show variant of checking running jobs
