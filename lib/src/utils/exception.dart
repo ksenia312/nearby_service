@@ -14,7 +14,7 @@ class NearbyServiceException implements Exception {
   }
 
   ///
-  /// A call from an unsupported platform.
+  /// Usage of the plugin on an unsupported platform
   ///
   factory NearbyServiceException.unsupportedPlatform({
     required String caller,
@@ -22,13 +22,15 @@ class NearbyServiceException implements Exception {
       NearbyServiceUnsupportedPlatformException(caller: caller);
 
   ///
-  /// A decoding error.
+  /// Error decoding messages from native platform to Dart (open an issue if
+  /// this happens!)
   ///
   factory NearbyServiceException.unsupportedDecoding(dynamic value) =>
       NearbyServiceUnsupportedDecodingException(value);
 
   ///
-  /// Invalid message error
+  /// An attempt to send an invalid message on the sender's side. Add content
+  /// validation to your messages
   ///
   factory NearbyServiceException.invalidMessage(NearbyMessageContent content) =>
       NearbyServiceInvalidMessageException(content);
@@ -42,11 +44,11 @@ class NearbyServiceException implements Exception {
 }
 
 ///
-/// A call from an unsupported platform.
+/// Usage of the plugin on an unsupported platform
 ///
 class NearbyServiceUnsupportedPlatformException extends NearbyServiceException {
   ///
-  /// A call from an unsupported platform - default constructor
+  /// Usage of the plugin on an unsupported platform - default constructor
   ///
   NearbyServiceUnsupportedPlatformException({required String caller})
       : super(
@@ -60,7 +62,8 @@ class NearbyServiceUnsupportedPlatformException extends NearbyServiceException {
 }
 
 ///
-/// A decoding error
+/// Error decoding messages from native platform to Dart (open an issue if
+/// this happens!)
 ///
 class NearbyServiceUnsupportedDecodingException extends NearbyServiceException {
   ///
@@ -78,7 +81,8 @@ class NearbyServiceUnsupportedDecodingException extends NearbyServiceException {
 }
 
 ///
-/// Invalid message error
+/// An attempt to send an invalid message on the sender's side. Add content
+/// validation to your messages
 ///
 class NearbyServiceInvalidMessageException extends NearbyServiceException {
   ///
