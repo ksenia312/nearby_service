@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:nearby_service/nearby_service.dart';
 import 'package:nearby_service/src/utils/logger.dart';
 
+import 'utils/mapper.dart';
+
 /// An implementation of [NearbyServiceAndroidPlatform] that uses method channels.
 class MethodChannelAndroidNearbyService extends NearbyServiceAndroidPlatform {
   /// The method channel used to interact with the native platform.
@@ -39,26 +41,29 @@ class MethodChannelAndroidNearbyService extends NearbyServiceAndroidPlatform {
 
   @override
   Future<bool> discover() async {
-    return (await methodChannel.invokeMethod<bool>('discover')) ?? false;
+    final result = await methodChannel.invokeMethod('discover');
+    return _handleBooleanResult(result);
   }
 
   @override
   Future<bool> stopDiscovery() async {
-    return (await methodChannel.invokeMethod<bool>('stopDiscovery')) ?? false;
+    final result = await methodChannel.invokeMethod('stopDiscovery');
+    return _handleBooleanResult(result);
   }
 
   @override
   Future<bool> connect(String deviceAddress) async {
-    return (await methodChannel.invokeMethod<bool?>(
-          "connect",
-          {"deviceAddress": deviceAddress},
-        )) ??
-        false;
+    final result = await methodChannel.invokeMethod(
+      "connect",
+      {"deviceAddress": deviceAddress},
+    );
+    return _handleBooleanResult(result);
   }
 
   @override
   Future<bool> disconnect() async {
-    return (await methodChannel.invokeMethod<bool?>("disconnect")) ?? false;
+    final result = await methodChannel.invokeMethod("disconnect");
+    return _handleBooleanResult(result);
   }
 
   @override
@@ -69,5 +74,17 @@ class MethodChannelAndroidNearbyService extends NearbyServiceAndroidPlatform {
     return connectedDeviceChannel.receiveBroadcastStream().map(
           (e) => NearbyConnectionInfoMapper.mapToInfo(e),
         );
+  }
+
+  bool _handleBooleanResult(dynamic result) {
+    if (result is bool) {
+      return result;
+    } else if (result is String) {
+      throw NearbyServiceAndroidExceptionMapper.map(result);
+    } else {
+      throw NearbyServiceException(
+        'Got unknown value from native platform: $result',
+      );
+    }
   }
 }

@@ -37,7 +37,7 @@ class MethodChannelNearbyService extends NearbyServicePlatform {
   @override
   Future<List<NearbyDevice>> getPeers() async {
     return NearbyDeviceMapper.instance.mapToDeviceList(
-      await methodChannel.invokeMethod('fetchPeers'),
+      await methodChannel.invokeMethod('getPeers'),
     );
   }
 

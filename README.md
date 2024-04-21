@@ -11,7 +11,11 @@ Nearby Service Flutter Plugin is used to create connections in a P2P network.
 The plugin supports sending text messages and files. With it,
 you can easily create any kind of information sharing application **without Internet connection**.
 
-Your feedback and suggestions would be greatly appreciated! [You can leave your opinion here](https://forms.gle/FbAtW2dG5RYCxb1DA)
+The package does not support communication between Android and IOS devices, the connection is available for
+**Android-Android** and **IOS-IOS** relations.
+
+Your feedback and suggestions would be greatly
+appreciated! [You can leave your opinion here](https://forms.gle/FbAtW2dG5RYCxb1DA)
 
 ## Table of Contents
 
@@ -26,6 +30,7 @@ Your feedback and suggestions would be greatly appreciated! [You can leave your 
 - [Data sharing](#data-sharing)
     - [Text messages](#text-messages)
     - [Resource messages](#resource-messages)
+- [Exceptions](#exceptions)
 - [Additional options](#additional-options)
 - [Demo](#demo)
 ## About
@@ -445,6 +450,32 @@ final filesListener = NearbyServiceFilesListener(
   },
 );
 ```
+
+## Exceptions
+
+**NearbyService** includes custom errors that you can catch in your implementation.
+
+**Common exceptions [See here](https://github.com/ksenia312/nearby_service/blob/main/lib/src/utils/exception.dart):**
+
+- `NearbyServiceUnsupportedPlatformException`: Usage of the plugin on an unsupported platform
+- `NearbyServiceUnsupportedDecodingException`: Error decoding messages from native platform to Dart (open an issue if
+  this happens)
+- `NearbyServiceInvalidMessageException`: An attempt to send an invalid message on the sender's side. Add content
+  validation to your messages
+
+**Exceptions that can be caught from the `discover()`, `stopDiscovery()`, `connect()`, and `disconnect()` methods for
+the Android platform
+[See here](https://github.com/ksenia312/nearby_service/blob/main/lib/src/platforms/android/utils/exception.dart):**
+
+- `NearbyServiceBusyException`: The Wi-Fi P2P framework is currently busy. Usually this means that you have sent a
+  request to some device and now one of the peers is **CONNECTING**
+- `NearbyServiceP2PPUnsupportedException`: Wi-Fi P2P is not supported on this device
+- `NearbyServiceNoServiceRequestsException`: No service discovery requests have been made. Ensure that you have
+  initiated a service discovery request before attempting to connect
+- `NearbyServiceGenericErrorException`: A generic error occurred. This could be due to various reasons such as hardware
+  issues, Wi-Fi being turned off, or temporary issues with the Wi-Fi P2P framework
+- `NearbyServiceUnknownException`: An unknown error occurred. Please check the device's Wi-Fi P2P settings and ensure
+  the device supports Wi-Fi P2P
 
 ## Additional options
 
