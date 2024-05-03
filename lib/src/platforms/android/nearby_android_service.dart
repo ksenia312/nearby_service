@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:nearby_service/nearby_service.dart';
 
 import 'socket_service/nearby_socket_service.dart';
@@ -15,9 +14,8 @@ class NearbyAndroidService extends NearbyService {
   late final _socketService = NearbySocketService(this);
 
   @override
-  ValueListenable<CommunicationChannelState> get communicationChannelState {
-    return _socketService.state;
-  }
+  CommunicationChannelState get communicationChannelState =>
+      _socketService.communicationChannelState;
 
   ///
   /// Initializes Android [WifiP2PManager](https://developer.android.com/reference/android/net/wifi/p2p/WifiP2pManager)
@@ -54,9 +52,8 @@ class NearbyAndroidService extends NearbyService {
   /// Note! Requires [NearbyAndroidDevice] to be passed.
   ///
   @override
-  Future<bool> connect(NearbyDevice device) {
-    _requireAndroidDevice(device);
-    return NearbyServiceAndroidPlatform.instance.connect(device.info.id);
+  Future<bool> connect(String deviceId) {
+    return NearbyServiceAndroidPlatform.instance.connect(deviceId);
   }
 
   ///
@@ -65,7 +62,7 @@ class NearbyAndroidService extends NearbyService {
   /// Note! Requires [NearbyAndroidDevice] to be passed.
   ///
   @override
-  Future<bool> disconnect([NearbyDevice? device]) {
+  Future<bool> disconnect([String? deviceId]) {
     return NearbyServiceAndroidPlatform.instance.disconnect();
   }
 
@@ -133,10 +130,8 @@ class NearbyAndroidService extends NearbyService {
     return NearbyServiceAndroidPlatform.instance.getConnectionInfoStream();
   }
 
-  void _requireAndroidDevice(NearbyDevice device) {
-    assert(
-      device is NearbyAndroidDevice,
-      'The Nearby Android Service can only work with the NearbyAndroidDevice and not with ${device.runtimeType}',
-    );
+  @override
+  Stream<CommunicationChannelState> getCommunicationChannelStateStream() {
+    return _socketService.stateController.stream.asBroadcastStream();
   }
 }

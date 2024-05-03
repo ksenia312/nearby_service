@@ -60,7 +60,7 @@ class _AppBodyState extends State<AppBody> {
   late final _nearbyService = NearbyService.getInstance(
     /// Define log level here
     logLevel: NearbyServiceLogLevel.debug,
-  )..communicationChannelState.addListener(() => setState(() {}));
+  );
 
   AppState _state = AppState.idle;
 
@@ -70,6 +70,8 @@ class _AppBodyState extends State<AppBody> {
   /// List of discovered devices
   List<NearbyDevice> _peers = [];
   StreamSubscription? _peersSubscription;
+  CommunicationChannelState _communicationChannelState =
+      CommunicationChannelState.notConnected;
 
   /// Temporary solution to check the connection,
   /// use [NearbyService.getConnectedDeviceStream] for this purpose
@@ -158,10 +160,6 @@ class _AppBodyState extends State<AppBody> {
     return Container();
   }
 
-  CommunicationChannelState get _communicationChannelState {
-    return _nearbyService.communicationChannelState.value;
-  }
-
   Future<void> _initialize() async {
     await _nearbyService.initialize();
   }
@@ -204,7 +202,7 @@ class _AppBodyState extends State<AppBody> {
   Future<void> _connect(NearbyDevice device) async {
     // Be careful with already connected devices,
     // double connection may be unnecessary
-    final result = await _nearbyService.connect(device);
+    final result = await _nearbyService.connect(device.info.id);
     if (result || device.status.isConnected) {
       final channelStarting = _tryCommunicate(device);
       if (!channelStarting) {
@@ -241,6 +239,10 @@ class _AppBodyState extends State<AppBody> {
 
   void _startCommunicationChannel(NearbyDevice device) {
     if (!_communicationChannelState.isNotConnected) return;
+    // start listening communication channel state
+    _nearbyService.getCommunicationChannelStateStream().listen((event) {
+      _communicationChannelState = event;
+    });
 
     _nearbyService.startCommunicationChannel(
       NearbyCommunicationChannelData(
@@ -273,7 +275,7 @@ class _AppBodyState extends State<AppBody> {
 
   Future<void> _disconnect() async {
     try {
-      await _nearbyService.disconnect(_connectedDevice!);
+      await _nearbyService.disconnect(_connectedDevice!.info.id);
     } finally {
       await _nearbyService.endCommunicationChannel();
       await _nearbyService.stopDiscovery();

@@ -8,14 +8,16 @@ import 'package:nearby_service_example_full/utils/files_saver.dart';
 import 'app_state.dart';
 
 class AppService extends ChangeNotifier {
-  late final _nearbyService = NearbyService.getInstance()
-    ..communicationChannelState.addListener(notifyListeners);
+  late final _nearbyService = NearbyService.getInstance();
 
   AppState state = AppState.idle;
   List<NearbyDevice>? peers;
   NearbyDevice? connectedDevice;
   NearbyDeviceInfo? currentDeviceInfo;
   NearbyConnectionAndroidInfo? _connectionAndroidInfo;
+  CommunicationChannelState _communicationChannelState =
+      CommunicationChannelState.notConnected;
+  bool _isIOSBrowser = true;
 
   String platformVersion = 'Unknown';
   String platformModel = 'Unknown';
@@ -47,6 +49,9 @@ class AppService extends ChangeNotifier {
       await _nearbyService.initialize(
         data: NearbyInitializeData(iosDeviceName: iosDeviceName),
       );
+      _nearbyService.ios?.getIsBrowserStream().listen((event) {
+        _isIOSBrowser = event;
+      });
       updateState(
         Platform.isAndroid ? AppState.permissions : AppState.selectClientType,
       );
@@ -81,6 +86,7 @@ class AppService extends ChangeNotifier {
     if (result ?? false) {
       updateState(AppState.readyToDiscover);
       startListeningConnectionInfo();
+      startListeningCommunicationChannelState();
       return true;
     }
     return false;
@@ -148,7 +154,7 @@ class AppService extends ChangeNotifier {
 
   Future<void> connect(NearbyDevice device) async {
     try {
-      await _nearbyService.connect(device);
+      await _nearbyService.connect(device.info.id);
     } on NearbyServiceBusyException catch (_) {
       _logBusyException();
     } catch (e, s) {
@@ -159,7 +165,7 @@ class AppService extends ChangeNotifier {
 
   Future<void> disconnect([NearbyDevice? device]) async {
     try {
-      await _nearbyService.disconnect(device);
+      await _nearbyService.disconnect(device?.info.id);
     } on NearbyServiceBusyException catch (_) {
       _logBusyException();
     } catch (e, s) {
@@ -189,12 +195,11 @@ class AppService extends ChangeNotifier {
 }
 
 extension GettersExtension on AppService {
-  CommunicationChannelState get communicationChannelState {
-    return _nearbyService.communicationChannelState.value;
-  }
+  CommunicationChannelState get communicationChannelState =>
+      _communicationChannelState;
 
   bool get isIOSBrowser {
-    return _nearbyService.ios?.isBrowser.value ?? false;
+    return _isIOSBrowser;
   }
 
   bool? get isAndroidGroupOwner {
@@ -209,6 +214,21 @@ extension ConnectionInfoExtension on AppService {
           _nearbyService.android?.getConnectionInfoStream().listen(
         (event) async {
           _connectionAndroidInfo = event;
+          _notify();
+        },
+      );
+    } catch (e, s) {
+      _log(e, s);
+    }
+    _notify();
+  }
+
+  void startListeningCommunicationChannelState() {
+    try {
+      _connectionInfoSubscription =
+          _nearbyService.getCommunicationChannelStateStream().listen(
+        (event) async {
+          _communicationChannelState = event;
           _notify();
         },
       );
@@ -251,7 +271,7 @@ extension ConnectedDeviceExtension on AppService {
     updateState(AppState.loadingConnection);
     try {
       _connectedDeviceSubscription =
-          _nearbyService.getConnectedDeviceStream(device).listen(
+          _nearbyService.getConnectedDeviceStream(device.info.id).listen(
         (event) async {
           final wasConnected = connectedDevice?.status.isConnected ?? false;
           final nowConnected = event?.status.isConnected ?? false;

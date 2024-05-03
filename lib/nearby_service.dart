@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:nearby_service/nearby_service.dart';
 import 'package:nearby_service/nearby_service_platform_interface.dart';
 import 'package:nearby_service/src/utils/logger.dart';
@@ -62,19 +61,6 @@ abstract class NearbyService {
   late final NearbyAndroidService? android = get(
     onAndroid: (e) => e,
   );
-
-  ///
-  /// **A value to determine the communication channel's status.**
-  ///
-  /// For **Android** this is the socket connection state.
-  /// The server can wait for the client to connect,
-  /// and the client can be waiting for the server to be created.
-  /// Also, both can be in connected and unconnected states.
-  ///
-  /// For **IOS** this is the state of the message stream subscription.
-  /// which is generated for the device with the current connected device ID.
-  ///
-  ValueListenable<CommunicationChannelState> get communicationChannelState;
 
   ///
   /// Gets version of current platform.
@@ -147,9 +133,11 @@ abstract class NearbyService {
   /// Returns the  constantly updating [NearbyDevice] you are currently connected to.
   /// If it returns null, then there is no connection at the moment.
   ///
-  Stream<NearbyDevice?> getConnectedDeviceStream(NearbyDevice device) {
-    return NearbyServicePlatform.instance.getConnectedDeviceStream(device);
+  Stream<NearbyDevice?> getConnectedDeviceStream(String deviceId) {
+    return NearbyServicePlatform.instance.getConnectedDeviceStream(deviceId);
   }
+
+  CommunicationChannelState get communicationChannelState;
 
   ///
   /// Initialization of a platform-specific service.
@@ -193,7 +181,7 @@ abstract class NearbyService {
   Future<bool> stopDiscovery();
 
   ///
-  /// Connects to passed [device] using a platform-specific service.
+  /// Connects to passed [deviceId] using a platform-specific service.
   ///
   /// Note that the [NearbyIOSService] implementation **invites** or
   /// **accepts invite** depending on the [NearbyIOSService.isBrowser].
@@ -208,15 +196,13 @@ abstract class NearbyService {
   /// 4. [NearbyServiceGenericErrorException]
   /// 5. [NearbyServiceUnknownException]
   ///
-  Future<bool> connect(NearbyDevice device);
+  Future<bool> connect(String deviceId);
 
   ///
-  /// Disconnects from passed [device] using a platform-specific service.
+  /// Disconnects from passed [deviceId] using a platform-specific service.
   ///
   /// Note that if [Platform.isIOS] == true, [NearbyIOSDevice] should be passed.
   /// If [Platform.isAndroid] == true, [NearbyAndroidDevice] should be passed.
-  ///
-  /// **For IOS [device] is required!!!**
   ///
   /// On Android can throw mapped from native platform exceptions:
   /// 1. [NearbyServiceBusyException]
@@ -225,7 +211,7 @@ abstract class NearbyService {
   /// 4. [NearbyServiceGenericErrorException]
   /// 5. [NearbyServiceUnknownException]
   ///
-  Future<bool> disconnect([NearbyDevice? device]);
+  Future<bool> disconnect([String? deviceId]);
 
   ///
   /// If the device is already connected, it does not mean that you can
@@ -235,7 +221,7 @@ abstract class NearbyService {
   /// You need to call [startCommunicationChannel] before using [send].
   /// A communication channel can only be created if you are connected to some device.
   ///
-  /// You can monitor changes in communication channel state using the [communicationChannelState] getter.
+  /// You can monitor changes in communication channel state using the [getCommunicationChannelStateStream] getter.
   ///
   FutureOr<bool> startCommunicationChannel(
     NearbyCommunicationChannelData data,
@@ -249,6 +235,19 @@ abstract class NearbyService {
   /// Use [endCommunicationChannel] for this purpose.
   ///
   FutureOr<bool> endCommunicationChannel();
+
+  ///
+  /// **A value to determine the communication channel's status.**
+  ///
+  /// For **Android** this is the socket connection state.
+  /// The server can wait for the client to connect,
+  /// and the client can be waiting for the server to be created.
+  /// Also, both can be in connected and unconnected states.
+  ///
+  /// For **IOS** this is the state of the message stream subscription.
+  /// which is generated for the device with the current connected device ID.
+  ///
+  Stream<CommunicationChannelState> getCommunicationChannelStateStream();
 
   ///
   /// Method to send data to the created communication channel.
