@@ -69,7 +69,13 @@ class NearbyAndroidService extends NearbyService {
     return NearbyServiceAndroidPlatform.instance.disconnect();
   }
 
-  Future<bool> cancelConnect([NearbyDevice? device]) {
+  ///
+  /// On [NearbyServiceBusyException] you can check for running jobs
+  /// (if any of devices has [NearbyDeviceStatus.connecting]).
+  ///
+  /// If so, call [cancelLastConnectionProcess] to cancel last request
+  ///
+  Future<bool> cancelLastConnectionProcess() {
     return NearbyServiceAndroidPlatform.instance.cancelConnect();
   }
 

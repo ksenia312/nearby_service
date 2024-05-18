@@ -87,7 +87,7 @@ class DevicePreview extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         onTap: () {
           if (device.status.isConnecting) {
-            context.read<AppService>().cancelConnect(device);
+            context.read<AppService>().cancelConnect();
           } else if (!device.status.isConnected) {
             context.read<AppService>().connect(device);
           } else {

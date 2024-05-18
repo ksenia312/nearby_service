@@ -11,7 +11,6 @@ class NearbyManager: NSObject {
     
     func initialize(for deviceName: String? = nil, result: @escaping FlutterResult) {
         self.device = MyDeviceDataGenerator.generate(name: deviceName)
-        NearbyDevicesStore.instance.clear()
         
         self.advertiser = MCNearbyServiceAdvertiser(
             peer: self.device.peerID,
