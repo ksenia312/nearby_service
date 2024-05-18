@@ -68,7 +68,6 @@ class MethodChannelAndroidNearbyService extends NearbyServiceAndroidPlatform {
 
   @override
   Future<bool> cancelConnect() async {
-    print('call cancelConnect');
     final result = await methodChannel.invokeMethod("cancelConnect");
     return _handleBooleanResult(result);
   }
