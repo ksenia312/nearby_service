@@ -173,7 +173,6 @@ extension NearbyManager: MCNearbyServiceAdvertiserDelegate {
         self.invitationHandlers[peerID.displayName] = invitationHandler
         
     }
-    
 }
 
 extension NearbyManager: MCNearbyServiceBrowserDelegate {
