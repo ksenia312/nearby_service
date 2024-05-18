@@ -176,7 +176,7 @@ class AppService extends ChangeNotifier {
 
   Future<void> cancelConnect([NearbyDevice? device]) async {
     try {
-      await _nearbyService.cancelConnect(device);
+      await _nearbyService.android?.cancelConnect(device);
     } on NearbyServiceBusyException catch (_) {
       _logBusyException();
     } catch (e, s) {

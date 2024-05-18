@@ -154,12 +154,6 @@ class NearbyIOSService extends NearbyService {
     return result;
   }
 
-  @override
-  Future<bool> cancelConnect([NearbyDevice? device]) {
-    // TODO: implement cancelConnect
-    throw UnimplementedError();
-  }
-
   ///
   /// Starts listening for messages from device with
   /// [NearbyCommunicationChannelData.connectedDeviceId].

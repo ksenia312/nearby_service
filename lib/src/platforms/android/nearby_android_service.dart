@@ -69,7 +69,6 @@ class NearbyAndroidService extends NearbyService {
     return NearbyServiceAndroidPlatform.instance.disconnect();
   }
 
-  @override
   Future<bool> cancelConnect([NearbyDevice? device]) {
     return NearbyServiceAndroidPlatform.instance.cancelConnect();
   }
