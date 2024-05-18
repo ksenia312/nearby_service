@@ -136,6 +136,14 @@ class NearbyServicePlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
                 }
             }
 
+            "cancelConnect" -> {
+                try {
+                    manager.cancelConnect(result)
+                } catch (e: Exception) {
+                    onError(result, e)
+                }
+            }
+
             else -> {
                 result.notImplemented()
             }

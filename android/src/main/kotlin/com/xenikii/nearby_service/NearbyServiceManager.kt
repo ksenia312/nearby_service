@@ -203,6 +203,15 @@ class NearbyServiceManager(private var context: Context) {
 
     }
 
+    fun cancelConnect(result: Result? = null) {
+        val actionListener = getActionListener(
+            result,
+            "Last connection request was cancelled",
+            "Failed to cancel the last connection process"
+        )
+        wifiManager.cancelConnect(wifiChannel, actionListener)
+    }
+
 
     private fun addWifiActions() {
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION)
