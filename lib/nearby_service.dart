@@ -227,6 +227,8 @@ abstract class NearbyService {
   ///
   Future<bool> disconnect([NearbyDevice? device]);
 
+  Future<bool> cancelConnect([NearbyDevice? device]);
+
   ///
   /// If the device is already connected, it does not mean that you can
   /// send and receive data.

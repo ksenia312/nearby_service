@@ -69,6 +69,11 @@ class NearbyAndroidService extends NearbyService {
     return NearbyServiceAndroidPlatform.instance.disconnect();
   }
 
+  @override
+  Future<bool> cancelConnect([NearbyDevice? device]) {
+    return NearbyServiceAndroidPlatform.instance.cancelConnect();
+  }
+
   ///
   /// Starts a socket service to transfer data. Uses device with
   /// [NearbyCommunicationChannelData.connectedDeviceId].

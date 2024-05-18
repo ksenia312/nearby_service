@@ -57,7 +57,7 @@ class DevicePreview extends StatelessWidget {
           ),
     );
 
-    final disconnectButton = device.status.isConnected
+    final trailingButton = device.status.isConnected
         ? TextButton(
             onPressed: () => context.read<AppService>().disconnect(device),
             style: TextButton.styleFrom(
@@ -75,10 +75,10 @@ class DevicePreview extends StatelessWidget {
           name,
           const SizedBox(height: 5),
           id,
-          if (disconnectButton != null)
+          if (trailingButton != null)
             Padding(
               padding: const EdgeInsets.only(top: 10),
-              child: disconnectButton,
+              child: trailingButton,
             ),
         ],
       );
@@ -86,7 +86,9 @@ class DevicePreview extends StatelessWidget {
       return InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () {
-          if (!device.status.isConnected) {
+          if (device.status.isConnecting) {
+            context.read<AppService>().cancelConnect(device);
+          } else if (!device.status.isConnected) {
             context.read<AppService>().connect(device);
           } else {
             context.read<AppService>().startListeningConnectedDevice(device);
@@ -115,7 +117,11 @@ class DevicePreview extends StatelessWidget {
               ),
               Flexible(
                 child: Text(
-                  device.status.isConnected ? 'Tap to chat' : 'Tap to connect',
+                  device.status.isConnected
+                      ? 'Tap to chat'
+                      : device.status.isConnecting
+                          ? 'Tap to cancel connection'
+                          : 'Tap to connect',
                   style: const TextStyle(color: kGreenColor, fontSize: 12),
                   textAlign: TextAlign.center,
                 ),

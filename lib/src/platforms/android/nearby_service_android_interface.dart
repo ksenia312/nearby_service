@@ -55,6 +55,10 @@ abstract class NearbyServiceAndroidPlatform extends PlatformInterface {
     throw UnimplementedError('disconnect() has not been implemented.');
   }
 
+  Future<bool> cancelConnect() {
+    throw UnimplementedError('cancelRequest() has not been implemented.');
+  }
+
   Stream<NearbyConnectionAndroidInfo?> getConnectionInfoStream() {
     throw UnimplementedError(
       'getConnectionInfoStream() has not been implemented.',

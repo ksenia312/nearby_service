@@ -135,6 +135,10 @@ class AppService extends ChangeNotifier {
 
   Future<void> stopDiscovery() async {
     try {
+      final hasRunning = await hasRunningJobs();
+      if (hasRunning) {
+        await cancelConnect();
+      }
       final result = await _nearbyService.stopDiscovery();
       if (result) {
         updateState(AppState.readyToDiscover);
@@ -166,6 +170,17 @@ class AppService extends ChangeNotifier {
       _log(e, s);
     } finally {
       await stopListeningAll();
+    }
+    notifyListeners();
+  }
+
+  Future<void> cancelConnect([NearbyDevice? device]) async {
+    try {
+      await _nearbyService.cancelConnect(device);
+    } on NearbyServiceBusyException catch (_) {
+      _logBusyException();
+    } catch (e, s) {
+      _log(e, s);
     }
     notifyListeners();
   }
