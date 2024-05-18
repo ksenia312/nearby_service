@@ -1,3 +1,7 @@
+## 0.0.8
+
+- Add `cancelLastConnectionProcess` for Android manager
+
 ## 0.0.7
 
 - Log all errors on the Android platform
