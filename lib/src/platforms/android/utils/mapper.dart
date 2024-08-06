@@ -1,7 +1,12 @@
+// ignore_for_file: constant_identifier_names
 import 'package:nearby_service/nearby_service.dart';
 
 class NearbyServiceAndroidExceptionMapper {
   NearbyServiceAndroidExceptionMapper._();
+
+  static bool canMap(String error) {
+    return AndroidFailureCodes.values.any((element) => element.name == error);
+  }
 
   static NearbyServiceException map(String error) {
     AndroidFailureCodes? enumValue;
@@ -17,10 +22,17 @@ class NearbyServiceAndroidExceptionMapper {
         NearbyServiceP2PUnsupportedException(),
       AndroidFailureCodes.NO_SERVICE_REQUESTS =>
         NearbyServiceNoServiceRequestsException(),
+      AndroidFailureCodes.NO_INITIALIZATION =>
+        NearbyServiceNoInitializationException(),
       _ => NearbyServiceUnknownException(),
     };
   }
 }
 
-// ignore: constant_identifier_names
-enum AndroidFailureCodes { P2P_UNSUPPORTED, BUSY, NO_SERVICE_REQUESTS, ERROR }
+enum AndroidFailureCodes {
+  P2P_UNSUPPORTED,
+  BUSY,
+  NO_SERVICE_REQUESTS,
+  ERROR,
+  NO_INITIALIZATION,
+}

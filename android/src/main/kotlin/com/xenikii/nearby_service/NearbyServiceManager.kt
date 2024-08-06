@@ -87,6 +87,8 @@ class NearbyServiceManager(private var context: Context) {
      * It also may be null.
      */
     fun getCurrentDevice(result: Result) {
+        if (!checkInitialization(result)) return
+
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 wifiManager.requestDeviceInfo(wifiChannel) { device ->
@@ -119,6 +121,8 @@ class NearbyServiceManager(private var context: Context) {
      * All permissions from [NearbyServicePermissionsHandler] are required.
      */
     fun discover(result: Result) {
+        if (!checkInitialization(result)) return
+
         try {
             wifiManager.discoverPeers(
                 wifiChannel, getActionListener(
@@ -139,6 +143,8 @@ class NearbyServiceManager(private var context: Context) {
      * Stop discovery for peers in Wi-fi Direct scope.
      */
     fun stopDiscovery(result: Result) {
+        if (!checkInitialization(result)) return
+
         wifiManager.stopPeerDiscovery(
             wifiChannel, getActionListener(
                 result,
@@ -167,6 +173,8 @@ class NearbyServiceManager(private var context: Context) {
      * Connects to provided [deviceAddress] in Wi-fi Direct scope.
      */
     fun connect(result: Result, deviceAddress: String) {
+        if (!checkInitialization(result)) return
+
         val config = WifiP2pConfig()
         if (receiver.connectedDevice?.deviceAddress == deviceAddress) {
             Logger.i("Already connected to the device $deviceAddress")
@@ -196,6 +204,8 @@ class NearbyServiceManager(private var context: Context) {
      * Disconnect from a previous device in Wi-fi Direct scope.
      */
     fun disconnect(result: Result? = null) {
+        if (!checkInitialization(result)) return
+
         val actionListener = getActionListener(
             result, "Disconnected from last device", "Failed to disconnect"
         )
@@ -204,6 +214,8 @@ class NearbyServiceManager(private var context: Context) {
     }
 
     fun cancelConnect(result: Result? = null) {
+        if (!checkInitialization(result)) return
+
         val actionListener = getActionListener(
             result,
             "Last connection request was cancelled",
@@ -240,6 +252,25 @@ class NearbyServiceManager(private var context: Context) {
         }
     }
 
+    private fun checkInitialization(result: Result?): Boolean {
+        if (!::wifiManager.isInitialized) {
+            Logger.e("WifiManager is not initialized. Please call 'initialize()' first")
+            result?.success(ErrorCodes.NO_INITIALIZATION)
+            return false
+        }
+        if (!::wifiChannel.isInitialized) {
+            Logger.e("WifiChannel is not initialized. Please call 'initialize()' first")
+            result?.success(ErrorCodes.NO_INITIALIZATION)
+            return false
+        }
+        if (!::receiver.isInitialized) {
+            Logger.e("Broadcast Receiver is not initialized. Please call 'initialize()' first")
+            result?.success(ErrorCodes.NO_INITIALIZATION)
+            return false
+        }
+        return true
+    }
+
     private fun getActionListener(
         result: Result?,
         successMessage: String? = null,
@@ -262,11 +293,11 @@ class NearbyServiceManager(private var context: Context) {
                     else -> "An unknown error occurred. Please check the device's Wi-Fi P2P settings and ensure the device supports Wi-Fi P2P."
                 }
                 val stringifyReasonCode = when (reasonCode) {
-                    WifiP2pManager.P2P_UNSUPPORTED -> "P2P_UNSUPPORTED"
-                    WifiP2pManager.ERROR -> "ERROR"
-                    WifiP2pManager.BUSY -> "BUSY"
-                    WifiP2pManager.NO_SERVICE_REQUESTS -> "NO_SERVICE_REQUESTS"
-                    else -> "UNKNOWN"
+                    WifiP2pManager.P2P_UNSUPPORTED -> ErrorCodes.P2P_UNSUPPORTED
+                    WifiP2pManager.ERROR -> ErrorCodes.ERROR
+                    WifiP2pManager.BUSY -> ErrorCodes.BUSY
+                    WifiP2pManager.NO_SERVICE_REQUESTS -> ErrorCodes.NO_SERVICE_REQUESTS
+                    else -> ErrorCodes.UNKNOWN
                 }
                 Logger.e("$errorMessage, Reason code: $reasonCode, Reason: $reason")
                 result?.success(stringifyReasonCode)

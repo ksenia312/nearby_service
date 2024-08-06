@@ -70,6 +70,21 @@ class NearbyServiceGenericErrorException extends NearbyServiceException {
 }
 
 ///
+/// Error when the plugin is not initialized. Please call initialize() method first.
+///
+class NearbyServiceNoInitializationException extends NearbyServiceException {
+  NearbyServiceNoInitializationException()
+      : super(
+          '${_kNearbyServiceMessage}NO_INITIALIZATION',
+        );
+
+  @override
+  String toString() {
+    return 'NearbyServiceNoInitializationException{error: $error}';
+  }
+}
+
+///
 /// An unknown error occurred. Please check the device's Wi-Fi
 /// P2P settings and ensure the device supports Wi-Fi P2P.
 ///
