@@ -12,7 +12,7 @@ class MethodChannelAndroidNearbyService extends NearbyServiceAndroidPlatform {
 
   @override
   Future<bool> initialize() async {
-    final result = await methodChannel.invokeMethod<bool>(
+    final result = await methodChannel.invokeMethod(
       'initialize',
       {"logLevel": Logger.level.name},
     );
@@ -22,13 +22,13 @@ class MethodChannelAndroidNearbyService extends NearbyServiceAndroidPlatform {
 
   @override
   Future<bool> requestPermissions() async {
-    final result = await methodChannel.invokeMethod<bool>('requestPermissions');
+    final result = await methodChannel.invokeMethod('requestPermissions');
     return ResultHandler.instance.handle<bool?>(result) ?? false;
   }
 
   @override
   Future<bool> checkWifiService() async {
-    final result = await methodChannel.invokeMethod<bool>('checkWifiService');
+    final result = await methodChannel.invokeMethod('checkWifiService');
     return ResultHandler.instance.handle<bool?>(result) ?? false;
   }
 
