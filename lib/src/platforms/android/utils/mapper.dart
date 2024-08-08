@@ -1,14 +1,15 @@
 // ignore_for_file: constant_identifier_names
 import 'package:nearby_service/nearby_service.dart';
+import 'package:nearby_service/src/interface/nearby_service_exception_mapper.dart';
 
-class NearbyServiceAndroidExceptionMapper {
-  NearbyServiceAndroidExceptionMapper._();
-
-  static bool canMap(String error) {
+class NearbyServiceAndroidExceptionMapper extends NearbyServiceExceptionMapper {
+  @override
+  bool canMap(String error) {
     return AndroidFailureCodes.values.any((element) => element.name == error);
   }
 
-  static NearbyServiceException map(String error) {
+  @override
+  NearbyServiceException map(String error) {
     AndroidFailureCodes? enumValue;
     try {
       enumValue = AndroidFailureCodes.values.firstWhere(

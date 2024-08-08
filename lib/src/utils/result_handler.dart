@@ -1,5 +1,5 @@
 import 'package:nearby_service/nearby_service.dart';
-import 'package:nearby_service/src/platforms/android/utils/mapper.dart';
+import 'package:nearby_service/src/interface/nearby_service_exception_mapper.dart';
 
 class ResultHandler {
   ResultHandler._();
@@ -7,8 +7,9 @@ class ResultHandler {
   static ResultHandler instance = ResultHandler._();
 
   T handle<T>(dynamic result) {
-    if (NearbyServiceAndroidExceptionMapper.canMap(result)) {
-      throw NearbyServiceAndroidExceptionMapper.map(result);
+    if (result is String &&
+        NearbyServiceExceptionMapper.instance.canMap(result)) {
+      throw NearbyServiceExceptionMapper.instance.map(result);
     }
     if (result is T) {
       return result;
