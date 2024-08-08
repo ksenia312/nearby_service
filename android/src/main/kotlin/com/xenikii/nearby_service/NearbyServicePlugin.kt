@@ -177,7 +177,6 @@ class NearbyServicePlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
         channel.setMethodCallHandler(null)
         peersChannel.setStreamHandler(null)
         connectedDeviceChannel.setStreamHandler(null)
-        manager.disconnect()
     }
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {

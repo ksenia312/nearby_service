@@ -158,6 +158,8 @@ class NearbyServiceManager(private var context: Context) {
      * Returns peers from [NearbyServiceBroadcastReceiver].
      */
     fun getPeers(result: Result) {
+        if (!checkInitialization(result)) return
+
         result.success(receiver.peers)
     }
 
@@ -165,6 +167,8 @@ class NearbyServiceManager(private var context: Context) {
      * Returns connection info from [NearbyServiceBroadcastReceiver] in json string.
      */
     fun getConnectionInfo(result: Result) {
+        if (!checkInitialization(result)) return
+
         val info = receiver.wifiInfo?.toJsonString()
         result.success(info)
     }
@@ -252,19 +256,25 @@ class NearbyServiceManager(private var context: Context) {
         }
     }
 
-    private fun checkInitialization(result: Result?): Boolean {
-        if (!::wifiManager.isInitialized) {
-            Logger.e("WifiManager is not initialized. Please call 'initialize()' first")
-            result?.success(ErrorCodes.NO_INITIALIZATION)
-            return false
-        }
-        if (!::wifiChannel.isInitialized) {
-            Logger.e("WifiChannel is not initialized. Please call 'initialize()' first")
-            result?.success(ErrorCodes.NO_INITIALIZATION)
-            return false
-        }
-        if (!::receiver.isInitialized) {
-            Logger.e("Broadcast Receiver is not initialized. Please call 'initialize()' first")
+    private fun checkInitialization(result: Result?, shouldLog: Boolean = true): Boolean {
+        try {
+            if (!::wifiManager.isInitialized) {
+                Logger.e("WifiManager is not initialized. Please call 'initialize()' first")
+                result?.success(ErrorCodes.NO_INITIALIZATION)
+                return false
+            }
+            if (!::wifiChannel.isInitialized) {
+                Logger.e("WifiChannel is not initialized. Please call 'initialize()' first")
+                result?.success(ErrorCodes.NO_INITIALIZATION)
+                return false
+            }
+            if (!::receiver.isInitialized) {
+                Logger.e("Broadcast Receiver is not initialized. Please call 'initialize()' first")
+                result?.success(ErrorCodes.NO_INITIALIZATION)
+                return false
+            }
+        } catch (e: Exception) {
+            Logger.e("Failed to check initialization, please call 'initialize()' first")
             result?.success(ErrorCodes.NO_INITIALIZATION)
             return false
         }
@@ -312,6 +322,8 @@ class NearbyServiceManager(private var context: Context) {
 
         val postCallback = object : Runnable {
             override fun run() {
+                if (!checkInitialization(null, false)) return
+
                 handler.post { eventSink?.success("${receiver.peers}") }
                 handler.postDelayed(this, 1000)
             }
@@ -337,6 +349,8 @@ class NearbyServiceManager(private var context: Context) {
 
         val postCallback = object : Runnable {
             override fun run() {
+                if (!checkInitialization(null, false)) return
+
                 handler.post { eventSink?.success(receiver.connectedDevice?.toJsonString()) }
                 handler.postDelayed(this, 1000)
             }
@@ -361,6 +375,8 @@ class NearbyServiceManager(private var context: Context) {
 
         val postCallback = object : Runnable {
             override fun run() {
+                if (!checkInitialization(null, false)) return
+
                 handler.post { eventSink?.success(receiver.wifiInfo?.toJsonString()) }
                 handler.postDelayed(this, 1000)
             }
