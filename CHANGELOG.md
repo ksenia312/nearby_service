@@ -1,3 +1,8 @@
+## 0.0.9
+
+- Add initialization checks for Android and IOS
+- Fix issue for Android platform: https://github.com/ksenia312/nearby_service/issues/8
+
 ## 0.0.8
 
 - Add `cancelLastConnectionProcess` for Android manager

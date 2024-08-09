@@ -2,8 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:nearby_service/nearby_service.dart';
 import 'package:nearby_service/src/utils/logger.dart';
-
-import 'utils/mapper.dart';
+import 'package:nearby_service/src/utils/result_handler.dart';
 
 /// An implementation of [NearbyServiceAndroidPlatform] that uses method channels.
 class MethodChannelAndroidNearbyService extends NearbyServiceAndroidPlatform {
@@ -13,42 +12,44 @@ class MethodChannelAndroidNearbyService extends NearbyServiceAndroidPlatform {
 
   @override
   Future<bool> initialize() async {
-    return (await methodChannel.invokeMethod<bool>(
-          'initialize',
-          {"logLevel": Logger.level.name},
-        )) ??
-        false;
+    final result = await methodChannel.invokeMethod(
+      'initialize',
+      {"logLevel": Logger.level.name},
+    );
+
+    return ResultHandler.instance.handle<bool?>(result) ?? false;
   }
 
   @override
   Future<bool> requestPermissions() async {
-    return (await methodChannel.invokeMethod<bool>('requestPermissions')) ??
-        false;
+    final result = await methodChannel.invokeMethod('requestPermissions');
+    return ResultHandler.instance.handle<bool?>(result) ?? false;
   }
 
   @override
   Future<bool> checkWifiService() async {
-    return (await methodChannel.invokeMethod<bool>('checkWifiService')) ??
-        false;
+    final result = await methodChannel.invokeMethod('checkWifiService');
+    return ResultHandler.instance.handle<bool?>(result) ?? false;
   }
 
   @override
   Future<NearbyConnectionAndroidInfo?> getConnectionInfo() async {
-    return NearbyConnectionInfoMapper.mapToInfo(
+    final result = ResultHandler.instance.handle(
       await methodChannel.invokeMethod('getConnectionInfo'),
     );
+    return NearbyConnectionInfoMapper.mapToInfo(result);
   }
 
   @override
   Future<bool> discover() async {
     final result = await methodChannel.invokeMethod('discover');
-    return _handleBooleanResult(result);
+    return ResultHandler.instance.handle<bool?>(result) ?? false;
   }
 
   @override
   Future<bool> stopDiscovery() async {
     final result = await methodChannel.invokeMethod('stopDiscovery');
-    return _handleBooleanResult(result);
+    return ResultHandler.instance.handle<bool?>(result) ?? false;
   }
 
   @override
@@ -57,19 +58,19 @@ class MethodChannelAndroidNearbyService extends NearbyServiceAndroidPlatform {
       "connect",
       {"deviceAddress": deviceAddress},
     );
-    return _handleBooleanResult(result);
+    return ResultHandler.instance.handle<bool?>(result) ?? false;
   }
 
   @override
   Future<bool> disconnect() async {
     final result = await methodChannel.invokeMethod("disconnect");
-    return _handleBooleanResult(result);
+    return ResultHandler.instance.handle<bool?>(result) ?? false;
   }
 
   @override
   Future<bool> cancelConnect() async {
     final result = await methodChannel.invokeMethod("cancelConnect");
-    return _handleBooleanResult(result);
+    return ResultHandler.instance.handle<bool?>(result) ?? false;
   }
 
   @override
@@ -78,19 +79,9 @@ class MethodChannelAndroidNearbyService extends NearbyServiceAndroidPlatform {
       "nearby_service_connection_info",
     );
     return connectedDeviceChannel.receiveBroadcastStream().map(
-          (e) => NearbyConnectionInfoMapper.mapToInfo(e),
+          (e) => ResultHandler.instance.handle(
+            NearbyConnectionInfoMapper.mapToInfo(e),
+          ),
         );
-  }
-
-  bool _handleBooleanResult(dynamic result) {
-    if (result is bool) {
-      return result;
-    } else if (result is String) {
-      throw NearbyServiceAndroidExceptionMapper.map(result);
-    } else {
-      throw NearbyServiceException(
-        'Got unknown value from native platform: $result',
-      );
-    }
   }
 }

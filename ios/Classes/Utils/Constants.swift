@@ -16,3 +16,5 @@ let ON_RESOURCE_RECEIVED = Notification.Name("NearbySessionOnResourceReceived")
 
 let DART_COMMAND_MESSAGE_RECEIVED = "invoke_nearby_service_message_received"
 let DART_COMMAND_RESOURCES_RECEIVED = "invoke_nearby_service_resources_received"
+
+let ERROR_NO_INITIALIZATION = "NO_INITIALIZATION"
