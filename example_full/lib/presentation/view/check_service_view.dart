@@ -26,11 +26,13 @@ class _CheckServiceViewState extends State<CheckServiceView> {
                 setState(() {
                   showEnableButton = true;
                 });
-                AppShackBar.show(
-                  context,
-                  'Please enable Wi-fi',
-                  actionType: ActionType.warning,
-                );
+                if (context.mounted) {
+                  AppShackBar.show(
+                    context,
+                    'Please enable Wi-fi',
+                    actionType: ActionType.warning,
+                  );
+                }
               }
             });
           },
