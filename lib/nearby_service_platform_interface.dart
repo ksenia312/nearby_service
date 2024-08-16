@@ -48,6 +48,7 @@ abstract class NearbyServicePlatform extends PlatformInterface {
     throw UnimplementedError('streamPeers() has not been implemented.');
   }
 
+  @Deprecated('Use getConnectedDeviceStreamById instead')
   Stream<NearbyDevice?> getConnectedDeviceStream(NearbyDevice device) {
     throw UnimplementedError(
         'getConnectedDeviceStream() has not been implemented.');
