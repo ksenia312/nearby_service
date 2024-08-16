@@ -36,4 +36,8 @@ abstract base class NearbyMessage<C extends NearbyMessageContent> {
   String toString() {
     return 'NearbyMessage{content: $content}';
   }
+  ///
+  /// Get [Map] from [NearbyMessage].
+  ///
+  Map<String, dynamic> toJson();
 }

@@ -23,6 +23,7 @@ final class OutgoingNearbyMessage<C extends NearbyMessageContent>
   ///
   /// Get [Map] from [OutgoingNearbyMessage].
   ///
+  @override
   Map<String, dynamic> toJson() {
     return {
       'content': content.toJson(),
@@ -91,5 +92,16 @@ final class ReceivedNearbyMessage<C extends NearbyMessageContent>
   @override
   String toString() {
     return 'ReceivedNearbyMessage{sender: $sender content: $content}';
+  }
+
+  ///
+  /// Get [Map] from [ReceivedNearbyMessage].
+  ///
+  @override
+  Map<String, dynamic> toJson() {
+    return {
+      'content': content.toJson(),
+      'sender': sender.toJson(),
+    };
   }
 }
