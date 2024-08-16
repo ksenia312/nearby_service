@@ -30,7 +30,7 @@ class NearbyIOSService extends NearbyService {
   StreamSubscription? _resourcesSubscription;
 
   @override
-  CommunicationChannelState get communicationChannelState =>
+  CommunicationChannelState get communicationChannelStateValue =>
       _communicationChannelState;
 
   ///
@@ -130,7 +130,7 @@ class NearbyIOSService extends NearbyService {
   /// Note! Requires [NearbyIOSDevice] to be passed.
   ///
   @override
-  Future<bool> connect(String deviceId) async {
+  Future<bool> connectById(String deviceId) async {
     final result = _isBrowser
         ? await NearbyServiceIOSPlatform.instance.invite(deviceId)
         : await NearbyServiceIOSPlatform.instance.acceptInvite(deviceId);
@@ -151,7 +151,7 @@ class NearbyIOSService extends NearbyService {
   /// Note! Requires [NearbyIOSDevice] to be passed.
   ///
   @override
-  Future<bool> disconnect([String? deviceId]) async {
+  Future<bool> disconnectById([String? deviceId]) async {
     if (deviceId == null) return false;
     final result = await NearbyServiceIOSPlatform.instance.disconnect(deviceId);
     _logResult(

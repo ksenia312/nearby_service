@@ -14,7 +14,7 @@ class NearbyAndroidService extends NearbyService {
   late final _socketService = NearbySocketService(this);
 
   @override
-  CommunicationChannelState get communicationChannelState =>
+  CommunicationChannelState get communicationChannelStateValue =>
       _socketService.communicationChannelState;
 
   ///
@@ -52,7 +52,7 @@ class NearbyAndroidService extends NearbyService {
   /// Note! Requires [NearbyAndroidDevice] to be passed.
   ///
   @override
-  Future<bool> connect(String deviceId) {
+  Future<bool> connectById(String deviceId) {
     return NearbyServiceAndroidPlatform.instance.connect(deviceId);
   }
 
@@ -62,7 +62,7 @@ class NearbyAndroidService extends NearbyService {
   /// Note! Requires [NearbyAndroidDevice] to be passed.
   ///
   @override
-  Future<bool> disconnect([String? deviceId]) {
+  Future<bool> disconnectById([String? deviceId]) {
     return NearbyServiceAndroidPlatform.instance.disconnect();
   }
 

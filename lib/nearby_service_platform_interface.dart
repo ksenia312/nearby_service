@@ -48,11 +48,20 @@ abstract class NearbyServicePlatform extends PlatformInterface {
     throw UnimplementedError('streamPeers() has not been implemented.');
   }
 
-  Stream<NearbyDevice?> getConnectedDeviceStream(String deviceId) {
+  Stream<NearbyDevice?> getConnectedDeviceStream(NearbyDevice device) {
     throw UnimplementedError(
         'getConnectedDeviceStream() has not been implemented.');
   }
 
+  Stream<NearbyDevice?> getConnectedDeviceStreamById(String deviceId) {
+    throw UnimplementedError(
+      'getConnectedDeviceStreamById() has not been implemented.',
+    );
+  }
+
+  @Deprecated(
+    'This method will be removed. Method disconnect is platform-specific and you should use NearbyServiceIOSPlatform.disconnectById or NearbyServiceAndroidPlatform.disconnectById instead.',
+  )
   Future<bool> disconnect(NearbyDevice device) {
     throw UnimplementedError('disconnect() has not been implemented.');
   }

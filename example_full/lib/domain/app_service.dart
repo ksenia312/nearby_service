@@ -158,7 +158,7 @@ class AppService extends ChangeNotifier {
 
   Future<void> connect(NearbyDevice device) async {
     try {
-      await _nearbyService.connect(device.info.id);
+      await _nearbyService.connectById(device.info.id);
     } on NearbyServiceBusyException catch (_) {
       _logBusyException();
     } catch (e, s) {
@@ -169,7 +169,7 @@ class AppService extends ChangeNotifier {
 
   Future<void> disconnect([NearbyDevice? device]) async {
     try {
-      await _nearbyService.disconnect(device?.info.id);
+      await _nearbyService.disconnectById(device?.info.id);
     } on NearbyServiceBusyException catch (_) {
       _logBusyException();
     } catch (e, s) {
@@ -286,7 +286,7 @@ extension ConnectedDeviceExtension on AppService {
     updateState(AppState.loadingConnection);
     try {
       _connectedDeviceSubscription =
-          _nearbyService.getConnectedDeviceStream(device.info.id).listen(
+          _nearbyService.getConnectedDeviceStreamById(device.info.id).listen(
         (event) async {
           final wasConnected = connectedDevice?.status.isConnected ?? false;
           final nowConnected = event?.status.isConnected ?? false;

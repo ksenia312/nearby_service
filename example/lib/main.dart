@@ -74,7 +74,7 @@ class _AppBodyState extends State<AppBody> {
       CommunicationChannelState.notConnected;
 
   /// Temporary solution to check the connection,
-  /// use [NearbyService.getConnectedDeviceStream] for this purpose
+  /// use [NearbyService.getConnectedDeviceStreamById] for this purpose
   /// in your application
   Timer? _connectionCheckTimer;
   NearbyDevice? _connectedDevice;
@@ -202,7 +202,7 @@ class _AppBodyState extends State<AppBody> {
   Future<void> _connect(NearbyDevice device) async {
     // Be careful with already connected devices,
     // double connection may be unnecessary
-    final result = await _nearbyService.connect(device.info.id);
+    final result = await _nearbyService.connectById(device.info.id);
     if (result || device.status.isConnected) {
       final channelStarting = _tryCommunicate(device);
       if (!channelStarting) {
@@ -277,7 +277,7 @@ class _AppBodyState extends State<AppBody> {
 
   Future<void> _disconnect() async {
     try {
-      await _nearbyService.disconnect(_connectedDevice!.info.id);
+      await _nearbyService.disconnectById(_connectedDevice!.info.id);
     } finally {
       await _nearbyService.endCommunicationChannel();
       await _nearbyService.stopDiscovery();

@@ -50,6 +50,12 @@ class MockNearbyServicePlatform
   }
 
   @override
+  Stream<NearbyDevice?> getConnectedDeviceStreamById(String deviceId) {
+    // TODO: implement getConnectedDeviceStreamById
+    throw UnimplementedError();
+  }
+
+  @override
   Future<NearbyDeviceInfo?> getCurrentDeviceInfo() {
     // TODO: implement getCurrentDevice
     throw UnimplementedError();
