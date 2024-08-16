@@ -1,6 +1,5 @@
 import 'package:nearby_service/nearby_service.dart';
-
-const _kNearbyServiceMessage = 'Got error from native platform with status=';
+import 'package:nearby_service/src/utils/constants.dart';
 
 ///
 /// Wi-Fi P2P is not supported on this device
@@ -8,7 +7,7 @@ const _kNearbyServiceMessage = 'Got error from native platform with status=';
 class NearbyServiceP2PUnsupportedException extends NearbyServiceException {
   NearbyServiceP2PUnsupportedException()
       : super(
-          '${_kNearbyServiceMessage}P2P_UNSUPPORTED',
+          '${kNearbyServiceMessage}P2P_UNSUPPORTED',
         );
 
   @override
@@ -27,7 +26,7 @@ class NearbyServiceP2PUnsupportedException extends NearbyServiceException {
 class NearbyServiceBusyException extends NearbyServiceException {
   NearbyServiceBusyException()
       : super(
-          '${_kNearbyServiceMessage}BUSY',
+          '${kNearbyServiceMessage}BUSY',
         );
 
   @override
@@ -43,7 +42,7 @@ class NearbyServiceBusyException extends NearbyServiceException {
 class NearbyServiceNoServiceRequestsException extends NearbyServiceException {
   NearbyServiceNoServiceRequestsException()
       : super(
-          '${_kNearbyServiceMessage}NO_SERVICE_REQUESTS',
+          '${kNearbyServiceMessage}NO_SERVICE_REQUESTS',
         );
 
   @override
@@ -60,7 +59,7 @@ class NearbyServiceNoServiceRequestsException extends NearbyServiceException {
 class NearbyServiceGenericErrorException extends NearbyServiceException {
   NearbyServiceGenericErrorException()
       : super(
-          '${_kNearbyServiceMessage}ERROR',
+          '${kNearbyServiceMessage}ERROR',
         );
 
   @override
@@ -76,7 +75,7 @@ class NearbyServiceGenericErrorException extends NearbyServiceException {
 class NearbyServiceUnknownException extends NearbyServiceException {
   NearbyServiceUnknownException()
       : super(
-          '${_kNearbyServiceMessage}UNKNOWN',
+          '${kNearbyServiceMessage}UNKNOWN',
         );
 
   @override

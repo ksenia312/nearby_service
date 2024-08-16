@@ -1,5 +1,5 @@
+import 'package:nearby_service/src/utils/constants.dart';
 import 'package:nearby_service/src/utils/json_decoder.dart';
-import 'package:nearby_service/src/utils/unknown.dart';
 
 ///
 /// The class representing the connection information

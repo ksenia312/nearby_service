@@ -1,1 +1,0 @@
-const kNearbyUnknown = 'unknown';

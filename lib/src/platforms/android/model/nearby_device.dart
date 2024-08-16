@@ -1,6 +1,6 @@
 import 'package:nearby_service/nearby_service.dart';
+import 'package:nearby_service/src/utils/constants.dart';
 import 'package:nearby_service/src/utils/json_decoder.dart';
-import 'package:nearby_service/src/utils/unknown.dart';
 
 ///
 /// A device on a P2P network obtained from the Android platform.

@@ -4,8 +4,10 @@
 
 #### Connecting phones in a P2P network
 
-[![Xenikii Website](https://img.shields.io/badge/-xenikii.one-1D5FA7?style=flat&logoColor=white)](https://xenikii.one)
-[![LICENSE BSD](https://img.shields.io/badge/License-BSD-4577d9)](https://github.com/ksenia312/nearby_service/blob/main/LICENSE)
+[![Xenikii Website](https://img.shields.io/badge/-xenikii.one-313866?style=for-the-badge&logoColor=white)](https://xenikii.one)
+[![LICENSE BSD](https://img.shields.io/badge/License-BSD-504099?style=for-the-badge)](https://github.com/ksenia312/nearby_service/blob/main/LICENSE)
+[![Pub package](https://img.shields.io/pub/v/nearby_service.svg?style=for-the-badge&color=974EC3)](https://pub.dev/packages/nearby_service)
+[![Pub Likes](https://img.shields.io/pub/likes/nearby_service?style=for-the-badge&color=FE7BE5)](https://pub.dev/packages/nearby_service)
 
 Nearby Service Flutter Plugin is used to create connections in a P2P network.
 The plugin supports sending text messages and files. With it,

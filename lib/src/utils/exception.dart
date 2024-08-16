@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:nearby_service/nearby_service.dart';
+import 'package:nearby_service/src/utils/constants.dart';
 import 'package:nearby_service/src/utils/logger.dart';
 
 ///
@@ -96,5 +97,20 @@ class NearbyServiceInvalidMessageException extends NearbyServiceException {
   @override
   String toString() {
     return 'NearbyServiceInvalidMessageException{error: $error}';
+  }
+}
+
+///
+/// Error when the plugin is not initialized. Please call initialize() method first.
+///
+class NearbyServiceNoInitializationException extends NearbyServiceException {
+  NearbyServiceNoInitializationException()
+      : super(
+          '${kNearbyServiceMessage}NO_INITIALIZATION',
+        );
+
+  @override
+  String toString() {
+    return 'NearbyServiceNoInitializationException{error: $error}';
   }
 }

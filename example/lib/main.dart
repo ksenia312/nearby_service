@@ -247,7 +247,9 @@ class _AppBodyState extends State<AppBody> {
     _nearbyService.startCommunicationChannel(
       NearbyCommunicationChannelData(
         device.info.id,
-        filesListener: NearbyServiceFilesListener(onData: _filesListener),
+        filesListener: NearbyServiceFilesListener(
+          onData: (pack) => _filesListener(Scaffold.of(context).context, pack),
+        ),
         messagesListener: NearbyServiceMessagesListener(
           onData: _messagesListener,
           onCreated: () {
@@ -331,10 +333,14 @@ class _AppBodyState extends State<AppBody> {
     );
   }
 
-  void _filesListener(ReceivedNearbyFilesPack pack) {
-    FilesSaver.savePack(pack).then(
-      (value) => AppSnackBar.show(context, title: 'Files pack was saved'),
-    );
+  Future<void> _filesListener(
+    BuildContext context,
+    ReceivedNearbyFilesPack pack,
+  ) async {
+    await FilesSaver.savePack(pack);
+    if (context.mounted) {
+      AppSnackBar.show(context, title: 'Files pack was saved');
+    }
   }
 
   Future<void> _send(NearbyMessageContent content) async {

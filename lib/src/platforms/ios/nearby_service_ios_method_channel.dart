@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:nearby_service/nearby_service.dart';
+import 'package:nearby_service/src/utils/result_handler.dart';
 
 /// An implementation of [NearbyServiceIOSPlatform] that uses method channels.
 class MethodChannelIOSNearbyService extends NearbyServiceIOSPlatform {
@@ -31,72 +32,78 @@ class MethodChannelIOSNearbyService extends NearbyServiceIOSPlatform {
           break;
       }
     });
-    return (await methodChannel.invokeMethod<bool>(
-          'initialize',
-          deviceName != null ? {"deviceName": deviceName} : null,
-        ) ??
-        false);
+    final result = await methodChannel.invokeMethod(
+      'initialize',
+      deviceName != null ? {"deviceName": deviceName} : null,
+    );
+    return ResultHandler.instance.handle<bool?>(result) ?? false;
   }
 
   @override
   Future<String?> getSavedDeviceName() async {
-    return (await methodChannel.invokeMethod<String?>('getSavedDeviceName'));
+    final result = await methodChannel.invokeMethod<String?>(
+      'getSavedDeviceName',
+    );
+    return ResultHandler.instance.handle(result);
   }
 
   @override
   Future<bool> startAdvertising() async {
-    return (await methodChannel.invokeMethod<bool>('startAdvertising')) ??
-        false;
+    final result = await methodChannel.invokeMethod('startAdvertising');
+    return ResultHandler.instance.handle<bool?>(result) ?? false;
   }
 
   @override
   Future<bool> startBrowsing() async {
-    return (await methodChannel.invokeMethod<bool>('startBrowsing')) ?? false;
+    final result = await methodChannel.invokeMethod('startBrowsing');
+    return ResultHandler.instance.handle<bool?>(result) ?? false;
   }
 
   @override
   Future<bool> stopAdvertising() async {
-    return (await methodChannel.invokeMethod<bool>('stopAdvertising')) ?? false;
+    final result = await methodChannel.invokeMethod('stopAdvertising');
+    return ResultHandler.instance.handle<bool?>(result) ?? false;
   }
 
   @override
   Future<bool> stopBrowsing() async {
-    return (await methodChannel.invokeMethod<bool>('stopBrowsing')) ?? false;
+    final result = await methodChannel.invokeMethod('stopBrowsing');
+    return ResultHandler.instance.handle<bool?>(result) ?? false;
   }
 
   @override
   Future<bool> invite(String deviceId) async {
-    return (await methodChannel.invokeMethod<bool?>(
-          "invite",
-          {"deviceId": deviceId},
-        )) ??
-        false;
+    final result = await methodChannel.invokeMethod(
+      "invite",
+      {"deviceId": deviceId},
+    );
+    return ResultHandler.instance.handle<bool?>(result) ?? false;
   }
 
   @override
   Future<bool> acceptInvite(String deviceId) async {
-    return (await methodChannel.invokeMethod<bool?>(
-          "acceptInvite",
-          {"deviceId": deviceId},
-        )) ??
-        false;
+    final result = await methodChannel.invokeMethod(
+      "acceptInvite",
+      {"deviceId": deviceId},
+    );
+    return ResultHandler.instance.handle<bool?>(result) ?? false;
   }
 
   @override
   Future<bool> disconnect(String deviceId) async {
-    return (await methodChannel.invokeMethod<bool?>(
-          "disconnect",
-          {"deviceId": deviceId},
-        )) ??
-        false;
+    final result = await methodChannel.invokeMethod(
+      "disconnect",
+      {"deviceId": deviceId},
+    );
+    return ResultHandler.instance.handle<bool?>(result) ?? false;
   }
 
   @override
   Future<bool> send(OutgoingNearbyMessage message) async {
-    return (await methodChannel.invokeMethod<bool?>(
-          "send",
-          message.toJson(),
-        )) ??
-        false;
+    final result = await methodChannel.invokeMethod(
+      "send",
+      message.toJson(),
+    );
+    return ResultHandler.instance.handle<bool?>(result) ?? false;
   }
 }

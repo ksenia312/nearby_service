@@ -30,6 +30,8 @@ class NearbyManager: NSObject {
     }
     
     func getCurrentDevice(result: @escaping FlutterResult) {
+        if (!checkInitialization(result: result)) { return }
+        
         result(device.toDartFormat())
     }
     
@@ -43,32 +45,44 @@ class NearbyManager: NSObject {
     }
     
     func startAdvertising(result: @escaping FlutterResult) {
+        if (!checkInitialization(result: result)) { return }
+            
         self.advertiser.startAdvertisingPeer()
         result(true)
     }
     
     func startBrowsing(result: @escaping FlutterResult) {
+        if (!checkInitialization(result: result)) { return }
+        
         self.browser.startBrowsingForPeers()
         result(true)
     }
     
     func stopAdvertising(result: @escaping FlutterResult) {
+        if (!checkInitialization(result: result)) { return }
+        
         self.advertiser.stopAdvertisingPeer()
         NearbyDevicesStore.instance.clear()
         result(true)
     }
     
     func stopBrowsing(result: @escaping FlutterResult) {
+        if (!checkInitialization(result: result)) { return }
+        
         self.browser.stopBrowsingForPeers()
         NearbyDevicesStore.instance.clear()
         result(true)
     }
     
     func getPeers(result: @escaping FlutterResult) {
+        if (!checkInitialization(result: result)) { return }
+        
         result(NearbyDevicesStore.instance.toDartFormat())
     }
     
     func invite(for deviceId: String, result: @escaping FlutterResult) {
+        if (!checkInitialization(result: result)) { return }
+        
         do {
             let device = NearbyDevicesStore.instance.find(for: deviceId)
             if let requireDevice = device {
@@ -87,6 +101,8 @@ class NearbyManager: NSObject {
         }
     }
     func acceptInvite(for deviceId: String, result: @escaping FlutterResult) {
+        if (!checkInitialization(result: result)) { return }
+        
         let device = NearbyDevicesStore.instance.find(for: deviceId)
         if let requireDevice = device {
             let nearbySession = requireDevice.createSession(for: self.device.peerID)
@@ -96,12 +112,16 @@ class NearbyManager: NSObject {
     }
     
     func disconnect(for deviceId: String, result: @escaping FlutterResult) {
+        if (!checkInitialization(result: result)) { return }
+        
         let device = NearbyDevicesStore.instance.find(for: deviceId)
         device?.deleteSession()
         result(true)
     }
     
     func send(for content: NearbyMessageContent, with receiverId: String, result: @escaping FlutterResult) {
+        if (!checkInitialization(result: result)) { return }
+        
         let device = NearbyDevicesStore.instance.find(for: receiverId)
 
         do {
@@ -157,6 +177,18 @@ class NearbyManager: NSObject {
         }  catch let error {
             Logger.error(message: error.localizedDescription)
         }
+    }
+    
+    func checkInitialization(result: @escaping FlutterResult) -> Bool {
+        guard let _ = self.device,
+              let _ = self.advertiser,
+              let _ = self.browser else {
+            Logger.error(message: "NearbyManager is not initialized. Please call 'initialize()' first")
+            result(ERROR_NO_INITIALIZATION)
+            return false
+        }
+        
+        return true
     }
 }
 

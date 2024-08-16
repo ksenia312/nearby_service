@@ -1,4 +1,4 @@
-import 'package:nearby_service/src/utils/unknown.dart';
+import 'package:nearby_service/src/utils/constants.dart';
 
 ///
 /// Minimal information about the device.
