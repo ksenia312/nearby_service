@@ -238,12 +238,14 @@ class _AppBodyState extends State<AppBody> {
   }
 
   void _startCommunicationChannel(NearbyDevice device) {
-    if (!_communicationChannelState.isNotConnected) return;
+    if (_communicationChannelState != CommunicationChannelState.notConnected) {
+      // channel is loading or already connected
+      return;
+    }
     // start listening communication channel state
     _nearbyService.getCommunicationChannelStateStream().listen((event) {
       _communicationChannelState = event;
     });
-
     _nearbyService.startCommunicationChannel(
       NearbyCommunicationChannelData(
         device.info.id,
