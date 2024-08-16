@@ -267,6 +267,8 @@ abstract class NearbyService {
   /// 3. [NearbyServiceNoServiceRequestsException]
   /// 4. [NearbyServiceGenericErrorException]
   /// 5. [NearbyServiceUnknownException]
+  ///
+  /// **For IOS [device] is required!!!**
   @Deprecated('Use disconnectById instead')
   Future<bool> disconnect([NearbyDevice? device]);
 
@@ -283,6 +285,7 @@ abstract class NearbyService {
   /// 4. [NearbyServiceGenericErrorException]
   /// 5. [NearbyServiceUnknownException]
   ///
+  /// **For IOS [deviceId] is required!!!**
   Future<bool> disconnectById([String? deviceId]);
 
   ///
