@@ -52,6 +52,7 @@ class AppService extends ChangeNotifier {
       _nearbyService.ios?.getIsBrowserStream().listen((event) {
         _isIOSBrowser = event;
       });
+      startListeningCommunicationChannelState();
       updateState(
         Platform.isAndroid ? AppState.permissions : AppState.selectClientType,
       );
@@ -86,7 +87,6 @@ class AppService extends ChangeNotifier {
     if (result ?? false) {
       updateState(AppState.readyToDiscover);
       startListeningConnectionInfo();
-      startListeningCommunicationChannelState();
       return true;
     }
     return false;
