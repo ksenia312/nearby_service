@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:nearby_service/nearby_service.dart';
 import 'package:nearby_service/src/utils/logger.dart';
 import 'package:nearby_service/src/utils/stream_mapper.dart';
@@ -12,29 +13,45 @@ import 'package:nearby_service/src/utils/stream_mapper.dart';
 /// device by identifier.
 ///
 class NearbyIOSService extends NearbyService {
+  final _isBrowser = ValueNotifier<bool>(true);
+  final _communicationChannelState =
+      ValueNotifier(CommunicationChannelState.notConnected);
+
   late final _isBrowserController = StreamController<bool>.broadcast()
-    ..add(_isBrowser)
-    ..stream.asBroadcastStream().listen((e) => _isBrowser = e);
+    ..add(_isBrowser.value)
+    ..stream.asBroadcastStream().listen((e) => _isBrowser.value = e);
 
   late final _stateController =
       StreamController<CommunicationChannelState>.broadcast()
-        ..add(_communicationChannelState)
+        ..add(_communicationChannelState.value)
         ..stream
             .asBroadcastStream()
-            .listen((e) => _communicationChannelState = e);
-
-  var _isBrowser = true;
-  var _communicationChannelState = CommunicationChannelState.notConnected;
+            .listen((e) => _communicationChannelState.value = e);
 
   StreamSubscription? _messagesSubscription;
   StreamSubscription? _resourcesSubscription;
 
   @override
   CommunicationChannelState get communicationChannelStateValue =>
+      _communicationChannelState.value;
+
+  @override
+  ValueListenable<CommunicationChannelState> get communicationChannelState =>
       _communicationChannelState;
 
   ///
   /// Determines whether the current device is a **Browser** or **Advertiser**.
+  ///
+  @Deprecated('Use getIsBrowserStream or isBrowserValue instead')
+  ValueListenable<bool> get isBrowser => _isBrowser;
+
+  ///
+  /// Determines whether the current device is a **Browser** or **Advertiser**.
+  ///
+  bool get isBrowserValue => _isBrowser.value;
+
+  ///
+  /// Stream that determines whether the current device is a **Browser** or **Advertiser**.
   ///
   /// * Browser will only see devices with Advertiser status in the peers list.
   /// Browser sends connection requests.
@@ -44,11 +61,6 @@ class NearbyIOSService extends NearbyService {
   ///
   Stream<bool> getIsBrowserStream() =>
       _isBrowserController.stream.asBroadcastStream();
-
-  ///
-  /// Determines whether the current device is a **Browser** or **Advertiser**.
-  ///
-  bool get isBrowser => _isBrowser;
 
   ///
   /// Initializes [MCNearbyServiceAdvertiser](https://developer.apple.com/documentation/multipeerconnectivity/mcnearbyserviceadvertiser)
@@ -85,12 +97,12 @@ class NearbyIOSService extends NearbyService {
   ///
   /// Starts discovery on the local P2P network.
   ///
-  /// Starts browsing for peers if [isBrowser] is true.
-  /// Starts advertising for peers if [isBrowser] is false.
+  /// Starts browsing for peers if [isBrowserValue] is true.
+  /// Starts advertising for peers if [isBrowserValue] is false.
   ///
   @override
   Future<bool> discover() async {
-    final result = _isBrowser
+    final result = _isBrowser.value
         ? await NearbyServiceIOSPlatform.instance.startBrowsing()
         : await NearbyServiceIOSPlatform.instance.startAdvertising();
     _logResult(
@@ -104,12 +116,12 @@ class NearbyIOSService extends NearbyService {
   ///
   /// Slops discovery on the local P2P network.
   ///
-  /// Slops browsing for peers if [isBrowser] is true.
-  /// Slops advertising for peers if [isBrowser] is false.
+  /// Slops browsing for peers if [isBrowserValue] is true.
+  /// Slops advertising for peers if [isBrowserValue] is false.
   ///
   @override
   Future<bool> stopDiscovery() async {
-    final result = _isBrowser
+    final result = _isBrowser.value
         ? await NearbyServiceIOSPlatform.instance.stopBrowsing()
         : await NearbyServiceIOSPlatform.instance.stopAdvertising();
 
@@ -124,21 +136,33 @@ class NearbyIOSService extends NearbyService {
   ///
   /// Connects to the [device] on the P2P network.
   ///
-  /// Invites [device] if [isBrowser] is true.
-  /// Accepts invite from [device] if [isBrowser] is false.
+  /// Invites [device] if [isBrowserValue] is true.
+  /// Accepts invite from [device] if [isBrowserValue] is false.
   ///
   /// Note! Requires [NearbyIOSDevice] to be passed.
+  @Deprecated('Use connectById instead')
+  @override
+  Future<bool> connect(NearbyDevice device) async {
+    _requireIOSDevice(device);
+    return connectById(device.info.id);
+  }
+
+  ///
+  /// Connects to the [deviceId] on the P2P network.
+  ///
+  /// Invites [deviceId] if [isBrowserValue] is true.
+  /// Accepts invite from [deviceId] if [isBrowserValue] is false.
   ///
   @override
   Future<bool> connectById(String deviceId) async {
-    final result = _isBrowser
+    final result = _isBrowser.value
         ? await NearbyServiceIOSPlatform.instance.invite(deviceId)
         : await NearbyServiceIOSPlatform.instance.acceptInvite(deviceId);
 
     _logResult(
       result,
       onSuccess:
-          '${_isBrowser ? 'Sent invitation to' : 'Accepted invitation from'} '
+          '${_isBrowser.value ? 'Sent invitation to' : 'Accepted invitation from'} '
           '$deviceId',
       onError: 'Failed to connect to $deviceId',
     );
@@ -149,6 +173,17 @@ class NearbyIOSService extends NearbyService {
   /// Disconnects from the [device] on the P2P network.
   ///
   /// Note! Requires [NearbyIOSDevice] to be passed.
+  ///
+  @Deprecated('Use disconnectById instead')
+  @override
+  Future<bool> disconnect([NearbyDevice? device]) async {
+    if (device == null) return false;
+    _requireIOSDevice(device);
+    return disconnectById(device.info.id);
+  }
+
+  ///
+  /// Disconnects from the [deviceId] on the P2P network.
   ///
   @override
   Future<bool> disconnectById([String? deviceId]) async {
@@ -249,6 +284,11 @@ class NearbyIOSService extends NearbyService {
     throw NearbyServiceException.invalidMessage(message.content);
   }
 
+  @override
+  Stream<CommunicationChannelState> getCommunicationChannelStateStream() {
+    return _stateController.stream.asBroadcastStream();
+  }
+
   ///
   /// If you want to ask the user to change the name on the network,
   /// you can retrieve the name previously saved in
@@ -262,7 +302,7 @@ class NearbyIOSService extends NearbyService {
   }
 
   ///
-  /// Changes the [_isBrowser] to the passed [value].
+  /// Changes the [isBrowserValue] to the passed [value].
   ///
   void setIsBrowser({required bool value}) {
     Logger.debug('Is Browser Value was set to $value');
@@ -281,12 +321,14 @@ class NearbyIOSService extends NearbyService {
     }
   }
 
-  @override
-  Stream<CommunicationChannelState> getCommunicationChannelStateStream() {
-    return _stateController.stream.asBroadcastStream();
+  String get _currentConnectionType {
+    return _isBrowser.value ? 'browsing' : 'advertising';
   }
 
-  String get _currentConnectionType {
-    return _isBrowser ? 'browsing' : 'advertising';
+  void _requireIOSDevice(NearbyDevice device) {
+    assert(
+      device is NearbyIOSDevice,
+      'The Nearby IOS Service can only work with the NearbyIOSDevice and not with ${device.runtimeType}',
+    );
   }
 }
