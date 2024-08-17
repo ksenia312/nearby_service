@@ -1,6 +1,6 @@
 ---
 name: Question about source code
-about: Ask a question about source code
+about: Ask a question about source code here
 title: "[QUESTION]: "
 labels: question
 assignees: ksenia312
