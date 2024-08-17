@@ -8,7 +8,7 @@
 Thank you for considering contributing to the Nearby Service package! Please follow the guidelines below based on your
 use case.
 
-#### 1. Reporting a bug
+#### Reporting a bug
 
 If you have found a bug, please follow these steps:
 
@@ -20,7 +20,7 @@ If you have found a bug, please follow these steps:
 3. **Provide details**: Include a clear and concise description of the bug, steps to reproduce it, and any relevant logs
    or screenshots.
 
-#### 2. Suggesting an improvement or feature
+#### Suggesting an improvement or feature
 
 If you have an idea for an improvement or a new feature, follow these steps:
 
@@ -31,7 +31,7 @@ If you have an idea for an improvement or a new feature, follow these steps:
 3. **Describe your suggestion**: Provide a detailed description of the improvement or feature, including potential use
    cases and any other relevant information.
 
-#### 3. Submitting a bug fix or improvement
+#### Submitting a bug fix or improvement
 
 If you have created a fix for a bug or an improvement, please follow these steps:
 
@@ -46,7 +46,7 @@ If you have created a fix for a bug or an improvement, please follow these steps
 6. **Use appropriate labels**: In your PR, mention the issue number if it exists and use the `bug` or `enhancement`
    label accordingly.
 
-#### 4. Asking a question about nearby_service or source code
+#### Asking a question about nearby_service or source code
 
 If you have a question about how to use Nearby Service or about the source code, please follow these steps:
 
