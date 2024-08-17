@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:nearby_service/nearby_service.dart';
 import 'package:nearby_service/src/utils/file_socket.dart';
 import 'package:nearby_service/src/utils/logger.dart';
@@ -31,10 +32,8 @@ class NearbySocketService {
 
   late final stateController =
       StreamController<CommunicationChannelState>.broadcast()
-        ..add(_communicationChannelState)
-        ..stream
-            .asBroadcastStream()
-            .listen((e) => _communicationChannelState = e);
+        ..add(_state.value)
+        ..stream.asBroadcastStream().listen((e) => _state.value = e);
 
   NearbyAndroidCommunicationChannelData _androidData =
       const NearbyAndroidCommunicationChannelData();
@@ -43,10 +42,13 @@ class NearbySocketService {
   WebSocket? _socket;
   HttpServer? _server;
   StreamSubscription? _messagesSubscription;
-  var _communicationChannelState = CommunicationChannelState.notConnected;
 
-  CommunicationChannelState get communicationChannelState =>
-      _communicationChannelState;
+  final _state = ValueNotifier(CommunicationChannelState.notConnected);
+
+  CommunicationChannelState get communicationChannelStateValue => _state.value;
+
+  ValueListenable<CommunicationChannelState> get communicationChannelState =>
+      _state;
 
   ///
   /// Start a socket with the user's role defined.
@@ -142,7 +144,7 @@ class NearbySocketService {
     required NearbyServiceMessagesListener socketListener,
     required NearbyConnectionAndroidInfo info,
   }) async {
-    if (_communicationChannelState.isLoading) {
+    if (_state.value.isLoading) {
       final response = await _network.pingServer(
         address: info.ownerIpAddress,
         port: _androidData.port,
