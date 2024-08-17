@@ -57,4 +57,5 @@ If you have a question about how to use Nearby Service or about the source code,
    indicate that this is a question.
 3. **Describe your question**: Clearly state your question and provide any necessary context.
 
-Thank you for your contributions!
+---
+Your effort is appreciated 💗
