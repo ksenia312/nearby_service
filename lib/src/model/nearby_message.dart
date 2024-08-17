@@ -26,8 +26,8 @@ final class OutgoingNearbyMessage<C extends NearbyMessageContent>
   @override
   Map<String, dynamic> toJson() {
     return {
-      'content': content.toJson(),
       'receiver': receiver.toJson(),
+      ...super.toJson(),
     };
   }
 
@@ -100,8 +100,8 @@ final class ReceivedNearbyMessage<C extends NearbyMessageContent>
   @override
   Map<String, dynamic> toJson() {
     return {
-      'content': content.toJson(),
       'sender': sender.toJson(),
+      ...super.toJson(),
     };
   }
 }
