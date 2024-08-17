@@ -35,3 +35,4 @@ build/
 
 # FVM Version Cache
 .fvm/
+playground/*
