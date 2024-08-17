@@ -74,7 +74,9 @@ abstract class NearbyService {
   /// For **IOS** this is the state of the message stream subscription.
   /// which is generated for the device with the current connected device ID.
   ///
-  @Deprecated('Use getCommunicationChannelStateStream instead')
+  @Deprecated(
+    'Use getCommunicationChannelStateStream or communicationChannelStateValue instead',
+  )
   ValueListenable<CommunicationChannelState> get communicationChannelState;
 
   ///
@@ -192,7 +194,7 @@ abstract class NearbyService {
   /// Starts searching for devices using a platform-specific service.
   ///
   /// Note that the [NearbyIOSService] implementation starts **browsing** or
-  /// **advertising** depending on the [NearbyIOSService.isBrowser].
+  /// **advertising** depending on the [NearbyIOSService.isBrowserValue].
   ///
   /// On Android can throw mapped from native platform exceptions:
   /// 1. [NearbyServiceBusyException]
@@ -207,7 +209,7 @@ abstract class NearbyService {
   /// Stops searching for devices using a platform-specific service.
   ///
   /// Note that the [NearbyIOSService] implementation stops **browsing** or
-  /// **advertising** depending on the [NearbyIOSService.isBrowser].
+  /// **advertising** depending on the [NearbyIOSService.isBrowserValue].
   ///
   /// On Android can throw mapped from native platform exceptions:
   /// 1. [NearbyServiceBusyException]
@@ -241,7 +243,7 @@ abstract class NearbyService {
   /// Connects to passed [deviceId] using a platform-specific service.
   ///
   /// Note that the [NearbyIOSService] implementation **invites** or
-  /// **accepts invite** depending on the [NearbyIOSService.isBrowser].
+  /// **accepts invite** depending on the [NearbyIOSService.isBrowserValue].
   ///
   /// Note that if [Platform.isIOS] == true, [NearbyIOSDevice] should be passed.
   /// If [Platform.isAndroid] == true, [NearbyAndroidDevice] should be passed.

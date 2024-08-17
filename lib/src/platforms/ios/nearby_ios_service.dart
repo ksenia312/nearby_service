@@ -36,6 +36,9 @@ class NearbyIOSService extends NearbyService {
       _communicationChannelState.value;
 
   @override
+  @Deprecated(
+    'Use getCommunicationChannelStateStream or communicationChannelStateValue instead',
+  )
   ValueListenable<CommunicationChannelState> get communicationChannelState =>
       _communicationChannelState;
 

@@ -13,7 +13,9 @@ import 'socket_service/nearby_socket_service.dart';
 class NearbyAndroidService extends NearbyService {
   late final _socketService = NearbySocketService(this);
 
-  @Deprecated('Use getCommunicationChannelStateStream instead')
+  @Deprecated(
+    'Use getCommunicationChannelStateStream or communicationChannelStateValue instead',
+  )
   @override
   ValueListenable<CommunicationChannelState> get communicationChannelState =>
       _socketService.communicationChannelState;

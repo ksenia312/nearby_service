@@ -54,6 +54,7 @@ class MethodChannelNearbyService extends NearbyServicePlatform {
   }
 
   @override
+  @Deprecated('Use getConnectedDeviceStreamById instead')
   Stream<NearbyDevice?> getConnectedDeviceStream(NearbyDevice device) {
     return getConnectedDeviceStreamById(device.info.id);
   }
