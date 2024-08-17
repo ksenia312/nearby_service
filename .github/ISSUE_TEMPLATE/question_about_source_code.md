@@ -11,10 +11,10 @@ assignees: ksenia312
 Provide your question here
 
 ### Source Code Path
-Specify the path to the source code you are referring to. (e.g., `lib/src/platforms/android/nearby_android_service.dart`)
+Specify the path to the source code (e.g., `lib/src/platforms/android/nearby_android_service.dart`)
 
 ### Code Snippet
-Include a code snippet from the source code in question. Ensure to provide enough context to understand the issue.
+Include a code snippet from the source code in question
 
 ```dart
 // Example source code snippet
@@ -23,3 +23,6 @@ Include a code snippet from the source code in question. Ensure to provide enoug
     return _socketService.send(message);
   }
 ```
+---
+
+Your effort is appreciated 💗

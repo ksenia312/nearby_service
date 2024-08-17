@@ -17,8 +17,7 @@ List the steps that reproduce the behavior:
 
 1. Initialize the package: (e.g., `_nearbyService.initialize();`)
 2. Attempt to discover peers: (e.g., `_nearbyService.discover();`)
-3. Perform communication actions: (e.g., `_nearbyService.startCommunicationChannel(...);`)
-4. Observe the issue: (e.g., Connection drops, no data received, etc.)
+3. Observe the issue: (e.g., Connection drops, no data received, etc.)
 
 ### **Environment**
 
@@ -69,3 +68,6 @@ Describe the network conditions and configuration when the issue occurred (if re
     - [ ] Disabled
 
 - **Additional Network Information:** (e.g., any network configurations or limitations that might be relevant)
+
+---
+Your effort is appreciated 💗

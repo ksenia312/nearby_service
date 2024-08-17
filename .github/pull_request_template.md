@@ -25,4 +25,4 @@ If applicable, include screenshots to demonstrate the changes or to help clarify
 
 ---
 
-Thank you for contributing to the project! Your effort is appreciated 💗
+Your effort is appreciated 💗
