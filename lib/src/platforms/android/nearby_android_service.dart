@@ -59,13 +59,12 @@ class NearbyAndroidService extends NearbyService {
   @Deprecated('Use connectById instead')
   @override
   Future<bool> connect(NearbyDevice device) {
+    _requireAndroidDevice(device);
     return NearbyServiceAndroidPlatform.instance.connect(device.info.id);
   }
 
   ///
   /// Connects to the [deviceId] on the Wifi Direct network.
-  ///
-  /// Note! Requires [NearbyAndroidDevice] to be passed.
   ///
   @override
   Future<bool> connectById(String deviceId) {
@@ -75,7 +74,7 @@ class NearbyAndroidService extends NearbyService {
   ///
   /// Disconnects from the [device] on the Wifi Direct network.
   ///
-  /// Note! Requires [NearbyAndroidDevice] to be passed.
+  /// [device] is not required for Android.
   ///
   @Deprecated('Use disconnectById instead')
   @override
@@ -170,5 +169,12 @@ class NearbyAndroidService extends NearbyService {
   @override
   Stream<CommunicationChannelState> getCommunicationChannelStateStream() {
     return _socketService.stateController.stream.asBroadcastStream();
+  }
+
+  void _requireAndroidDevice(NearbyDevice device) {
+    assert(
+      device is NearbyAndroidDevice,
+      'The Nearby Android Service can only work with the NearbyAndroidDevice and not with ${device.runtimeType}',
+    );
   }
 }
