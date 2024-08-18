@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:nearby_service/nearby_service.dart';
 
 ///
@@ -36,4 +37,10 @@ abstract base class NearbyMessage<C extends NearbyMessageContent> {
   String toString() {
     return 'NearbyMessage{content: $content}';
   }
+
+  ///
+  /// Get [Map] from [NearbyMessage].
+  ///
+  @mustCallSuper
+  Map<String, dynamic> toJson() => {'content': content.toJson()};
 }

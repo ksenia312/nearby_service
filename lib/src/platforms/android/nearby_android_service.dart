@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 import 'package:nearby_service/nearby_service.dart';
 
@@ -14,10 +13,16 @@ import 'socket_service/nearby_socket_service.dart';
 class NearbyAndroidService extends NearbyService {
   late final _socketService = NearbySocketService(this);
 
+  @Deprecated(
+    'Use getCommunicationChannelStateStream or communicationChannelStateValue instead',
+  )
   @override
-  ValueListenable<CommunicationChannelState> get communicationChannelState {
-    return _socketService.state;
-  }
+  ValueListenable<CommunicationChannelState> get communicationChannelState =>
+      _socketService.communicationChannelState;
+
+  @override
+  CommunicationChannelState get communicationChannelStateValue =>
+      _socketService.communicationChannelStateValue;
 
   ///
   /// Initializes Android [WifiP2PManager](https://developer.android.com/reference/android/net/wifi/p2p/WifiP2pManager)
@@ -53,6 +58,7 @@ class NearbyAndroidService extends NearbyService {
   ///
   /// Note! Requires [NearbyAndroidDevice] to be passed.
   ///
+  @Deprecated('Use connectById instead')
   @override
   Future<bool> connect(NearbyDevice device) {
     _requireAndroidDevice(device);
@@ -60,12 +66,31 @@ class NearbyAndroidService extends NearbyService {
   }
 
   ///
+  /// Connects to the [deviceId] on the Wifi Direct network.
+  ///
+  @override
+  Future<bool> connectById(String deviceId) {
+    return NearbyServiceAndroidPlatform.instance.connect(deviceId);
+  }
+
+  ///
   /// Disconnects from the [device] on the Wifi Direct network.
+  ///
+  /// [device] is not required for Android.
+  ///
+  @Deprecated('Use disconnectById instead')
+  @override
+  Future<bool> disconnect([NearbyDevice? device]) {
+    return NearbyServiceAndroidPlatform.instance.disconnect();
+  }
+
+  ///
+  /// Disconnects from the [deviceId] on the Wifi Direct network.
   ///
   /// Note! Requires [NearbyAndroidDevice] to be passed.
   ///
   @override
-  Future<bool> disconnect([NearbyDevice? device]) {
+  Future<bool> disconnectById([String? deviceId]) {
     return NearbyServiceAndroidPlatform.instance.disconnect();
   }
 
@@ -141,6 +166,11 @@ class NearbyAndroidService extends NearbyService {
   ///
   Stream<NearbyConnectionAndroidInfo?> getConnectionInfoStream() {
     return NearbyServiceAndroidPlatform.instance.getConnectionInfoStream();
+  }
+
+  @override
+  Stream<CommunicationChannelState> getCommunicationChannelStateStream() {
+    return _socketService.stateController.stream.asBroadcastStream();
   }
 
   void _requireAndroidDevice(NearbyDevice device) {

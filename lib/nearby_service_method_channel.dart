@@ -54,13 +54,17 @@ class MethodChannelNearbyService extends NearbyServicePlatform {
   }
 
   @override
+  @Deprecated('Use getConnectedDeviceStreamById instead')
   Stream<NearbyDevice?> getConnectedDeviceStream(NearbyDevice device) {
+    return getConnectedDeviceStreamById(device.info.id);
+  }
+
+  @override
+  Stream<NearbyDevice?> getConnectedDeviceStreamById(String deviceId) {
     const connectedDeviceChannel = EventChannel(
       "nearby_service_connected_device",
     );
-    return connectedDeviceChannel
-        .receiveBroadcastStream(device.info.id)
-        .map((e) {
+    return connectedDeviceChannel.receiveBroadcastStream(deviceId).map((e) {
       final updatedResult = ResultHandler.instance.handle(e);
       return NearbyDeviceMapper.instance.mapToDevice(updatedResult);
     });
