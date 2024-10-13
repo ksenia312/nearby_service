@@ -86,8 +86,12 @@ class NearbySocketService {
         );
         return true;
       }
+    } else {
+      Future.delayed(data.androidData.clientReconnectInterval, () {
+        startSocket(data: data);
+      });
+      return false;
     }
-    return false;
   }
 
   ///
@@ -149,23 +153,28 @@ class NearbySocketService {
       );
 
       if (await _pingManager.checkPong(response)) {
-        _socket = await _network.connectToSocket(
-          ownerIpAddress: info.ownerIpAddress,
-          port: _androidData.port,
-          socketType: NearbySocketType.message,
-        );
-        _createSocketSubscription(socketListener);
-      } else {
-        Logger.debug(
-          'Retry to connect to the server in ${_androidData.clientReconnectInterval.inSeconds}s',
-        );
-        Future.delayed(_androidData.clientReconnectInterval, () {
-          _tryConnectClient(
-            socketListener: socketListener,
-            info: info,
+        try {
+          _socket = await _network.connectToSocket(
+            ownerIpAddress: info.ownerIpAddress,
+            port: _androidData.port,
+            socketType: NearbySocketType.message,
           );
-        });
+          _createSocketSubscription(socketListener);
+          return;
+        } catch (e) {
+          Logger.error(e);
+        }
       }
+
+      Logger.debug(
+        'Retry to connect to the server in ${_androidData.clientReconnectInterval.inSeconds}s',
+      );
+      Future.delayed(_androidData.clientReconnectInterval, () {
+        _tryConnectClient(
+          socketListener: socketListener,
+          info: info,
+        );
+      });
     }
   }
 

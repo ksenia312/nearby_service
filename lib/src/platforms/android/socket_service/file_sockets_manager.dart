@@ -9,11 +9,12 @@ class FileSocketsManager {
 
   final _filesSockets = <String, FilesSocket>{};
   final _serverWaitingRequests = <String, HttpRequest>{};
+  final _cachedFilesRequests = <NearbyMessageFilesRequest>[];
+  final _socketCreationFutures = <String, Future>{};
 
   NearbyServiceFilesListener? _filesListener;
   NearbyDeviceInfo? _sender;
-  NearbyMessageFilesRequest? _cachedFilesRequest;
-  Future? _socketCreationFuture;
+
   var _connectionData = const NearbyAndroidCommunicationChannelData();
 
   void setListener(NearbyServiceFilesListener? listener) {
@@ -55,31 +56,35 @@ class FileSocketsManager {
         content is NearbyMessageFilesResponse && content.isAccepted;
 
     if (isRequest) {
-      _cachedFilesRequest = content;
+      _cachedFilesRequests.add(content);
       Logger.debug('Files pack request ${content.id} was cached');
     }
+    final cachedRequest = _cachedFilesRequests
+        .where(
+          (e) => e.id == content.id,
+        )
+        .firstOrNull;
+
     if (!socketExists) {
       final info = await _service.getConnectionInfo();
       if (info != null && info.groupFormed) {
         if (info.isGroupOwner) {
-          if (isPositiveResponse && _cachedFilesRequest != null) {
-            _socketCreationFuture = _startFilesServerSocket(
-              _cachedFilesRequest!,
+          if (isPositiveResponse && cachedRequest != null) {
+            _socketCreationFutures[content.id] = _startFilesServerSocket(
+              cachedRequest,
             );
           }
         } else {
           NearbyMessageFilesRequest? request;
 
-          if (!isReceived &&
-              isPositiveResponse &&
-              _cachedFilesRequest != null) {
-            request = _cachedFilesRequest!;
+          if (!isReceived && isPositiveResponse && cachedRequest != null) {
+            request = cachedRequest;
           } else if (isRequest) {
             request = content;
           }
 
           if (request != null) {
-            _socketCreationFuture = _connectToFilesSocket(
+            _socketCreationFutures[content.id] = _connectToFilesSocket(
               request,
               ownerIpAddress: info.ownerIpAddress,
             );
@@ -88,12 +93,12 @@ class FileSocketsManager {
       }
     }
 
-    if (isReceived && isPositiveResponse && _cachedFilesRequest != null) {
-      await _socketCreationFuture?.whenComplete(
+    if (isReceived && isPositiveResponse && cachedRequest != null) {
+      await _socketCreationFutures[content.id]?.whenComplete(
         () async {
-          await _startDataTransfer(_cachedFilesRequest!);
-          _socketCreationFuture = null;
-          _cachedFilesRequest = null;
+          await _startDataTransfer(cachedRequest);
+          _socketCreationFutures.remove(content.id);
+          _cachedFilesRequests.remove(cachedRequest);
         },
       );
     }
@@ -105,8 +110,8 @@ class FileSocketsManager {
     }
     _filesSockets.clear();
     _filesListener = null;
-    _cachedFilesRequest = null;
-    _socketCreationFuture = null;
+    _cachedFilesRequests.clear();
+    _socketCreationFutures.clear();
   }
 
   Future<void> _connectToFilesSocket(
@@ -162,6 +167,11 @@ class FileSocketsManager {
       if (result) {
         _serverWaitingRequests.remove(filesRequest.id);
       }
+    } else {
+      await Future.delayed(
+        _connectionData.clientReconnectInterval,
+        () => _startFilesServerSocket(filesRequest),
+      );
     }
   }
 
