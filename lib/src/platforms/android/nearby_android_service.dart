@@ -170,7 +170,7 @@ class NearbyAndroidService extends NearbyService {
 
   @override
   Stream<CommunicationChannelState> getCommunicationChannelStateStream() {
-    return _socketService.stateController.stream.asBroadcastStream();
+    return _socketService.state.broadcastStream;
   }
 
   void _requireAndroidDevice(NearbyDevice device) {
