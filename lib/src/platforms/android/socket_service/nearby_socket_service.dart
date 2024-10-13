@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:nearby_service/nearby_service.dart';
 import 'package:nearby_service/src/utils/file_socket.dart';
+import 'package:nearby_service/src/utils/listenable.dart';
 import 'package:nearby_service/src/utils/logger.dart';
 import 'package:nearby_service/src/utils/random.dart';
 import 'package:nearby_service/src/utils/stream_mapper.dart';
@@ -30,10 +31,9 @@ class NearbySocketService {
     _pingManager,
   );
 
-  late final stateController =
-      StreamController<CommunicationChannelState>.broadcast()
-        ..add(_state.value)
-        ..stream.asBroadcastStream().listen((e) => _state.value = e);
+  late final state = NearbyServiceListenable<CommunicationChannelState>(
+    initialValue: CommunicationChannelState.notConnected,
+  );
 
   NearbyAndroidCommunicationChannelData _androidData =
       const NearbyAndroidCommunicationChannelData();
@@ -43,12 +43,10 @@ class NearbySocketService {
   HttpServer? _server;
   StreamSubscription? _messagesSubscription;
 
-  final _state = ValueNotifier(CommunicationChannelState.notConnected);
-
-  CommunicationChannelState get communicationChannelStateValue => _state.value;
+  CommunicationChannelState get communicationChannelStateValue => state.value;
 
   ValueListenable<CommunicationChannelState> get communicationChannelState =>
-      _state;
+      state.notifier;
 
   ///
   /// Start a socket with the user's role defined.
@@ -63,7 +61,7 @@ class NearbySocketService {
   Future<bool> startSocket({
     required NearbyCommunicationChannelData data,
   }) async {
-    stateController.add(CommunicationChannelState.loading);
+    state.add(CommunicationChannelState.loading);
 
     _androidData = data.androidData;
     _connectedDeviceId = data.connectedDeviceId;
@@ -133,7 +131,7 @@ class NearbySocketService {
       _server = null;
       _connectedDeviceId = null;
 
-      stateController.add(CommunicationChannelState.notConnected);
+      state.add(CommunicationChannelState.notConnected);
       return true;
     } catch (e) {
       return false;
@@ -144,7 +142,7 @@ class NearbySocketService {
     required NearbyServiceMessagesListener socketListener,
     required NearbyConnectionAndroidInfo info,
   }) async {
-    if (_state.value.isLoading) {
+    if (state.value.isLoading) {
       final response = await _network.pingServer(
         address: info.ownerIpAddress,
         port: _androidData.port,
@@ -226,23 +224,23 @@ class NearbySocketService {
           }
         },
         onDone: () {
-          stateController.add(CommunicationChannelState.notConnected);
+          state.add(CommunicationChannelState.notConnected);
           socketListener.onDone?.call();
         },
         onError: (e, s) {
           Logger.error(e);
-          stateController.add(CommunicationChannelState.notConnected);
+          state.add(CommunicationChannelState.notConnected);
           socketListener.onError?.call(e, s);
         },
         cancelOnError: socketListener.cancelOnError,
       );
     }
     if (_messagesSubscription != null) {
-      stateController.add(CommunicationChannelState.connected);
+      state.add(CommunicationChannelState.connected);
       Logger.info('Socket subscription was created successfully');
       socketListener.onCreated?.call();
     } else {
-      stateController.add(CommunicationChannelState.notConnected);
+      state.add(CommunicationChannelState.notConnected);
     }
   }
 

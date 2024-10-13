@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:nearby_service/nearby_service.dart';
+import 'package:nearby_service/src/utils/listenable.dart';
 import 'package:nearby_service/src/utils/logger.dart';
 import 'package:nearby_service/src/utils/stream_mapper.dart';
 
@@ -13,20 +14,12 @@ import 'package:nearby_service/src/utils/stream_mapper.dart';
 /// device by identifier.
 ///
 class NearbyIOSService extends NearbyService {
-  final _isBrowser = ValueNotifier<bool>(true);
+  final _isBrowser = NearbyServiceListenable<bool>(initialValue: true);
+
   final _communicationChannelState =
-      ValueNotifier(CommunicationChannelState.notConnected);
-
-  late final _isBrowserController = StreamController<bool>.broadcast()
-    ..add(_isBrowser.value)
-    ..stream.asBroadcastStream().listen((e) => _isBrowser.value = e);
-
-  late final _stateController =
-      StreamController<CommunicationChannelState>.broadcast()
-        ..add(_communicationChannelState.value)
-        ..stream
-            .asBroadcastStream()
-            .listen((e) => _communicationChannelState.value = e);
+      NearbyServiceListenable<CommunicationChannelState>(
+    initialValue: CommunicationChannelState.notConnected,
+  );
 
   StreamSubscription? _messagesSubscription;
   StreamSubscription? _resourcesSubscription;
@@ -40,13 +33,13 @@ class NearbyIOSService extends NearbyService {
     'Use getCommunicationChannelStateStream or communicationChannelStateValue instead',
   )
   ValueListenable<CommunicationChannelState> get communicationChannelState =>
-      _communicationChannelState;
+      _communicationChannelState.notifier;
 
   ///
   /// Determines whether the current device is a **Browser** or **Advertiser**.
   ///
   @Deprecated('Use getIsBrowserStream or isBrowserValue instead')
-  ValueListenable<bool> get isBrowser => _isBrowser;
+  ValueListenable<bool> get isBrowser => _isBrowser.notifier;
 
   ///
   /// Determines whether the current device is a **Browser** or **Advertiser**.
@@ -62,8 +55,7 @@ class NearbyIOSService extends NearbyService {
   /// status that have sent it a connection request.
   /// Advertiser accepts or rejects connection requests.
   ///
-  Stream<bool> getIsBrowserStream() =>
-      _isBrowserController.stream.asBroadcastStream();
+  Stream<bool> getIsBrowserStream() => _isBrowser.broadcastStream;
 
   ///
   /// Initializes [MCNearbyServiceAdvertiser](https://developer.apple.com/documentation/multipeerconnectivity/mcnearbyserviceadvertiser)
@@ -209,7 +201,7 @@ class NearbyIOSService extends NearbyService {
     NearbyCommunicationChannelData data,
   ) async {
     Logger.debug('Creating messages subscription');
-    _stateController.add(CommunicationChannelState.loading);
+    _communicationChannelState.add(CommunicationChannelState.loading);
 
     await endCommunicationChannel();
     final eventListener = data.messagesListener;
@@ -222,12 +214,12 @@ class NearbyIOSService extends NearbyService {
         .listen(
       eventListener.onData,
       onDone: () {
-        _stateController.add(CommunicationChannelState.notConnected);
+        _communicationChannelState.add(CommunicationChannelState.notConnected);
         eventListener.onDone?.call();
       },
       onError: (e, s) {
         Logger.error(e);
-        _stateController.add(CommunicationChannelState.notConnected);
+        _communicationChannelState.add(CommunicationChannelState.notConnected);
         eventListener.onError?.call(e, s);
       },
       cancelOnError: eventListener.cancelOnError,
@@ -241,7 +233,7 @@ class NearbyIOSService extends NearbyService {
       onDone: filesListener?.onDone,
       onError: (e, s) {
         Logger.error(e);
-        _stateController.add(CommunicationChannelState.notConnected);
+        _communicationChannelState.add(CommunicationChannelState.notConnected);
         filesListener?.onError?.call(e, s);
       },
       cancelOnError: filesListener?.cancelOnError,
@@ -249,9 +241,9 @@ class NearbyIOSService extends NearbyService {
     if (_messagesSubscription != null) {
       Logger.info('Messages subscription was created successfully');
       eventListener.onCreated?.call();
-      _stateController.add(CommunicationChannelState.connected);
+      _communicationChannelState.add(CommunicationChannelState.connected);
     } else {
-      _stateController.add(CommunicationChannelState.notConnected);
+      _communicationChannelState.add(CommunicationChannelState.notConnected);
     }
     if (_resourcesSubscription != null) {
       Logger.info('Resources subscription was created successfully');
@@ -270,7 +262,7 @@ class NearbyIOSService extends NearbyService {
     await _resourcesSubscription?.cancel();
     _messagesSubscription = null;
     _resourcesSubscription = null;
-    _stateController.add(CommunicationChannelState.notConnected);
+    _communicationChannelState.add(CommunicationChannelState.notConnected);
     Logger.debug('Communication channel was cancelled');
     return true;
   }
@@ -289,7 +281,7 @@ class NearbyIOSService extends NearbyService {
 
   @override
   Stream<CommunicationChannelState> getCommunicationChannelStateStream() {
-    return _stateController.stream.asBroadcastStream();
+    return _communicationChannelState.broadcastStream;
   }
 
   ///
@@ -309,7 +301,7 @@ class NearbyIOSService extends NearbyService {
   ///
   void setIsBrowser({required bool value}) {
     Logger.debug('Is Browser Value was set to $value');
-    _isBrowserController.add(value);
+    _isBrowser.add(value);
   }
 
   void _logResult(
