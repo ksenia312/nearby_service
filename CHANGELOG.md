@@ -1,3 +1,7 @@
+## 0.1.2
+
+- [Android]: Improve files management and connection
+
 ## 0.1.1
 
 - Fix issue https://github.com/ksenia312/nearby_service/issues/16
