@@ -19,7 +19,7 @@ class DevicePreview extends StatelessWidget {
     final color = device.status.isConnected ? kGreenColor : kGreyColor;
 
     final avatar = CircleAvatar(
-      backgroundColor: kBlueColor.withOpacity(0.7),
+      backgroundColor: kBlueColor.withValues(alpha: 0.7),
       foregroundColor: kWhiteColor,
       maxRadius: largeView ? 100 : 30,
       child: Padding(

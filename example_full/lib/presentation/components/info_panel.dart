@@ -120,7 +120,7 @@ class _InfoChip extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             blurRadius: 2,
-            color: Theme.of(context).shadowColor.withOpacity(0.4),
+            color: Theme.of(context).shadowColor.withValues(alpha: 0.4),
             offset: const Offset(0, 1),
           ),
         ],
@@ -133,13 +133,16 @@ class _InfoChip extends StatelessWidget {
             '$label: ',
             style: TextStyle(
               fontWeight: FontWeight.bold,
+              fontSize: 12,
               color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
-          Text(
-            value,
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface,
+          Flexible(
+            child: Text(
+              value,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
             ),
           ),
         ],

@@ -14,6 +14,7 @@ import android.os.Build
 /**
  * Receiver of [WifiP2pManager] changes.
  */
+@Suppress("DEPRECATION")
 class NearbyServiceBroadcastReceiver(
     private val wifiManager: WifiP2pManager,
     private val wifiChannel: Channel,
@@ -34,7 +35,7 @@ class NearbyServiceBroadcastReceiver(
             }
 
             WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION -> {
-                writeDevices()
+                writeDevices { intent.getParcelableExtra(WifiP2pManager.EXTRA_P2P_DEVICE_LIST) }
             }
 
             WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION -> {
@@ -76,13 +77,19 @@ class NearbyServiceBroadcastReceiver(
         }
     }
 
-    private fun writeDevices() {
+    private fun writeDevices(deviceListSupplier: (() -> WifiP2pDeviceList?)? = null) {
         try {
             wifiManager.requestPeers(
                 wifiChannel
-            ) { newPeers: WifiP2pDeviceList ->
+            ) { data: WifiP2pDeviceList ->
                 val list: MutableList<String> = mutableListOf()
 
+                val newPeers =
+                    if (data.deviceList.isEmpty() && deviceListSupplier != null) {
+                        deviceListSupplier() ?: data
+                    } else {
+                        data
+                    }
                 if (newPeers.deviceList.isEmpty() && connectedDevice != null) {
                     connectedDevice = null
                 }

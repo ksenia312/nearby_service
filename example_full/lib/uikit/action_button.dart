@@ -33,7 +33,7 @@ class ActionButton extends StatelessWidget {
         maximumSize: const Size(150, 50),
         minimumSize: const Size(70, 50),
         elevation: 2,
-        surfaceTintColor: type.color.withOpacity(0.05),
+        surfaceTintColor: type.color.withValues(alpha: 0.05),
       ),
       child: Text(
         title,

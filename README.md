@@ -19,6 +19,15 @@ The package does not support communication between Android and IOS devices, the 
 Your feedback and suggestions would be greatly
 appreciated! [You can leave your opinion here](https://forms.gle/FbAtW2dG5RYCxb1DA)
 
+## Video
+
+Watch a quick demonstration in MP4 format:
+- [Android](https://drive.google.com/file/d/1nxdzDjBC6pMmT5GEyf4u88X5Q77khCWy/view?usp=drive_link)
+- [iOS](https://drive.google.com/file/d/1MDyDxMJ5jjU9lr-wGeqcAY1uEEHNHTZ_/view?usp=drive_link)
+
+Or find the GIF demo at the end of the README:
+- [Demo](#demo)
+
 ## Table of Contents
 
 - [About](#about)

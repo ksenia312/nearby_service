@@ -1,3 +1,10 @@
+## 0.1.3
+
+- [Android]: Use intent to get peers when requestPeers() returns empty
+- Update README: add Video section
+- Use Flutter 3.27.4
+- Upgrade AGP to 8.2.1 in examples
+
 ## 0.1.2
 
 - [Android]: Improve files management and connection
