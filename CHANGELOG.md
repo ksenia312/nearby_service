@@ -1,3 +1,7 @@
+## 0.2.0
+
+- Add support for macOS
+
 ## 0.1.3
 
 - [Android]: Use intent to get peers when requestPeers() returns empty
