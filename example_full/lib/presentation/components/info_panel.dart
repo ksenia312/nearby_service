@@ -53,10 +53,10 @@ class InfoPanel extends StatelessWidget {
               label: 'Communication channel state',
               value: service.communicationChannelState.previewName,
             ),
-            if (Platform.isIOS)
+            if (Platform.isIOS || Platform.isMacOS)
               _InfoChip(
                 label: 'Role',
-                value: service.isIOSBrowser
+                value: service.isDarwinBrowser
                     ? 'You are going to find your friend'
                     : 'You are waiting for another user to connect',
               ),
@@ -94,7 +94,8 @@ class AdditionalInfoPanel extends StatelessWidget {
             label: 'Model',
             value: service.platformModel,
           ),
-          if (service.currentDeviceInfo != null && Platform.isIOS)
+          if (service.currentDeviceInfo != null &&
+              (Platform.isIOS || Platform.isMacOS))
             _InfoChip(
               label: 'Device P2P ID',
               value: service.currentDeviceInfo!.id,

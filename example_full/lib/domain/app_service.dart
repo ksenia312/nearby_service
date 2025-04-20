@@ -17,7 +17,7 @@ class AppService extends ChangeNotifier {
   NearbyConnectionAndroidInfo? _connectionAndroidInfo;
   CommunicationChannelState _communicationChannelState =
       CommunicationChannelState.notConnected;
-  bool _isIOSBrowser = true;
+  bool _isDarwinBrowser = true;
 
   String platformVersion = 'Unknown';
   String platformModel = 'Unknown';
@@ -40,17 +40,17 @@ class AppService extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<String> getSavedIOSDeviceName() async {
-    return (await _nearbyService.ios?.getSavedDeviceName()) ?? platformModel;
+  Future<String> getSavedDarwinDeviceName() async {
+    return (await _nearbyService.darwin?.getSavedDeviceName()) ?? platformModel;
   }
 
-  Future<void> initialize(String? iosDeviceName) async {
+  Future<void> initialize(String? darwinDeviceName) async {
     try {
       await _nearbyService.initialize(
-        data: NearbyInitializeData(iosDeviceName: iosDeviceName),
+        data: NearbyInitializeData(darwinDeviceName: darwinDeviceName),
       );
-      _nearbyService.ios?.getIsBrowserStream().listen((event) {
-        _isIOSBrowser = event;
+      _nearbyService.darwin?.getIsBrowserStream().listen((event) {
+        _isDarwinBrowser = event;
       });
       startListeningCommunicationChannelState();
       updateState(
@@ -97,7 +97,7 @@ class AppService extends ChangeNotifier {
   }
 
   void setIsBrowser({required bool value}) {
-    _nearbyService.ios?.setIsBrowser(value: value);
+    _nearbyService.darwin?.setIsBrowser(value: value);
     updateState(AppState.readyToDiscover);
   }
 
@@ -213,8 +213,8 @@ extension GettersExtension on AppService {
   CommunicationChannelState get communicationChannelState =>
       _communicationChannelState;
 
-  bool get isIOSBrowser {
-    return _isIOSBrowser;
+  bool get isDarwinBrowser {
+    return _isDarwinBrowser;
   }
 
   bool? get isAndroidGroupOwner {

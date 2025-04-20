@@ -8,8 +8,8 @@ abstract class NearbyServiceExceptionMapper {
   static NearbyServiceExceptionMapper get instance {
     if (Platform.isAndroid) {
       return NearbyServiceAndroidExceptionMapper();
-    } else if (Platform.isIOS) {
-      return NearbyServiceIOSExceptionMapper();
+    } else if (Platform.isIOS || Platform.isMacOS) {
+      return NearbyServiceDarwinExceptionMapper();
     }
     throw NearbyServiceException.unsupportedPlatform(
       caller: 'NearbyServiceExceptionMapper',

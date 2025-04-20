@@ -46,19 +46,19 @@ abstract base class NearbyDevice {
   /// * The [onAndroid] callback returns this instance of [NearbyDevice],
   /// cast as [NearbyAndroidDevice] if [Platform.isAndroid] is true.
   ///
-  /// * The [onIOS] callback returns this instance of [NearbyDevice],
-  /// cast as [NearbyIOSDevice] if [Platform.isIOS] is true.
+  /// * The [onDarwin] callback returns this instance of [NearbyDevice],
+  /// cast as [NearbyDarwinDevice] if [Platform.isIOS] or [Platform.isMacOS] is true.
   ///
   /// * The [onAny] callback returns this instance of [NearbyDevice] with
-  /// no casting if both [Platform.isAndroid] and [Platform.isIOS] are false.
+  /// no casting if both [Platform.isAndroid] and [Platform.isIOS] or [Platform.isMacOS] are false.
   ///
   T? byPlatform<T>({
     T Function(NearbyDevice)? onAny,
     T Function(NearbyAndroidDevice)? onAndroid,
-    T Function(NearbyIOSDevice)? onIOS,
+    T Function(NearbyDarwinDevice)? onDarwin,
   }) {
-    if (this is NearbyIOSDevice && onIOS != null) {
-      return onIOS(this as NearbyIOSDevice);
+    if (this is NearbyDarwinDevice && onDarwin != null) {
+      return onDarwin(this as NearbyDarwinDevice);
     } else if (this is NearbyAndroidDevice && onAndroid != null) {
       return onAndroid(this as NearbyAndroidDevice);
     } else {

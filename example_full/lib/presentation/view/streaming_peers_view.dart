@@ -34,8 +34,8 @@ class _PeersBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Selector<AppService, bool>(
-      selector: (context, service) => service.isIOSBrowser,
-      builder: (context, isIOSBrowser, _) {
+      selector: (context, service) => service.isDarwinBrowser,
+      builder: (context, isDarwinBrowser, _) {
         return Selector<AppService, List<NearbyDevice>?>(
           selector: (context, service) => service.peers,
           builder: (context, peers, _) {
@@ -55,7 +55,7 @@ class _PeersBody extends StatelessWidget {
                     ],
                   )
                 : Text(
-                    Platform.isAndroid || isIOSBrowser
+                    Platform.isAndroid || isDarwinBrowser
                         ? 'No one here ('
                         : "Wait until someone invites you!",
                     textAlign: TextAlign.center,

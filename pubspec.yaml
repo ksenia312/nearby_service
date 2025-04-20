@@ -28,3 +28,7 @@ flutter:
         pluginClass: NearbyServicePlugin
       ios:
         pluginClass: NearbyServicePlugin
+        sharedDarwinSource: true
+      macos:
+        pluginClass: NearbyServicePlugin
+        sharedDarwinSource: true

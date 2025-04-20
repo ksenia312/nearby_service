@@ -10,7 +10,7 @@ import 'package:nearby_service/nearby_service.dart';
 /// see https://github.com/ksenia312/nearby_service/blob/main/example/lib/.
 import 'components/connected_device_view.dart';
 import 'components/files_messaging_view.dart';
-import 'components/ios_role_selector.dart';
+import 'components/darwin_role_selector.dart';
 import 'components/peer_widget.dart';
 import 'components/text_messaging_view.dart';
 import 'utils/app_snack_bar.dart';
@@ -64,8 +64,8 @@ class _AppBodyState extends State<AppBody> {
 
   AppState _state = AppState.idle;
 
-  /// Browser OR Advertiser for IOS
-  bool _isIosBrowser = true;
+  /// Browser OR Advertiser for IOS/MacOS
+  bool _isDarwinBrowser = true;
 
   /// List of discovered devices
   List<NearbyDevice> _peers = [];
@@ -98,10 +98,10 @@ class _AppBodyState extends State<AppBody> {
       return Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (Platform.isIOS)
-            IOSRoleSelector(
-              isIosBrowser: _isIosBrowser,
-              onSelect: (value) => setState(() => _isIosBrowser = value),
+          if (Platform.isIOS || Platform.isMacOS)
+            DarwinRoleSelector(
+              isDarwinBrowser: _isDarwinBrowser,
+              onSelect: (value) => setState(() => _isDarwinBrowser = value),
             ),
           ElevatedButton(
             onPressed: _startProcess,
@@ -112,13 +112,13 @@ class _AppBodyState extends State<AppBody> {
     } else if (_state == AppState.discovering) {
       return ListView(
         children: [
-          if (Platform.isIOS)
-            Text('You are ${_isIosBrowser ? 'Browser' : 'Advertiser'}'),
+          if (Platform.isIOS || Platform.isMacOS)
+            Text('You are ${_isDarwinBrowser ? 'Browser' : 'Advertiser'}'),
           if (_peers.isEmpty) const Text('Searching for peers...'),
           ..._peers.map(
             (e) => PeerWidget(
               device: e,
-              isIosBrowser: _isIosBrowser,
+              isDarwinBrowser: _isDarwinBrowser,
               onConnect: _connect,
               communicationChannelState: _communicationChannelState,
             ),
@@ -176,8 +176,8 @@ class _AppBodyState extends State<AppBody> {
       final isGranted = await _nearbyService.android?.requestPermissions();
       final wifiEnabled = await _nearbyService.android?.checkWifiService();
       return (isGranted ?? false) && (wifiEnabled ?? false);
-    } else if (Platform.isIOS) {
-      _nearbyService.ios?.setIsBrowser(value: _isIosBrowser);
+    } else if (Platform.isIOS || Platform.isMacOS) {
+      _nearbyService.darwin?.setIsBrowser(value: _isDarwinBrowser);
       return true;
     } else {
       return false;

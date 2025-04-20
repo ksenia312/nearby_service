@@ -19,7 +19,7 @@ class _IdleViewState extends State<IdleView> {
   @override
   void initState() {
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      context.read<AppService>().getSavedIOSDeviceName().then((value) {
+      context.read<AppService>().getSavedDarwinDeviceName().then((value) {
         controller.text = value;
         controller.selection = TextSelection.collapsed(offset: value.length);
         setState(() {
@@ -56,7 +56,7 @@ class _IdleViewState extends State<IdleView> {
     return Center(
       child: Column(
         children: [
-          if (Platform.isIOS)
+          if (Platform.isIOS || Platform.isMacOS)
             Padding(
               padding: const EdgeInsets.only(bottom: 10.0),
               child: TextFormField(

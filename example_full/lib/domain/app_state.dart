@@ -23,7 +23,7 @@ enum AppState {
     AppState.connected,
     AppState.communicationChannelCreated,
   ];
-  static final List<AppState> iosSteps = [
+  static final List<AppState> darwinSteps = [
     AppState.idle,
     AppState.selectClientType,
     AppState.readyToDiscover,
@@ -36,7 +36,7 @@ enum AppState {
 
   static final List<AppState> steps = [
     if (Platform.isAndroid) ...androidSteps,
-    if (Platform.isIOS) ...iosSteps,
+    if (Platform.isIOS || Platform.isMacOS) ...darwinSteps,
   ];
 
   int get step {

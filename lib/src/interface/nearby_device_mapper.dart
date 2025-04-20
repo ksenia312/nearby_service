@@ -13,7 +13,7 @@ abstract interface class NearbyDeviceMapper {
     if (Platform.isAndroid) {
       return NearbyAndroidMapper();
     }
-    if (Platform.isIOS) {
+    if (Platform.isIOS || Platform.isMacOS) {
       return NearbyIOSMapper();
     }
 

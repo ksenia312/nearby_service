@@ -19,7 +19,7 @@ class ReadyView extends StatelessWidget {
           title: 'Start discover peers',
         ),
         const SizedBox(height: 10),
-        if (Platform.isIOS)
+        if (Platform.isIOS || Platform.isMacOS)
           ActionButton(
             onTap: () {
               context.read<AppService>().updateState(AppState.selectClientType);
