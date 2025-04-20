@@ -13,8 +13,8 @@ Nearby Service Flutter Plugin is used to create connections in a P2P network.
 The plugin supports sending text messages and files. With it,
 you can easily create any kind of information sharing application **without Internet connection**.
 
-The package does not support communication between Android and IOS devices, the connection is available for
-**Android-Android** and **IOS-IOS** relations.
+The package does not support communication between Android and IOS/macOS (Darwin) devices, the connection is available for
+**Android-Android** and **Darwin-Darwin** relations.
 
 Your feedback and suggestions would be greatly
 appreciated! [You can leave your opinion here](https://forms.gle/FbAtW2dG5RYCxb1DA)
@@ -32,11 +32,11 @@ Or find the GIF demo at the end of the README:
 
 - [About](#about)
     - [Android](#about-android-plugin)
-    - [IOS](#about-ios-plugin)
+    - [IOS and macOS](#about-ios-and-macos-plugin)
 - [Features](#features)
 - [Setup](#setup)
     - [Android](#android-setup)
-    - [IOS](#ios-setup)
+    - [IOS and macOS](#ios-and-macos-setup)
 - [Usage](#usage)
 - [Data sharing](#data-sharing)
     - [Text messages](#text-messages)
@@ -65,14 +65,14 @@ To check permissions and Wi-fi status, the
 - `checkWifiService()` (Android only): returns true if Wi-fi is enabled
 - `requestPermissions()` (Android only): requests permissions for location and nearby devices and returns true if
   granted
-- `openServicesSettings()`: opens Wi-fi settings for Android and general settings for iOS
+- `openServicesSettings()`: opens Wi-fi settings for Android and general settings for iOS and macOS
 
 > Testing the plugin **is not possible** on Android emulators, as they usually do not contain the Wi-fi Direct function
 > in general! Use physical devices for that.
 
-### About IOS Plugin
+### About IOS and macOS Plugin
 
-For IOS, the P2P connection is implemented through the `Multipeer Connectivity` framework.
+For IOS and macOS, the P2P connection is implemented through the `Multipeer Connectivity` framework.
 
 This framework **automatically selects** the best network technology depending on the situation—using **Wi-Fi**
 if both devices are on the same network, or using **peer-to-peer Wi-Fi** or **Bluetooth** otherwise.
@@ -85,8 +85,8 @@ the `nearby_service` plugin to open the settings and prompt the user to turn Wi-
 - **Device Preparation**
     - Requesting permissions to use Wi-Fi Direct (Android only)
     - Checking Wi-Fi status (Android only)
-    - Opening settings to enable Wi-Fi (Android and iOS)
-    - Role selection - Browser or Advertiser (IOS only)
+    - Opening settings to enable Wi-Fi (Android and IOS/macOS)
+    - Role selection - Browser or Advertiser (IOS and macOS only)
 
 - **Connecting to the Device from a P2P Network**
     - Listening for discovered devices (peers)
@@ -110,9 +110,9 @@ the `nearby_service` plugin to open the settings and prompt the user to turn Wi-
 All necessary Android permissions are already in the **AndroidManifest.xml** of the plugin,
 so you don't need to add anything **to work with p2p network**.
 
-### IOS setup
+### IOS and macOS setup
 
-For IOS, you need to add the following values to **Info.plist**:
+For IOS and macOS, you need to add the following values to **Info.plist**:
 
 ```
 <key>NSBonjourServices</key>
@@ -161,11 +161,11 @@ For IOS, you need to add the following values to **Info.plist**:
 > final _nearbyService = NearbyService.getInstance();
 > _nearbyService.android..
 > ```
-> For IOS:
+> For IOS and macOS:
 >
 > ```dart
 > final _nearbyService = NearbyService.getInstance();
-> _nearbyService.ios..
+> _nearbyService.darwin..
 > ```
 
 1. Import the package:
@@ -185,9 +185,9 @@ final _nearbyService = NearbyService.getInstance();
 
 ```dart
 // You can change the device name on a P2P network only for iOS. 
-// Optionally pass the [iosDeviceName].
+// Optionally pass the [darwinDeviceName].
 await _nearbyService.initialize(
-        data: NearbyInitializeData(iosDeviceName: iosDeviceName),
+        data: NearbyInitializeData(darwinDeviceName: darwinDeviceName),
       );
 ```
 
@@ -207,9 +207,9 @@ if (isWifiEnabled ?? false) {
 }
 ```
 
-**Extra step for IOS:** ask the user to choose whether they are a Browser or Advertiser:
+**Extra step for IOS and macOS:** ask the user to choose whether they are a Browser or Advertiser:
 
-> In IOS Multipeer Connectivity, there are 2 roles for the discovery process and connection between devices: **browser**
+> In IOS and macOS Multipeer Connectivity, there are 2 roles for the discovery process and connection between devices: **browser**
 > and **advertiser**.
 >
 > **Browser**: This component discovers nearby devices that report their availability. It is
@@ -221,7 +221,7 @@ if (isWifiEnabled ?? false) {
 The code for selecting a role:
 
 ```dart
-_nearbyService.ios?.setIsBrowser(value: isBrowser);
+_nearbyService.darwin?.setIsBrowser(value: isBrowser);
 // go to the starting discovery step
 ```
 
@@ -243,7 +243,7 @@ _nearbyService.getPeersStream().listen((event) => peers = event);
 6. Each of the peers is a `NearbyDevice` and you can connect to it:
 
 > Remember that when used on the Android platform, you can only pass `NearbyAndroidDevice` to the `connect()` method.
-> Similarly for iOS, `NearbyIOSDevice`. Devices automatically come from the discovery state in the correct type, so you
+> Similarly for iOS and macOS, `NearbyDarwinDevice`. Devices automatically come from the discovery state in the correct type, so you
 > just need to use the received data.
 
 ```dart
@@ -270,7 +270,7 @@ _connectedDeviceSubscription = _nearbyService.getConnectedDeviceStream(device).l
 ```
 
 8. Once you have connected over a P2P network, you still need to create a **communication channel** to transfer data.
-   For Android, this is a **socket** embedded in `NearbyService`, for iOS it's a setup to listen to messages and
+   For Android, this is a **socket** embedded in `NearbyService`, for iOS and macOS it's a setup to listen to messages and
    resources from the desired device. There is a method `startCommunicationChannel()` for this purpose. You should pass
    to it listeners for messages and resources received from the connected device. There can only be one communication
    channel, if you create a new one, the previous one will be **cancelled**.
