@@ -44,6 +44,9 @@ Or find the GIF demo at the end of the README:
 - [Exceptions](#exceptions)
 - [Additional options](#additional-options)
 - [Demo](#demo)
+- [Migration Guide](#migration-guide)
+    - [Migrating from v0.1.0 to v0.2.0](#migrating-from-v010-to-v020)
+
 ## About
 
 > A peer-to-peer (P2P) network is a decentralized network architecture in which each participant, called a peer, can act
@@ -542,3 +545,62 @@ the Android platform
 ### IOS
 
 ![IOS_demo](https://github.com/ksenia312/nearby_service/blob/main/assets/demo_ios.gif?raw=true)
+
+## Migration Guide
+
+### Migrating from v0.1.0 to v0.2.0
+
+Version 0.2.0 adds support for macOS but introduces breaking changes to accommodate the unified Darwin platform (iOS and macOS).
+
+#### API Changes
+
+1. **Property Renaming**
+   - `.ios` property has been renamed to `.darwin`
+   ```dart
+   // Before (v0.1.0)
+   _nearbyService.ios?.setIsBrowser(value: isBrowser);
+   
+   // After (v0.2.0)
+   _nearbyService.darwin?.setIsBrowser(value: isBrowser);
+   ```
+
+2. **Class Renaming**
+   - `NearbyIOSDevice` has been renamed to `NearbyDarwinDevice`
+   - `NearbyIOSService` has been renamed to `NearbyDarwinService`
+   - `NearbyServiceIOSExceptionMapper` has been renamed to `NearbyServiceDarwinExceptionMapper`
+
+3. **Parameter Renaming in NearbyInitializeData**
+   - `iosDeviceName` has been renamed to `darwinDeviceName`
+   ```dart
+   // Before (v0.1.0)
+   await _nearbyService.initialize(
+     data: NearbyInitializeData(iosDeviceName: deviceName),
+   );
+   
+   // After (v0.2.0)
+   await _nearbyService.initialize(
+     data: NearbyInitializeData(darwinDeviceName: deviceName),
+   );
+   ```
+
+#### Assert Statements
+
+If you have assertions in your code that check for specific types, make sure to update them:
+
+```dart
+// Before (v0.1.0)
+assert(
+  device is NearbyIOSDevice,
+  'The Nearby IOS Service can only work with the NearbyIOSDevice'
+);
+
+// After (v0.2.0)
+assert(
+  device is NearbyDarwinDevice,
+  'The Nearby Darwin Service can only work with the NearbyDarwinDevice'
+);
+```
+
+#### Flutter Configuration
+
+If you're developing a plugin based on `nearby_service`, note that the `pubspec.yaml` now uses `sharedDarwinSource: true` to share code between iOS and macOS platforms.
