@@ -5,13 +5,13 @@ class PeerWidget extends StatelessWidget {
   const PeerWidget({
     super.key,
     required this.device,
-    required this.isIosBrowser,
+    required this.isDarwinBrowser,
     required this.onConnect,
     required this.communicationChannelState,
   });
 
   final NearbyDevice device;
-  final bool isIosBrowser;
+  final bool isDarwinBrowser;
   final ValueChanged<NearbyDevice> onConnect;
   final CommunicationChannelState communicationChannelState;
 
@@ -28,7 +28,7 @@ class PeerWidget extends StatelessWidget {
 
     return ListTile(
       title: Text(
-        '${isIosBrowser ? 'Found device' : 'Pending invitation'} | ${device.info.displayName} | $status',
+        '${isDarwinBrowser ? 'Found device' : 'Pending invitation'} | ${device.info.displayName} | $status',
       ),
       onTap: canTap ? () => onConnect(device) : null,
       tileColor: Colors.blueAccent,

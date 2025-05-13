@@ -4,7 +4,7 @@ import 'package:nearby_service/src/utils/json_decoder.dart';
 ///
 /// A device on a P2P network obtained from the IOS platform.
 ///
-final class NearbyIOSDevice extends NearbyDevice {
+final class NearbyDarwinDevice extends NearbyDevice {
   ///
   /// A class representing an IOS device on a P2P network.
   ///
@@ -13,7 +13,7 @@ final class NearbyIOSDevice extends NearbyDevice {
   ///
   /// [MCPeerID](https://developer.apple.com/documentation/multipeerconnectivity/mcpeerid) is an identifier on the local network for IOS.
   ///
-  NearbyIOSDevice({
+  NearbyDarwinDevice({
     required super.info,
     required super.status,
     this.os,
@@ -22,10 +22,10 @@ final class NearbyIOSDevice extends NearbyDevice {
   });
 
   ///
-  /// Gets [NearbyIOSDevice] from [Map].
+  /// Gets [NearbyDarwinDevice] from [Map].
   ///
-  factory NearbyIOSDevice.fromJson(Map<String, dynamic>? json) {
-    return NearbyIOSDevice(
+  factory NearbyDarwinDevice.fromJson(Map<String, dynamic>? json) {
+    return NearbyDarwinDevice(
       info: NearbyDeviceInfo.fromJson(json),
       deviceType: json?["deviceType"],
       os: json?["os"],
@@ -53,7 +53,7 @@ final class NearbyIOSDevice extends NearbyDevice {
   bool operator ==(Object other) =>
       identical(this, other) ||
       super == other &&
-          other is NearbyIOSDevice &&
+          other is NearbyDarwinDevice &&
           runtimeType == other.runtimeType &&
           os == other.os &&
           osVersion == other.osVersion &&
@@ -78,7 +78,7 @@ class NearbyIOSMapper implements NearbyDeviceMapper {
     final decoded = JSONDecoder.decodeList(value);
     return [
       ...?decoded?.map(
-        (e) => NearbyIOSDevice.fromJson(JSONDecoder.decodeMap(e)),
+        (e) => NearbyDarwinDevice.fromJson(JSONDecoder.decodeMap(e)),
       ),
     ];
   }
@@ -88,6 +88,6 @@ class NearbyIOSMapper implements NearbyDeviceMapper {
     final decoded = JSONDecoder.decodeMap(value);
     if (decoded == null) return null;
 
-    return NearbyIOSDevice.fromJson(decoded);
+    return NearbyDarwinDevice.fromJson(decoded);
   }
 }

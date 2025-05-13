@@ -1,3 +1,15 @@
+## 0.2.0
+
+**!! BREAKING CHANGES !!**
+
+- Add support for macOS
+- Renamed iOS-specific elements to Darwin to support both iOS and macOS:
+  - API: `iosDeviceName` renamed to `darwinDeviceName` in `NearbyInitializeData`
+  - API: `NearbyIOSDevice` renamed to `NearbyDarwinDevice`
+  - API: `NearbyIOSService` renamed to `NearbyDarwinService`
+  - API: `NearbyServiceIOSExceptionMapper` renamed to `NearbyServiceDarwinExceptionMapper`
+  - Access: `.ios` property renamed to `.darwin`
+
 ## 0.1.3
 
 - [Android]: Use intent to get peers when requestPeers() returns empty

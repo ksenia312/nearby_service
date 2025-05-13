@@ -2,7 +2,7 @@
 import 'package:nearby_service/nearby_service.dart';
 import 'package:nearby_service/src/interface/nearby_service_exception_mapper.dart';
 
-class NearbyServiceIOSExceptionMapper extends NearbyServiceExceptionMapper {
+class NearbyServiceDarwinExceptionMapper extends NearbyServiceExceptionMapper {
   @override
   bool canMap(String error) {
     return IOSFailureCodes.values.any((element) => element.name == error);

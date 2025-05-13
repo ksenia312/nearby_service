@@ -13,7 +13,7 @@ import 'package:nearby_service/src/utils/stream_mapper.dart';
 /// Connects to the device by subscribing to messages from the selected
 /// device by identifier.
 ///
-class NearbyIOSService extends NearbyService {
+class NearbyDarwinService extends NearbyService {
   final _isBrowser = NearbyServiceListenable<bool>(initialValue: true);
 
   final _communicationChannelState =
@@ -68,7 +68,7 @@ class NearbyIOSService extends NearbyService {
   /// The name of the device on the network can be
   /// specified on initialization via the parameter [data].
   ///
-  /// [NearbyInitializeData.iosDeviceName] will be passed to the platform as initial
+  /// [NearbyInitializeData.darwinDeviceName] will be passed to the platform as initial
   /// name. If a new name is not passed, the previous name stored
   /// in [UserDefaults](https://developer.apple.com/documentation/foundation/userdefaults)
   /// will be used. If there is no saved name, `UIDevice.current.name` will be used.
@@ -78,13 +78,13 @@ class NearbyIOSService extends NearbyService {
     NearbyInitializeData data = const NearbyInitializeData(),
   }) async {
     final result = await NearbyServiceIOSPlatform.instance.initialize(
-      data.iosDeviceName,
+      data.darwinDeviceName,
     );
 
     _logResult(
       result,
-      onSuccess: 'Initialized ${data.iosDeviceName}',
-      onError: 'Failed to initialize ${data.iosDeviceName}',
+      onSuccess: 'Initialized ${data.darwinDeviceName}',
+      onError: 'Failed to initialize ${data.darwinDeviceName}',
     );
     return result;
   }
@@ -134,7 +134,7 @@ class NearbyIOSService extends NearbyService {
   /// Invites [device] if [isBrowserValue] is true.
   /// Accepts invite from [device] if [isBrowserValue] is false.
   ///
-  /// Note! Requires [NearbyIOSDevice] to be passed.
+  /// Note! Requires [NearbyDarwinDevice] to be passed.
   @Deprecated('Use connectById instead')
   @override
   Future<bool> connect(NearbyDevice device) async {
@@ -167,7 +167,7 @@ class NearbyIOSService extends NearbyService {
   ///
   /// Disconnects from the [device] on the P2P network.
   ///
-  /// Note! Requires [NearbyIOSDevice] to be passed.
+  /// Note! Requires [NearbyDarwinDevice] to be passed.
   ///
   @Deprecated('Use disconnectById instead')
   @override
@@ -290,7 +290,7 @@ class NearbyIOSService extends NearbyService {
   /// [UserDefaults](https://developer.apple.com/documentation/foundation/userdefaults) using this method.
   ///
   /// Changing the name on the network is only available for IOS,
-  /// so the [NearbyIOSService] only can be used for that.
+  /// so the [NearbyDarwinService] only can be used for that.
   ///
   Future<String?> getSavedDeviceName() {
     return NearbyServiceIOSPlatform.instance.getSavedDeviceName();
@@ -322,8 +322,8 @@ class NearbyIOSService extends NearbyService {
 
   void _requireIOSDevice(NearbyDevice device) {
     assert(
-      device is NearbyIOSDevice,
-      'The Nearby IOS Service can only work with the NearbyIOSDevice and not with ${device.runtimeType}',
+      device is NearbyDarwinDevice,
+      'The Nearby IOS Service can only work with the NearbyDarwinDevice and not with ${device.runtimeType}',
     );
   }
 }

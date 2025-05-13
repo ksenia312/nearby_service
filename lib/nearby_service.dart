@@ -18,7 +18,7 @@ export 'src/interface/interface.dart';
 /// The main tool for working with a P2P network.
 /// Implementations:
 /// * for Android - [NearbyAndroidService]
-/// * for IOS - [NearbyIOSService]
+/// * for Darwin - [NearbyDarwinService]
 ///
 /// **The plugin is not supported for other platforms yet**
 ///
@@ -37,9 +37,9 @@ abstract class NearbyService {
     if (Platform.isAndroid) {
       Logger.debug('Created Nearby Android Service');
       return NearbyAndroidService();
-    } else if (Platform.isIOS) {
-      Logger.debug('Created Nearby IOS Service');
-      return NearbyIOSService();
+    } else if (Platform.isIOS || Platform.isMacOS) {
+      Logger.debug('Created Nearby Darwin Service');
+      return NearbyDarwinService();
     } else {
       throw NearbyServiceException.unsupportedPlatform(
         caller: 'getInstance()',
@@ -48,11 +48,11 @@ abstract class NearbyService {
   }
 
   ///
-  /// Returns [NearbyService] cast as [NearbyIOSService] if the current
-  /// platform is IOS. Otherwise, returns null.
+  /// Returns [NearbyService] cast as [NearbyDarwinService] if the current
+  /// platform is IOS or MacOS. Otherwise, returns null.
   ///
-  late final NearbyIOSService? ios = get(
-    onIOS: (e) => e,
+  late final NearbyDarwinService? darwin = get(
+    onDarwin: (e) => e,
   );
 
   ///
@@ -193,8 +193,8 @@ abstract class NearbyService {
   ///
   /// Starts searching for devices using a platform-specific service.
   ///
-  /// Note that the [NearbyIOSService] implementation starts **browsing** or
-  /// **advertising** depending on the [NearbyIOSService.isBrowserValue].
+  /// Note that the [NearbyDarwinService] implementation starts **browsing** or
+  /// **advertising** depending on the [NearbyDarwinService.isBrowserValue].
   ///
   /// On Android can throw mapped from native platform exceptions:
   /// 1. [NearbyServiceBusyException]
@@ -208,8 +208,8 @@ abstract class NearbyService {
   ///
   /// Stops searching for devices using a platform-specific service.
   ///
-  /// Note that the [NearbyIOSService] implementation stops **browsing** or
-  /// **advertising** depending on the [NearbyIOSService.isBrowserValue].
+  /// Note that the [NearbyDarwinService] implementation stops **browsing** or
+  /// **advertising** depending on the [NearbyDarwinService.isBrowserValue].
   ///
   /// On Android can throw mapped from native platform exceptions:
   /// 1. [NearbyServiceBusyException]
@@ -223,10 +223,10 @@ abstract class NearbyService {
   ///
   /// Connects to passed [device] using a platform-specific service.
   ///
-  /// Note that the [NearbyIOSService] implementation **invites** or
-  /// **accepts invite** depending on the [NearbyIOSService.isBrowser].
+  /// Note that the [NearbyDarwinService] implementation **invites** or
+  /// **accepts invite** depending on the [NearbyDarwinService.isBrowser].
   ///
-  /// Note that if [Platform.isIOS] == true, [NearbyIOSDevice] should be passed.
+  /// Note that if [Platform.isIOS] == true, [NearbyDarwinDevice] should be passed.
   /// If [Platform.isAndroid] == true, [NearbyAndroidDevice] should be passed.
   ///
   /// On Android can throw mapped from native platform exceptions:
@@ -242,10 +242,10 @@ abstract class NearbyService {
   ///
   /// Connects to passed [deviceId] using a platform-specific service.
   ///
-  /// Note that the [NearbyIOSService] implementation **invites** or
-  /// **accepts invite** depending on the [NearbyIOSService.isBrowserValue].
+  /// Note that the [NearbyDarwinService] implementation **invites** or
+  /// **accepts invite** depending on the [NearbyDarwinService.isBrowserValue].
   ///
-  /// Note that if [Platform.isIOS] == true, [NearbyIOSDevice] should be passed.
+  /// Note that if [Platform.isIOS] == true, [NearbyDarwinDevice] should be passed.
   /// If [Platform.isAndroid] == true, [NearbyAndroidDevice] should be passed.
   ///
   /// On Android can throw mapped from native platform exceptions:
@@ -260,7 +260,7 @@ abstract class NearbyService {
   ///
   /// Disconnects from passed [device] using a platform-specific service.
   ///
-  /// Note that if [Platform.isIOS] == true, [NearbyIOSDevice] should be passed.
+  /// Note that if [Platform.isIOS] == true, [NearbyDarwinDevice] should be passed.
   /// If [Platform.isAndroid] == true, [NearbyAndroidDevice] should be passed.
   ///
   /// On Android can throw mapped from native platform exceptions:
@@ -277,7 +277,7 @@ abstract class NearbyService {
   ///
   /// Disconnects from passed [deviceId] using a platform-specific service.
   ///
-  /// Note that if [Platform.isIOS] == true, [NearbyIOSDevice] should be passed.
+  /// Note that if [Platform.isIOS] or [Platform.isMacOS] == true, [NearbyDarwinDevice] should be passed.
   /// If [Platform.isAndroid] == true, [NearbyAndroidDevice] should be passed.
   ///
   /// On Android can throw mapped from native platform exceptions:
@@ -338,28 +338,28 @@ extension NearbyServiceGetterExtension on NearbyService {
   /// * The [onAndroid] callback returns this instance of [NearbyService],
   /// cast as [NearbyAndroidService] if [Platform.isAndroid] is true.
   ///
-  /// * The [onIOS] callback returns this instance of [NearbyService],
-  /// cast as [NearbyIOSService] if [Platform.isIOS] is true.
+  /// * The [onDarwin] callback returns this instance of [NearbyService],
+  /// cast as [NearbyDarwinService] if [Platform.isIOS] or [Platform.isMacOS] is true.
   ///
   /// * The [onAny] callback returns this instance of [NearbyService] with
-  /// no casting if both [Platform.isAndroid] and [Platform.isIOS] are false.
+  /// no casting if both [Platform.isAndroid] and [Platform.isIOS] or [Platform.isMacOS] are false.
   ///
   /// **Note: any of the callbacks must not be null!**
   ///
   T? get<T>({
     T Function(NearbyAndroidService)? onAndroid,
-    T Function(NearbyIOSService)? onIOS,
+    T Function(NearbyDarwinService)? onDarwin,
     T Function(NearbyService)? onAny,
   }) {
     assert(
-      onAndroid != null || onIOS != null || onAny != null,
-      'You should provide at least one of (onAndroid, onIOS, onAny)',
+      onAndroid != null || onDarwin != null || onAny != null,
+      'You should provide at least one of (onAndroid, onDarwin, onAny)',
     );
     if (this is NearbyAndroidService && onAndroid != null) {
       return onAndroid(this as NearbyAndroidService);
     }
-    if (this is NearbyIOSService && onIOS != null) {
-      return onIOS(this as NearbyIOSService);
+    if (this is NearbyDarwinService && onDarwin != null) {
+      return onDarwin(this as NearbyDarwinService);
     }
     if (onAny != null) {
       return onAny(this);

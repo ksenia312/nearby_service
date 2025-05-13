@@ -8,10 +8,10 @@ class NearbyInitializeData {
   /// There is an option to pass the device name to IOS [iosDeviceName].
   /// For Android platform changing device name in P2P network is not supported.
   ///
-  const NearbyInitializeData({this.iosDeviceName});
+  const NearbyInitializeData({this.darwinDeviceName});
 
   ///
   /// The device name for IOS on the P2P network.
   ///
-  final String? iosDeviceName;
+  final String? darwinDeviceName;
 }

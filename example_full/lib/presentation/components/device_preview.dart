@@ -46,8 +46,8 @@ class DevicePreview extends StatelessWidget {
     final status = Text(
       device.byPlatform(
             onAny: (d) => d.status.name,
-            onIOS: (d) =>
-                context.select<AppService, bool>((v) => v.isIOSBrowser)
+            onDarwin: (d) =>
+                context.select<AppService, bool>((v) => v.isDarwinBrowser)
                     ? "Peer found | ${d.status.name}"
                     : "Pending invitation | ${d.status.name}",
           ) ??
