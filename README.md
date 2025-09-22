@@ -128,6 +128,16 @@ For IOS and macOS, you need to add the following values to **Info.plist**:
 <string>[Your description here]</string>
 ```
 
+For macOS, you must have the following in `Release.entitlements` and `DebugProfile.entitlements`:
+```
+...
+<key>com.apple.security.network.server</key>
+<true/>
+<key>com.apple.security.network.client</key>
+<true/>
+...
+```
+
 - `NSBonjourServices`
 
   For the `nearby_service` plugin, you should add the value `<string>_mp-connection._tcp</string>`. This key is
